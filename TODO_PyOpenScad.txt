@@ -1,0 +1,6 @@
+-- Unit testing.
+-- Applescript or other inter-app communication that will recompile in OpenSCAD
+    whenever requested via your Python code
+-- Debugging info?  This isn't really present for SCAD, so it's hard from Python.
+
+-ETJ 13 Feb 2011
