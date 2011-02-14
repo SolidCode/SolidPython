@@ -1,0 +1,55 @@
+    PyOpenSCAD is a generalization of Phillip Tiefenbacher's openscad module, 
+found at http://www.thingiverse.com/thing:1481.  It generates valid OpenSCAD 
+code from Python code with minimal overhead.  Here's a simple example:
+    
+This Python code: 
+
+from pyopenscad import *
+d = difference()
+d.add( cube(10))
+d.add( sphere(15))
+print scad_render( d)
+
+Generates this OpenSCAD code:
+
+difference(){
+	cube(10);
+	sphere(15);
+}
+
+Steps to using PyOpenSCAD
+------------------------------
+-  from pyopenscad import *
+-  call 'use( "/path/to/scadfile.scad")' or 'include("/path/to/scadfile.scad")' 
+    for any included SCAD code
+-  OpenSCAD uses curly-brace blocks ({}) to create its tree.  In
+      PyOpenSCAD, you have to call 'add()' to add things to a tree:
+    -  Ex:  OpenSCAD:
+        -  difference(){
+              	cube(10);
+              	sphere(15);
+              }
+    -  PyOpenSCAD:
+        -  d = difference()
+           d.add( cube(10))
+           d.add( sphere(15))
+           
+-  Call scad_render( py_scad_obj)   to generate SCAD code
+-  OR:  call  scad_render_to_file( py_scad_obj, filepath) to
+      store that code in a file. 
+    -  If 'filepath' is open in the OpenSCAD IDE and Design =>
+          'Automatic Reload and Compile' is checked, calling
+          scad_render_to_file() from Python will load the object in
+          the IDE.
+    -  Alternately, you could call OpenSCAD's command line and render straight 
+        to STL.   
+
+Because you're using Python, a lot of things are easy that would be hard or 
+impossible in pure OpenSCAD.  Among these are:
+-- recursion
+-- built-in dictionary types
+-- mutable, slice-able list and string types
+-- external libraries (images! 3D geometry!  web-scraping! ...)
+
+Enjoy, and please send any questions or bug reports to me at evan_t_jones@mac.com. Cheers!
+Evan
