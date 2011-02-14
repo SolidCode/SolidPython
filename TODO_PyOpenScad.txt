@@ -1,6 +1,10 @@
+-- Add **kwargs to all SCAD objects so all Python-rendered SCAD functions accept
+    extra unspecified arguments, since OpenSCAD has this behavior.
 -- Unit testing.
+-- Comprehensive docs
+-- Add handling for the #*!% SCAD characters (debug, disable, root, background)
 -- Applescript or other inter-app communication that will recompile in OpenSCAD
     whenever requested via your Python code
 -- Debugging info?  This isn't really present for SCAD, so it's hard from Python.
 
--ETJ 13 Feb 2011
+-ETJ 14 Feb 2011
