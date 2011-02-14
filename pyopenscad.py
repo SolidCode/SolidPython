@@ -1,5 +1,22 @@
 #! /usr/bin/python
 # -*- coding: UTF-8 -*-
+
+#    Simple Python OpenSCAD Code Generator
+#    Copyright (C) 2009    Philipp Tiefenbacher <wizards23@gmail.com>
+#    Amendments & additions, (c) 2011 Evan Jones <evan_t_jones@mac.com>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.    See the
+#    GNU General Public License for more details.
+#
+#    http://www.gnu.org/licenses/gpl.html
+
 import os, sys, re
 import inspect
 
