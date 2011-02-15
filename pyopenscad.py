@@ -3,41 +3,43 @@
 
 #    Simple Python OpenSCAD Code Generator
 #    Copyright (C) 2009    Philipp Tiefenbacher <wizards23@gmail.com>
-#    Amendments & additions, (c) 2011 Evan Jones <evan_t_jones@mac.com>
+#    Amendments & additions, (C) 2011 Evan Jones <evan_t_jones@mac.com>
 #
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
+#   License: LGPL 2.1 or later
 #
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.    See the
-#    GNU General Public License for more details.
-#
-#    http://www.gnu.org/licenses/gpl.html
+
 
 import os, sys, re
 import inspect
 
 openscad_builtins = [
-    {'name': 'union',           'args': [],         'kwargs': []} ,
-    {'name': 'intersection',    'args': [],         'kwargs': []} ,
-    {'name': 'difference',      'args': [],         'kwargs': []} ,
+    # 2D primitives
+    {'name': 'polygon',         'args': ['points', 'paths'], 'kwargs': []} ,
+    {'name': 'circle',          'args': [],         'kwargs': ['r']} ,
+    {'name': 'square',          'args': [],         'kwargs': ['size', 'center']} ,
     
+    # 3D primitives
     {'name': 'sphere',          'args': [],         'kwargs': ['r']} ,
     {'name': 'cube',            'args': [],         'kwargs': ['size', 'center']} ,
     {'name': 'cylinder',        'args': [],         'kwargs': ['r','h']}  ,
     {'name': 'polyhedron',      'args': ['points', 'triangles' ], 'kwargs': ['convexity']} ,
     
+    # Boolean operations
+    {'name': 'union',           'args': [],         'kwargs': []} ,
+    {'name': 'intersection',    'args': [],         'kwargs': []} ,
+    {'name': 'difference',      'args': [],         'kwargs': []} ,
+    
+    # Transforms
     {'name': 'translate',       'args': [],         'kwargs': ['v']} ,
     {'name': 'scale',           'args': [],         'kwargs': ['s']} ,
     {'name': 'rotate',          'args': [],         'kwargs': ['a', 'v']} ,
-    
-    {'name': 'polygon',         'args': ['points', 'paths'], 'kwargs': []} ,
-    {'name': 'circle',          'args': [],         'kwargs': ['r']} ,
-    {'name': 'square',          'args': [],         'kwargs': ['size', 'center']} ,
-    
+    {'name': 'mirror',          'args': ['normal'], 'kwargs': []},
+    {'name': 'multmatrix',      'args': ['n'],      'kwargs': []},
+    {'name': 'color',           'args': ['c'],      'kwargs': []},
+    {'name': 'minkowski',       'args': [],         'kwargs': []}  ,
+    {'name': 'render',          'args': [],         'kwargs': ['convexity']} 
+        
+    # 2D to 3D transitions
     {'name': 'linear_extrude',  'args': [],         'kwargs': ['height', 'center', 'convexity', 'twist','slices']} ,
     {'name': 'rotate_extrude',  'args': [],         'kwargs': ['convexity']} ,
     {'name': 'dxf_linear_extrude', 'args': ['file'], 'kwargs': ['layer', 'height', 'center', 'convexity', 'twist', 'slices']} ,
@@ -46,21 +48,16 @@ openscad_builtins = [
     # Import/export
     {'name': 'import_stl',      'args': ['filename'], 'kwargs': ['convexity']} ,
     
-    # Modifiers #TODO: These needs custom code, since their SCAD names are different than in Python
+    # Modifiers; These are implemented by calling e.g. 
+    #   obj.set_modifier( '*') or 
+    #   obj.set_modifier('disable') 
+    # on  an existing object.
     # {'name': 'background',      'args': [],         'kwargs': []},     #   %{}
     # {'name': 'debug',           'args': [],         'kwargs': []} ,    #   #{}
     # {'name': 'root',            'args': [],         'kwargs': []} ,    #   !{}
     # {'name': 'disable',         'args': [],         'kwargs': []} ,    #   *{}
     
-    #TODO:
     {'name': 'intersection_for', 'args': ['n'],     'kwargs': []}  ,    #   e.g.: intersection_for( n=[1..6]){}
-    
-    # transforms
-    {'name': 'mirror',          'args': ['normal'], 'kwargs': []},
-    {'name': 'multmatrix',      'args': ['n'],      'kwargs': []},
-    {'name': 'color',           'args': ['c'],      'kwargs': []},
-    {'name': 'minkowski',       'args': [],         'kwargs': []}  ,
-    {'name': 'render',          'args': [],         'kwargs': ['convexity']}      ,
     
     # Unneeded
     {'name': 'assign',          'args': [],         'kwargs': []}   # Not really needed for Python.  Also needs a **args argument so it accepts anything
@@ -174,9 +171,20 @@ class openscad_object( object):
         self.children = []
         self.modifier = ""
         self.parent= None
+        self.special_vars = {}
     
     def set_modifier(self, m):
-        self.modifier = m
+        # Used to add one of the 4 single-character modifiers: #(debug)  !(root) %(background) or *(disable)
+        string_vals = { 'disable':      '*',
+                        'debug':        '#',
+                        'background':   '%',
+                        'root':         '!',
+                        '*':'*',
+                        '#':'#',
+                        '%':'%',
+                        '!':'!'}
+        
+        self.modifier = string_vals.get(m.lower(), '')
         return self
     
     def render(self):
@@ -205,6 +213,7 @@ class openscad_object( object):
                 s += py2openscad(v)
             else:
                 s += k + " = " + py2openscad(v)
+                
         s += ")"
         if self.children != None and len(self.children) > 0:
             s += " {"
@@ -216,8 +225,19 @@ class openscad_object( object):
         return s
     
     def add(self, child):
-        self.children.append(child)
-        child.set_parent( self)
+        '''
+        if child is a single object, assume it's an openscad_object and 
+        add it to self.children
+        
+        if child is a list, assume its members are all openscad_objects and
+        add them all to self.children
+        '''
+        if isinstance( child, list):
+            self.children.extend( child)
+            [c.set_parent(self) for c in child]
+        else:
+            self.children.append(child)
+            child.set_parent( self)
         return self
     
     def set_parent( self, parent):
