@@ -37,7 +37,7 @@ openscad_builtins = [
     {'name': 'multmatrix',      'args': ['n'],      'kwargs': []},
     {'name': 'color',           'args': ['c'],      'kwargs': []},
     {'name': 'minkowski',       'args': [],         'kwargs': []}  ,
-    {'name': 'render',          'args': [],         'kwargs': ['convexity']} 
+    {'name': 'render',          'args': [],         'kwargs': ['convexity']}, 
         
     # 2D to 3D transitions
     {'name': 'linear_extrude',  'args': [],         'kwargs': ['height', 'center', 'convexity', 'twist','slices']} ,
@@ -232,9 +232,11 @@ class openscad_object( object):
         if child is a list, assume its members are all openscad_objects and
         add them all to self.children
         '''
-        if isinstance( child, list):
-            self.children.extend( child)
-            [c.set_parent(self) for c in child]
+        if isinstance( child, list) or isinstance( child, tuple):
+            
+            # self.children.extend( child)
+            # [c.set_parent(self) for c in child]
+            [self.add( c) for c in child]
         else:
             self.children.append(child)
             child.set_parent( self)
@@ -246,6 +248,38 @@ class openscad_object( object):
     def add_param(self, k, v):
         self.params[k] = v
         return self
+    
+    def __call__( self, *args):
+        '''
+        Adds all objects in args to self.  This enables OpenSCAD-like syntax,
+        e.g.:
+        union()(
+            cube()
+            sphere()
+        )
+        '''
+        return self.add(args)
+    
+    def __add__(self, x):
+        '''
+        This makes u = a+b identical to:
+        union()( a, b )
+        '''
+        return union()(self, x)
+    
+    def __sub__(self, x):
+        '''
+        This makes u = a - b identical to:
+        difference()( a, b )
+        '''        
+        return difference()(self, x)
+    
+    def __mul__(self, x):
+        '''
+        This makes u = a * b identical to:
+        intersection()( a, b )
+        '''        
+        return intersection()(self, x)
     
 
 class included_openscad_object( openscad_object):
