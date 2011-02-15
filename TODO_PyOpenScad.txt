@@ -1,5 +1,7 @@
 -- Add **kwargs to all SCAD objects so all Python-rendered SCAD functions accept
     extra unspecified arguments, since OpenSCAD has this behavior.
+-- Add 'segments' arguments to circle(), sphere() and cylinder()? This breaks 
+    with OpenSCAD, but is simpler than circle(10).add_param('$fn', 30)
 -- Unit testing.
 -- Comprehensive docs
 -- Applescript or other inter-app communication that will recompile in OpenSCAD
