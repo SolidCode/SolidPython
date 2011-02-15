@@ -2,9 +2,12 @@
     extra unspecified arguments, since OpenSCAD has this behavior.
 -- Unit testing.
 -- Comprehensive docs
--- Add handling for the #*!% SCAD characters (debug, disable, root, background)
 -- Applescript or other inter-app communication that will recompile in OpenSCAD
     whenever requested via your Python code
 -- Debugging info?  This isn't really present for SCAD, so it's hard from Python.
+-- Programmatic way to designate parameters users might want to change
+-- Gui for setting parameters - sliders, dropdowns, etc.  Well... that's a separate project.
 
--ETJ 14 Feb 2011
+Completed:
+-- Add handling for the #*!% SCAD characters (debug, disable, root, background) -ETJ 15 Feb 2011
+-- Improving syntax so it's as close as possible to OpenSCAD's -ETJ 15 Feb 2011
