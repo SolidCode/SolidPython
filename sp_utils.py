@@ -6,7 +6,81 @@ from pyopenscad import *
 from math import *
 
 RIGHT, TOP, LEFT, BOTTOM = range(4)
+EPSILON = 0.01
 
+# ==========
+# = Colors =
+# ==========
+Oak = [0.65, 0.5, 0.4];
+Pine = [0.85, 0.7, 0.45];
+Birch = [0.9, 0.8, 0.6];
+FiberBoard = [0.7, 0.67, 0.6];
+BlackPaint = [0.2, 0.2, 0.2];
+Iron = [0.36, 0.33, 0.33];
+Steel = [0.65, 0.67, 0.72];
+Stainless = [0.45, 0.43, 0.5];
+Aluminum = [0.77, 0.77, 0.8];
+Brass = [0.88, 0.78, 0.5];
+Transparent = [1, 1, 1, 0.2];
+
+# ==============
+# = Grid Plane =
+# ==============
+def grid_plane( grid_unit=12, count=10, line_weight=0.1, plane='xz'):
+    
+    # Draws a grid of thin lines in the XZ plane.  Helpful for 
+    # reference during debugging.  
+    l = count*grid_unit
+    t = union()
+    t.set_modifier('background')
+    for i in range(-count/2, count/2+1):
+        if 'xz' in plane:
+            # xz-plane
+            h = up(   i*grid_unit)( cube( [ l, line_weight, line_weight], center=True))
+            v = right(i*grid_unit)( cube( [ line_weight, line_weight, l], center=True))
+            t.add([h,v])
+        
+        # xy plane
+        if 'xy' in plane:
+            h = forward(i*grid_unit)( cube([ l, line_weight, line_weight], center=True))
+            v = right(  i*grid_unit)( cube( [ line_weight, l, line_weight], center=True))
+            t.add([h,v])
+            
+        # yz plane
+        if 'yz' in plane:
+            h = up(      i*grid_unit)( cube([ line_weight, l, line_weight], center=True))
+            v = forward( i*grid_unit)( cube([ line_weight, line_weight, l], center=True))
+            
+            t.add([h,v])
+            
+    return t
+    
+
+# ==============
+# = Directions =
+# ==============
+def up( z):
+    return translate( [0,0,z])
+
+def down( z):
+    return translate( [0,0,-z])
+
+def right( x):
+    return translate( [x, 0,0])
+
+def left( x):
+    return translate( [-x, 0,0])
+
+def forward(y):
+    return translate( [0,y,0])
+
+def back( y):
+    return translate( [0,-y,0])
+
+
+# =======
+# = Arc =
+# =======
 def arc( rad, start_degrees, end_degrees, invert=False):
     # Draws a portion of a circle specified by start_degrees & end_degrees.
     # invert=True specifies will draw portions of that arc that lie in a 
@@ -54,6 +128,9 @@ def arc( rad, start_degrees, end_degrees, invert=False):
     
     return top
 
+# =========================
+# = Arc Helpers... ignore =
+# =========================
 def next_corner_for_side( side, rad):
     corners = { RIGHT:  [rad, rad],
                 TOP:    [-rad, rad],
@@ -86,6 +163,38 @@ def which_side( degrees):
     else:                               return BOTTOM
 
  
+# =====================
+# = Bill of Materials =
+# =====================
+g_parts_dict = {}
+def part( description='', per_unit_price=None):
+    def wrap(f):
+        name = description if description else f.__name__
+        g_parts_dict[name] = [0, per_unit_price]
+        def wrapped_f( *args):
+            name = description if description else f.__name__
+            g_parts_dict[name][0] += 1
+            return f(*args)
+        
+        return wrapped_f
+    
+    return wrap
+
+def print_BOM():
+    print "%8s\t%8s\t%8s\t%8s"%("Desc.", "Count", "Unit Price", "Total Price")
+    all_costs = 0
+    for desc,(count, price) in g_parts_dict.items():
+        if count > 0:
+            if price:
+                total = price*count
+                all_costs += total
+                print "%8s\t%8d\t%8f\t%8.2f"%(desc, count, price, total)
+            else:
+                print "%8s\t%8d"%(desc, count)
+    if all_costs > 0:
+        print "_"*60
+        print "Total Cost: %.2f"%all_costs
+
  
 if __name__ == '__main__':
     res = arc( rad=20, start_degrees=120, end_degrees=30, invert=True)   
