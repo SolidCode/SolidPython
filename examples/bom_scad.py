@@ -6,7 +6,7 @@
 # Writes a scad file to '$HOME/Desktop/BOM_example.scad'
 #
 # Basically:  
-#   -- Define every part you wat in the Bill of Materials in a function
+#   -- Define every part you want in the Bill of Materials in a function
 #   -- Use the 'part' decorator ahead of the definition of each part's function
 #           e.g.:  
                 # @part()

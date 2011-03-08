@@ -28,7 +28,7 @@ Transparent = [1, 1, 1, 0.2];
 # ==============
 def grid_plane( grid_unit=12, count=10, line_weight=0.1, plane='xz'):
     
-    # Draws a grid of thin lines in the XZ plane.  Helpful for 
+    # Draws a grid of thin lines in the specified plane.  Helpful for 
     # reference during debugging.  
     l = count*grid_unit
     t = union()
@@ -166,6 +166,9 @@ def which_side( degrees):
 # =====================
 # = Bill of Materials =
 # =====================
+#   Any part defined in a method can be automatically using the @part()
+# decorator. After all parts have been created, call bill_of_materials()
+# to generate a report.  Se examples/bom_scad.py for usage
 g_parts_dict = {}
 def part( description='', per_unit_price=None):
     def wrap(f):
@@ -198,8 +201,5 @@ def bill_of_materials():
     return res
 
  
-if __name__ == '__main__':
-    res = arc( rad=20, start_degrees=120, end_degrees=30, invert=True)   
-    print scad_render(res)
     
     
