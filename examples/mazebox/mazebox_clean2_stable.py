@@ -1,5 +1,17 @@
+#   A-Mazing Box, http://www.thingiverse.com/thing:1481
+#   Copyright (C) 2009    Philipp Tiefenbacher <wizards23@gmail.com>
+#   With very minor changes for SolidPython compatibility, 8 March 2011
+#
+
+# Make sure we can import the OpenScad translation module
+import sys, os
+cur_dir = os.path.split( os.path.abspath(__file__))[0]
+sys.path.append(cur_dir+ '/../..') # Works on Windows?
+
 from math import *
 from pyopenscad import *
+# Requires pypng module, which can be found with 'pip install pypng', 
+# 'easy_install pypng', or at http://code.google.com/p/pypng/
 from testpng import *
 from inset import *
 from trianglemath import *
@@ -15,14 +27,10 @@ hn=90
 s = 0.775
 
 
-
-
 h = hn*s
 hone = h/hn
 
 toph = (h-gripH)+3
-
-
 
 depth=[]
 
@@ -37,6 +45,7 @@ for i in range(0, hn):
   depth.append([])
   for j in range(0, rn):
     depth[i].append(0.0)
+
 
 depth = getPNG('playground/maze7.png')
 depth = flip(depth)
