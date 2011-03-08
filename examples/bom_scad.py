@@ -109,6 +109,7 @@ if __name__ == '__main__':
     a = assemble()
     
     bom = bill_of_materials()
+    print bom
     
     file_out = os.path.join( os.getenv('HOME'), 'Desktop', 'BOM_example.scad')
     scad_render_to_file( a, file_out)
