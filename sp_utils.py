@@ -180,20 +180,22 @@ def part( description='', per_unit_price=None):
     
     return wrap
 
-def print_BOM():
-    print "%8s\t%8s\t%8s\t%8s"%("Desc.", "Count", "Unit Price", "Total Price")
+def bill_of_materials():
+    res = ''
+    res +=  "%8s\t%8s\t%8s\t%8s\n"%("Desc.", "Count", "Unit Price", "Total Price")
     all_costs = 0
     for desc,(count, price) in g_parts_dict.items():
         if count > 0:
             if price:
                 total = price*count
                 all_costs += total
-                print "%8s\t%8d\t%8f\t%8.2f"%(desc, count, price, total)
+                res += "%8s\t%8d\t%8f\t%8.2f\n"%(desc, count, price, total)
             else:
-                print "%8s\t%8d"%(desc, count)
+                res += "%8s\t%8d\n"%(desc, count)
     if all_costs > 0:
-        print "_"*60
-        print "Total Cost: %.2f"%all_costs
+        res += "_"*60+'\n'
+        res += "Total Cost: %.2f\n"%all_costs
+    return res
 
  
 if __name__ == '__main__':
