@@ -80,7 +80,6 @@ def m3_nut():
 
 @part()
 def doohickey():
-    d = cube([30, 10, doohickey_h], center=True)
     hole_cyl = translate([0,0,-EPSILON])(
                     cylinder(r=m3_rad, h=doohickey_h+2*EPSILON )
                 )
