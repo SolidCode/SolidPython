@@ -8,6 +8,10 @@ from math import *
 RIGHT, TOP, LEFT, BOTTOM = range(4)
 EPSILON = 0.01
 
+UP_VEC      = [ 0, 0, 1]
+RIGHT_VEC   = [ 1, 0, 0]
+BACK_VEC    = [ 0, 1, 0]
+
 # ==========
 # = Colors =
 # ==========

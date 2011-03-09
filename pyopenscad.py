@@ -104,32 +104,7 @@ def include( scad_file_path):
 # =========================================
 # = Rendering Python code to OpenSCAD code=
 # =========================================
-def scad_render( scad_object):
-    # FIXME: If all this explanation is needed, why not just make o.render() private
-    # so people aren't tempted to use it?
-    
-    # NOTE:  scad_render renders an entire TREE of objects, not just scad_object.
-    # This is necessary to enable include/use behavior and lets you just render what you've
-    # done without having to keep track of the root of your SCAD tree.  
-    # If you want to render JUST one object's scad, call scad_obj.render()
-    # e.g.:
-    # You've defined some geometry in Python:
-    #   t = union()
-    #   r = rect( 10)
-    #   c = circle( 20)
-    #   t.add(r)
-    #   t.add(c)
-    
-    #   # Render the whole scene:
-    #   whole_scene_scad = scad_render(c)
-    #   # ONLY the circle's scad code
-    #   just_circle = c.render()
-    
-    # Also note that o.render() will only work 100% for  SCAD-native objects you've defined.
-    # For scad code you've use()d or include()d, you'll have to call scad_render( o)
-    # to get the correct include messages back in the rendered scad code. 
-    
-    
+def scad_render( scad_object, file_header=''):
     # Find the root of the tree, calling x.parent until there is none
     root = scad_object
     while root.parent:
@@ -149,11 +124,11 @@ def scad_render( scad_object):
     
     # and render the string
     includes = ''.join(include_strings) + "\n"
-    scad_body = root.render()
-    return includes + scad_body
+    scad_body = root._render()
+    return file_header + includes + scad_body
 
-def scad_render_to_file( scad_object, filepath):
-    rendered_string = scad_render( scad_object)
+def scad_render_to_file( scad_object, filepath, file_header=''):
+    rendered_string = scad_render( scad_object, file_header)
     # This write is destructive, and ought to do some checks that the write
     # was successful.
     f = open( filepath,"w")
@@ -187,7 +162,14 @@ class openscad_object( object):
         self.modifier = string_vals.get(m.lower(), '')
         return self
     
-    def render(self):
+    def _render(self):
+        '''
+        NOTE: In general, you won't want to call this method. For most purposes,
+        you really want scad_render(), which will render an entire tree rather 
+        than just a given object and its children. 
+        Calling obj._render also won't include necessary 'use' or 'include' statements
+        
+        '''        
         s = "\n" + self.modifier + self.name + "("
         first = True
         
@@ -218,7 +200,7 @@ class openscad_object( object):
         if self.children != None and len(self.children) > 0:
             s += " {"
             for child in self.children:
-                s += indent(child.render())
+                s += indent(child._render())
             s += "\n}"
         else:
             s += ";"
@@ -233,9 +215,6 @@ class openscad_object( object):
         add them all to self.children
         '''
         if isinstance( child, list) or isinstance( child, tuple):
-            
-            # self.children.extend( child)
-            # [c.set_parent(self) for c in child]
             [self.add( c) for c in child]
         else:
             self.children.append(child)

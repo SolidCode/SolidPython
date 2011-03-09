@@ -139,7 +139,7 @@ if part==1:
   d.add(intersection().add(bumpMapCylinder(innerR, hn+2, wall, 0).set_modifier("")).add(translate([0,0,baseH]).add(cylinder(r=innerR+2*wall,h=h*1.1).set_modifier(""))))
   #u.add()
   print "$fa=2; $fs=0.5;\n"
-  print d.render()
+  print d._render()
 elif part==2:
   top = difference()
   u = union()
@@ -157,7 +157,7 @@ elif part==2:
     u2.add(translate([(r+wall-0.3)*cos(a),(r+wall-0.3)*sin(a), toph-6]).add(sphere(r=2.4)))
   #top.add(cylinder(r = innerR+wall+gap, h=h))
   print "$fa=2; $fs=0.5;\n"
-  print top.render()
+  print top._render()
 else:
   top = difference()
   u = union()
@@ -175,7 +175,7 @@ else:
     u2.add(translate([(r+wall)*cos(a),(r+wall)*sin(a), 4]).add(sphere(r=2.3)))
   #top.add(cylinder(r = innerR+wall+gap, h=h))
   print "//$fn=20;\n"
-  print top.render()
+  print top._render()
 
 
 
