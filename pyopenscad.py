@@ -127,10 +127,18 @@ def scad_render( scad_object, file_header=''):
     scad_body = root._render()
     return file_header + includes + scad_body
 
-def scad_render_to_file( scad_object, filepath, file_header=''):
+def scad_render_to_file( scad_object, filepath=None, file_header=''):
     rendered_string = scad_render( scad_object, file_header)
     # This write is destructive, and ought to do some checks that the write
     # was successful.
+    # If filepath isn't supplied, place a .scad file with the same name
+    # as the calling module next to it
+    if not filepath:
+        frm = inspect.stack()[1]
+        calling_module = inspect.getmodule(frm[0])  
+        calling_file = os.path.abspath( calling_module.__file__) 
+        filepath = os.path.splitext( calling_file)[0] + '.scad'
+    
     f = open( filepath,"w")
     f.write( rendered_string)
     f.close
