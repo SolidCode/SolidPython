@@ -7,6 +7,7 @@ from math import *
 
 RIGHT, TOP, LEFT, BOTTOM = range(4)
 EPSILON = 0.01
+TAU = 2*pi
 
 UP_VEC      = [ 0, 0, 1]
 RIGHT_VEC   = [ 1, 0, 0]
@@ -26,6 +27,16 @@ Stainless = [0.45, 0.43, 0.5];
 Aluminum = [0.77, 0.77, 0.8];
 Brass = [0.88, 0.78, 0.5];
 Transparent = [1, 1, 1, 0.2];
+
+# ========================
+# = Degrees <==> Radians =
+# ========================
+def degrees( x_radians):
+    return 360.0*x_radians/TAU
+
+def radians( x_degrees):
+    return x_degrees/360.0*TAU
+
 
 # ==============
 # = Grid Plane =
@@ -85,50 +96,55 @@ def back( y):
 # =======
 # = Arc =
 # =======
-def arc( rad, start_degrees, end_degrees, invert=False):
+def arc( rad, start_degrees, end_degrees, invert=False, segments=None):
     # Draws a portion of a circle specified by start_degrees & end_degrees.
     # invert=True specifies will draw portions of that arc that lie in a 
     # square of sidelength 2*rad, but not in the circle itself.  This is
     # useful for creating fillets
-    
-    start_degrees %= 360
-    end_degrees %= 360
-    if start_degrees > end_degrees:
-        start_degrees, end_degrees = end_degrees, start_degrees
+    if start_degrees > 360 or start_degrees < 0:
+        start_degrees %= 360
+    if end_degrees > 360 or end_degrees < 0:
+        end_degrees %= 360
+    # if start_degrees > end_degrees:
+    #     start_degrees, end_degrees = end_degrees, start_degrees
     
     start_point = [rad* cos( radians( start_degrees)), rad*sin( radians( start_degrees))] 
     end_point   = [rad* cos( radians( end_degrees)),   rad*sin( radians( end_degrees))] 
-        
+    
     points = [[0,0], start_point]
     
     # second point is on the square, but in line (vertically or horizontally) with start_point
     # penultimate_point is the same w.r.t to end_point
-    if start_degrees not in [0, 90, 180, 270]: 
+    if start_degrees not in [0, 90, 180, 270, 360]: 
         points.append( side_point_for_degrees( start_degrees, rad))
     
-        
     # From start_point, work counterclockwise to end_point, with all intermediate 
     # points on the circumscribed square
-    for side in range( which_side(start_degrees), which_side(end_degrees)):
+    start_side = which_side(start_degrees)
+    end_side = which_side( end_degrees)
+    if end_side < start_side:
+        end_side += 4
+    for side in range( start_side, end_side):
         points.append( next_corner_for_side( side, rad))
         
     
-    if end_degrees not in [0, 90, 180, 270]: 
+    if end_degrees not in [0, 90, 180, 270, 360]: 
         points.append( side_point_for_degrees( end_degrees, rad))
     points.append( end_point)
     paths = [range(len(points))]
     
     square_poly = polygon( points, paths)
-    whole_circle = circle( rad)
+    
+    if segments:
+        circle_segs = ( 360 * segments)/abs( end_degrees - start_degrees)
+        whole_circle = circle( rad, segments=circle_segs)
+    else:
+        whole_circle = circle( rad)
         
     if invert:
-        top = difference()
-        top.add( square_poly)
-        top.add( whole_circle)
+        top = square_poly - whole_circle
     else:
-        top = intersection()
-        top.add( whole_circle)
-        top.add( square_poly)
+        top = whole_circle * square_poly
     
     return top
 
@@ -141,7 +157,7 @@ def next_corner_for_side( side, rad):
                 LEFT:   [-rad, -rad],
                 BOTTOM: [rad, -rad]
          }
-    return corners[side]
+    return corners[side % 4]
 
 def side_point_for_degrees( degrees, rad):
     # returns a line on a circle's circumscribed square
@@ -166,7 +182,7 @@ def which_side( degrees):
     if degrees > 135 and degrees <=225: return LEFT
     else:                               return BOTTOM
 
- 
+
 # =====================
 # = Bill of Materials =
 # =====================
