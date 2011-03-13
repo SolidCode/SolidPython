@@ -63,6 +63,18 @@ openscad_builtins = [
     {'name': 'assign',          'args': [],         'kwargs': []}   # Not really needed for Python.  Also needs a **args argument so it accepts anything
 ]
 
+# Some functions need custom code in them; put that code here
+builtin_literals = {
+    'circle': '''class circle( openscad_object):
+        def __init__( self, r, segments=None):
+            if segments:
+                openscad_object.__init__(self, 'circle', {'r': r, '$fn': segments})
+            else:
+                openscad_object.__init__(self, 'circle', {'r': r, })
+        
+'''%vars()
+
+}
 
 # ===============
 # = Including OpenSCAD code =
@@ -154,7 +166,6 @@ class openscad_object( object):
         self.children = []
         self.modifier = ""
         self.parent= None
-        self.special_vars = {}
     
     def set_modifier(self, m):
         # Used to add one of the 4 single-character modifiers: #(debug)  !(root) %(background) or *(disable)
@@ -236,6 +247,15 @@ class openscad_object( object):
         self.params[k] = v
         return self
     
+    def copy( self):
+        # Provides a copy of this object and all children, 
+        # but doesn't copy self.parent, meaning the new object belongs
+        # to a different tree
+        other = openscad_object( self.name, self.params)
+        for c in self.children:
+            other.add( c.copy())
+        return other
+
     def __call__( self, *args):
         '''
         Adds all objects in args to self.  This enables OpenSCAD-like syntax,
@@ -405,8 +425,12 @@ def parse_scad_callables( scad_code_str):
 
 # Dynamically add all builtins to this namespace on import
 for sym_dict in openscad_builtins:
-    class_str = new_openscad_class_str( sym_dict['name'], sym_dict['args'], sym_dict['kwargs'])
+    # entries in 'builtin_literals' override the entries in 'openscad_builtins'
+    if sym_dict['name'] in builtin_literals:
+        class_str = builtin_literals[ sym_dict['name']]
+    else:
+        class_str = new_openscad_class_str( sym_dict['name'], sym_dict['args'], sym_dict['kwargs'])
+    
     exec class_str 
-
-       
+    
 
