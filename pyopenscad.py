@@ -71,8 +71,14 @@ builtin_literals = {
                 openscad_object.__init__(self, 'circle', {'r': r, '$fn': segments})
             else:
                 openscad_object.__init__(self, 'circle', {'r': r, })
-        
-'''%vars()
+    
+'''%vars(),
+    'polygon': '''class polygon( openscad_object):
+        def __init__( self, points, paths=None):
+            if not paths:
+                paths = [ range( len( points))]
+            openscad_object.__init__( self, 'polygon', {'points':points, 'paths': paths})
+'''
 
 }
 
