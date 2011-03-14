@@ -94,7 +94,7 @@ def use( scad_file_path, use_not_include=True):
         contents = module.read()
         module.close()
     except Exception, e:
-        raise( "Failed to import SCAD module '%(scad_file_path)s' with error: %(e)s "%vars())
+        raise Exception( "Failed to import SCAD module '%(scad_file_path)s' with error: %(e)s "%vars())
         
     # Once we have a list of all callables and arguments, dynamically
     # add openscad_object subclasses for all callables to the calling module's
