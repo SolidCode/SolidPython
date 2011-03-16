@@ -71,6 +71,7 @@ def grid_plane( grid_unit=12, count=10, line_weight=0.1, plane='xz'):
     return t
     
 
+
 # ==============
 # = Directions =
 # ==============
@@ -220,6 +221,21 @@ def bill_of_materials():
         res += "Total Cost: %.2f\n"%all_costs
     return res
 
- 
+
+# ================
+# = Bounding Box =
+# ================ 
+def bounding_box( points):
+    all_x = []; all_y = []; all_z = []
+    for p in points:
+        all_x.append( p[0])
+        all_y.append( p[1])
+        if len(p) > 2:
+            all_z.append( p[2])
+        else:
+            all_z.append(0)
     
+    return [ [min(all_x), min(all_y), min(all_z)], [max(all_x), max(all_y), max(all_z)]]
+    
+
     
