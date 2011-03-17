@@ -21,7 +21,7 @@ openscad_builtins = [
     # 3D primitives
     {'name': 'sphere',          'args': [],         'kwargs': ['r']} ,
     {'name': 'cube',            'args': [],         'kwargs': ['size', 'center']} ,
-    {'name': 'cylinder',        'args': [],         'kwargs': ['r','h']}  ,
+    {'name': 'cylinder',        'args': [],         'kwargs': ['r','h','r1', 'r2', 'center']}  ,
     {'name': 'polyhedron',      'args': ['points', 'triangles' ], 'kwargs': ['convexity']} ,
     
     # Boolean operations
@@ -72,7 +72,7 @@ builtin_literals = {
             else:
                 openscad_object.__init__(self, 'circle', {'r': r, })
     
-'''%vars(),
+''',
     'polygon': '''class polygon( openscad_object):
         def __init__( self, points, paths=None):
             if not paths:
@@ -101,17 +101,15 @@ def use( scad_file_path, use_not_include=True):
         module.close()
     except Exception, e:
         raise Exception( "Failed to import SCAD module '%(scad_file_path)s' with error: %(e)s "%vars())
-        
+    
     # Once we have a list of all callables and arguments, dynamically
     # add openscad_object subclasses for all callables to the calling module's
     # namespace.
     symbols_dicts = extract_callable_signatures( scad_file_path)
-    frm = inspect.stack()[1]
-    calling_module = inspect.getmodule(frm[0])    
     
     for sd in symbols_dicts:
         class_str = new_openscad_class_str( sd['name'], sd['args'], sd['kwargs'], scad_file_path, use_not_include)
-        exec class_str in calling_module.__dict__
+        exec class_str in calling_module().__dict__
     
     return True
 
@@ -145,16 +143,35 @@ def scad_render( scad_object, file_header=''):
     scad_body = root._render()
     return file_header + includes + scad_body
 
-def scad_render_to_file( scad_object, filepath=None, file_header=''):
+def scad_render_to_file( scad_object, filepath=None, file_header='', include_orig_code=False):
     rendered_string = scad_render( scad_object, file_header)
+    
+    calling_file = os.path.abspath( calling_module().__file__) 
+    
+    if include_orig_code:
+        # Once a SCAD file has been created, it's difficult to reconstruct
+        # how it got there, since it has no variables, modules, etc.  So, include
+        # the Python code that generated the scad code as comments at the end of 
+        # the SCAD code
+        pyopenscad_str = open(calling_file, 'r').read()
+    
+        pyopenscad_str = '''
+/***********************************************
+******      PyOpenSCAD code:       *************
+************************************************
+ 
+%(pyopenscad_str)s 
+ 
+***********************************************/
+                            
+'''%vars()        
+        rendered_string += pyopenscad_str
+    
     # This write is destructive, and ought to do some checks that the write
     # was successful.
     # If filepath isn't supplied, place a .scad file with the same name
     # as the calling module next to it
     if not filepath:
-        frm = inspect.stack()[1]
-        calling_module = inspect.getmodule(frm[0])  
-        calling_file = os.path.abspath( calling_module.__file__) 
         filepath = os.path.splitext( calling_file)[0] + '.scad'
     
     f = open( filepath,"w")
@@ -261,7 +278,7 @@ class openscad_object( object):
         for c in self.children:
             other.add( c.copy())
         return other
-
+    
     def __call__( self, *args):
         '''
         Adds all objects in args to self.  This enables OpenSCAD-like syntax,
@@ -311,6 +328,18 @@ class included_openscad_object( openscad_object):
         openscad_object.__init__( self, name, params)
     
 
+
+def calling_module():
+    '''
+    Returns the module *2* back in the frame stack.  That means:
+    code in module A calls code in module B, which asks calling_module()
+    for module A.
+    
+    Got that?
+    '''
+    frm = inspect.stack()[2]
+    calling_mod = inspect.getmodule( frm[0])
+    return calling_mod
 
 def new_openscad_class_str( class_name, args=[], kwargs=[], include_file_path=None, use_not_include=True):
     args_str = ''
