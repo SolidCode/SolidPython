@@ -123,8 +123,6 @@ def include( scad_file_path):
 def scad_render( scad_object, file_header=''):
     # Find the root of the tree, calling x.parent until there is none
     root = scad_object
-    while root.parent:
-        root = root.parent
     
     # Scan the tree for all instances of 
     # included_openscad_object, storing their strings
@@ -200,17 +198,15 @@ class openscad_object( object):
                         '#':'#',
                         '%':'%',
                         '!':'!'}
-        
+         
         self.modifier = string_vals.get(m.lower(), '')
         return self
     
     def _render(self):
         '''
         NOTE: In general, you won't want to call this method. For most purposes,
-        you really want scad_render(), which will render an entire tree rather 
-        than just a given object and its children. 
-        Calling obj._render also won't include necessary 'use' or 'include' statements
-        
+        you really want scad_render(), 
+        Calling obj._render won't include necessary 'use' or 'include' statements
         '''        
         s = "\n" + self.modifier + self.name + "("
         first = True
