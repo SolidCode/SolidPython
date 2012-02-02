@@ -1,5 +1,5 @@
 #! /usr/bin/python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 import os, sys, re
 
 # Assumes SolidPython is in site-packages or elsewhwere in sys.path
