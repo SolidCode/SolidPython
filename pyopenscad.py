@@ -1,5 +1,5 @@
 #! /usr/bin/python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 #    Simple Python OpenSCAD Code Generator
 #    Copyright (C) 2009    Philipp Tiefenbacher <wizards23@gmail.com>
@@ -31,7 +31,7 @@ openscad_builtins = [
     
     # Transforms
     {'name': 'translate',       'args': [],         'kwargs': ['v']} ,
-    {'name': 'scale',           'args': [],         'kwargs': ['s']} ,
+    {'name': 'scale',           'args': [],         'kwargs': ['v']} ,
     {'name': 'rotate',          'args': [],         'kwargs': ['a', 'v']} ,
     {'name': 'mirror',          'args': ['normal'], 'kwargs': []},
     {'name': 'multmatrix',      'args': ['n'],      'kwargs': []},

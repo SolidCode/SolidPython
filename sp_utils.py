@@ -1,5 +1,5 @@
 #! /usr/bin/python2.5
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 import os, sys, re
 
 from pyopenscad import *

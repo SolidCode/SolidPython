@@ -1,5 +1,5 @@
 #! /usr/bin/python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 # Basic shape with several repeated parts, demonstrating the use of 
 # sp_utils.bill_of_materials() 
