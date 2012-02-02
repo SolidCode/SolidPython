@@ -1,5 +1,5 @@
 #! /usr/bin/python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 import sys, os
 
 # Make sure we have access to pyopenscad

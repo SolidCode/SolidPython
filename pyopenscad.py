@@ -1,5 +1,5 @@
 #! /usr/bin/python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 #    Simple Python OpenSCAD Code Generator
 #    Copyright (C) 2009    Philipp Tiefenbacher <wizards23@gmail.com>
