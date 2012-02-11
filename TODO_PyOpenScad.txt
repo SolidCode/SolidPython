@@ -1,7 +1,5 @@
 -- Add **kwargs to all SCAD objects so all Python-rendered SCAD functions accept
     extra unspecified arguments, since OpenSCAD has this behavior.
--- Add 'segments' arguments to circle(), sphere() and cylinder()? This breaks 
-    with OpenSCAD, but is simpler than circle(10).add_param('$fn', 30)
 -- Unit testing.
 -- Comprehensive docs
 -- Applescript or other inter-app communication that will recompile in OpenSCAD
@@ -10,6 +8,9 @@
 -- Programmatic way to designate parameters users might want to change
 -- Gui for setting parameters - sliders, dropdowns, etc.  Well... that's a separate project.
 -- More robust threading -- lead-in, lead-out, and cross-sectional support
+-- Some way to interrogate objects about their shape.  bounding_box() for all
+    openscad objects? With that in place, you could do things like 'move piece 
+    A up so its northern edge lines up with object B's northern edge.
 
 
 Completed:
@@ -18,3 +19,5 @@ Completed:
 -- By default, let polygon assume that connectivity between specified points (the paths argument) is
     in the order specified in the points array.  Without this, there's always 
     boilerplate: polygon( points=arr, paths= range(len(arr)))
+-- Add 'segments' arguments to circle(), sphere() and cylinder()? This breaks 
+    with OpenSCAD, but is simpler than circle(10).add_param('$fn', 30)    

@@ -15,13 +15,13 @@ import inspect
 openscad_builtins = [
     # 2D primitives
     {'name': 'polygon',         'args': ['points', 'paths'], 'kwargs': []} ,
-    {'name': 'circle',          'args': [],         'kwargs': ['r']} ,
+    {'name': 'circle',          'args': [],         'kwargs': ['r', 'segments']} ,
     {'name': 'square',          'args': [],         'kwargs': ['size', 'center']} ,
     
     # 3D primitives
-    {'name': 'sphere',          'args': [],         'kwargs': ['r']} ,
+    {'name': 'sphere',          'args': [],         'kwargs': ['r', 'segments']} ,
     {'name': 'cube',            'args': [],         'kwargs': ['size', 'center']} ,
-    {'name': 'cylinder',        'args': [],         'kwargs': ['r','h','r1', 'r2', 'center']}  ,
+    {'name': 'cylinder',        'args': [],         'kwargs': ['r','h','r1', 'r2', 'center', 'segments']}  ,
     {'name': 'polyhedron',      'args': ['points', 'triangles' ], 'kwargs': ['convexity']} ,
     
     # Boolean operations
@@ -65,19 +65,12 @@ openscad_builtins = [
 
 # Some functions need custom code in them; put that code here
 builtin_literals = {
-    'circle': '''class circle( openscad_object):
-        def __init__( self, r, segments=None):
-            if segments:
-                openscad_object.__init__(self, 'circle', {'r': r, '$fn': segments})
-            else:
-                openscad_object.__init__(self, 'circle', {'r': r, })
-    
-''',
     'polygon': '''class polygon( openscad_object):
         def __init__( self, points, paths=None):
             if not paths:
                 paths = [ range( len( points))]
             openscad_object.__init__( self, 'polygon', {'points':points, 'paths': paths})
+        
 '''
 
 }
@@ -210,9 +203,14 @@ class openscad_object( object):
         '''        
         s = "\n" + self.modifier + self.name + "("
         first = True
-        
+            
+        # OpenSCAD doesn't have a 'segments' argument, but it does 
+        # have '$fn'.  Swap one for the other
+        if 'segments' in self.params:
+            self.params['$fn'] = self.params.pop('segments')
+            
         valid_keys = self.params.keys()
-        
+            
         # intkeys are the positional parameters
         intkeys = filter(lambda x: type(x)==int, valid_keys)
         intkeys.sort()
@@ -280,7 +278,7 @@ class openscad_object( object):
         Adds all objects in args to self.  This enables OpenSCAD-like syntax,
         e.g.:
         union()(
-            cube()
+            cube(),
             sphere()
         )
         '''
@@ -289,21 +287,21 @@ class openscad_object( object):
     def __add__(self, x):
         '''
         This makes u = a+b identical to:
-        union()( a, b )
+        u = union()( a, b )
         '''
         return union()(self, x)
     
     def __sub__(self, x):
         '''
         This makes u = a - b identical to:
-        difference()( a, b )
+        u = difference()( a, b )
         '''        
         return difference()(self, x)
     
     def __mul__(self, x):
         '''
         This makes u = a * b identical to:
-        intersection()( a, b )
+        u = intersection()( a, b )
         '''        
         return intersection()(self, x)
     
