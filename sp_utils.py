@@ -16,17 +16,17 @@ FORWARD_VEC = [ 0, 1, 0]
 # ==========
 # = Colors =
 # ==========
-Oak = [0.65, 0.5, 0.4];
-Pine = [0.85, 0.7, 0.45];
-Birch = [0.9, 0.8, 0.6];
-FiberBoard = [0.7, 0.67, 0.6];
-BlackPaint = [0.2, 0.2, 0.2];
-Iron = [0.36, 0.33, 0.33];
-Steel = [0.65, 0.67, 0.72];
-Stainless = [0.45, 0.43, 0.5];
-Aluminum = [0.77, 0.77, 0.8];
-Brass = [0.88, 0.78, 0.5];
-Transparent = [1, 1, 1, 0.2];
+Oak         = [0.65, 0.50, 0.40];
+Pine        = [0.85, 0.70, 0.45];
+Birch       = [0.90, 0.80, 0.60];
+FiberBoard  = [0.70, 0.67, 0.60]   ;
+BlackPaint  = [0.20, 0.20, 0.20];
+Iron        = [0.36, 0.33, 0.33];
+Steel       = [0.65, 0.67, 0.72];
+Stainless   = [0.45, 0.43, 0.50]  ;
+Aluminum    = [0.77, 0.77, 0.80];
+Brass       = [0.88, 0.78, 0.50];
+Transparent = [1,    1,    1,   0.2];
 
 # ========================
 # = Degrees <==> Radians =
@@ -149,6 +149,11 @@ def arc( rad, start_degrees, end_degrees, invert=False, segments=None):
     
     return top
 
+# TODO: arc_to that creates an arc from point to another point.
+# This is useful for making paths.  See the SVG path command:
+# See: http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
+
+
 # =========================
 # = Arc Helpers... ignore =
 # =========================
@@ -243,10 +248,36 @@ def bounding_box( points):
 # = Hardware dimensions =
 # =======================
 screw_dimensions = {
-    'm3': { 'nut_thickness':2.4, 'nut_inner_diam': 5.4, 'nut_outer_diam':6.1, 'screw_outer_diam':2.9},
-
+    'm3': { 'nut_thickness':2.4, 'nut_inner_diam': 5.4, 'nut_outer_diam':6.1, 'screw_outer_diam':3.0, 'cap_diam':5.5 ,'cap_height':3.0 },
+    'm4': { 'nut_thickness':3.1, 'nut_inner_diam': 7.0, 'nut_outer_diam':7.9, 'screw_outer_diam':4.0, 'cap_diam':6.9 ,'cap_height':3.9 },
 }
 
+def screw( screw_type='m3', screw_length=16):
+    dims = screw_dimensions[screw_type.lower()]
+    shaft_rad  = dims['screw_outer_diam']/2
+    cap_rad    = dims['cap_diam']/2
+    cap_height = dims['cap_height']
+    
+    ret = union()(
+        cylinder( shaft_rad, screw_length),
+        up(screw_length)(
+            cylinder( cap_rad, cap_height)
+        )
+    )
+    return ret
+
+def nut( screw_type='m3'):
+    dims = screw_dimensions[screw_type.lower()]
+    outer_rad = dims['nut_outer_diam']
+    inner_rad = dims['screw_outer_diam']
+    
+    ret = difference()(
+        circle( outer_rad, segments=6),
+        circle( inner_rad)
+    )
+    return ret
+
+    
 # ==============
 # = Transforms =
 # ==============

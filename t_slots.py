@@ -81,27 +81,46 @@ def t_slot( poly, point=None, normal=None,
     gap = .05
     
     tab = tab_poly()
+    slot = nut_trap_slot( screw_type, screw_length)
+
+    tab  = transform_to_point( tab,  point, normal, two_d=True)
+    slot = transform_to_point( slot, point, normal, two_d=True)
+            
+    return poly + tab - slot
+
+def nut_trap_slot( screw_type='m3', screw_length=12, material_thickness=5):
+    # This shape has a couple uses.
+    # 1) Right angle joint between two pieces of material.
+    # A bolt goes through the second piece and into the first. 
+    
+    # 2) Set-screw for attaching to motor spindles. 
+    # Bolt goes full length into a sheet of material.  Set material_thickness
+    # to something small (1-2 mm) to make sure there's adequate room to 
+    # tighten onto the shaft
+    
     
     # Only valid for m3 screws now
     screw_dict = screw_dimensions.get( screw_type.lower())
     if screw_dict:
         screw_w = screw_dict['screw_outer_diam']
         screw_w2 = screw_w/2
-        nut_hole_x = (screw_dict[ 'nut_inner_diam'] + .2)/2 # NOTE: How are these tolerances?
-        nut_hole_h = screw_dict['nut_thickness'] + .5
+        nut_hole_x = (screw_dict[ 'nut_inner_diam'] + 0.2)/2 # NOTE: How are these tolerances?
+        nut_hole_h = screw_dict['nut_thickness'] + 0.5
         slot_depth = material_thickness - screw_length 
-        past_nut_overhang = 2
-        nut_loc = slot_depth  + past_nut_overhang + nut_hole_h
+        # If a nut isn't far enough into the material, the sections
+        # that hold the nut in may break off.  Make sure it's at least
+        # half a centimeter.  More would be better, actually
+        nut_loc = -5
     else:
         raise ValueError( "Don't have screw dimensions for requested screw size %s"%screw_type)
     
-    slot_pts = [ [ screw_w2, EPSILON ],
-            [ screw_w2, nut_loc],
-            [ nut_hole_x, nut_loc], 
-            [ nut_hole_x, nut_loc - nut_hole_h],
-            [ screw_w2, nut_loc - nut_hole_h],
-            [ screw_w2, slot_depth],    
-            ]
+    slot_pts = [[ screw_w2, EPSILON ],
+                [ screw_w2, nut_loc],
+                [ nut_hole_x, nut_loc], 
+                [ nut_hole_x, nut_loc - nut_hole_h],
+                [ screw_w2, nut_loc - nut_hole_h],
+                [ screw_w2, slot_depth],    
+                ]
     # mirror the slot points on the left
     slot_pts += [[-x, y] for x,y in slot_pts][ -1::-1]
             
@@ -114,12 +133,7 @@ def t_slot( poly, point=None, normal=None,
                 translate( [nut_hole_x, nut_loc])( circle( tab_curve_rad)),
                 translate( [-nut_hole_x, nut_loc])( circle( tab_curve_rad))
             )
-    
-    tab  = transform_to_point( tab,  point, normal, two_d=True)
-    slot = transform_to_point( slot, point, normal, two_d=True)
-            
-    return poly + tab - slot
-
+    return slot
 
 def assembly():
     a = union()
