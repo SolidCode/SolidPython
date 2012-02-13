@@ -100,8 +100,8 @@ def back( y):
 def arc( rad, start_degrees, end_degrees, segments=None):
     # Note: the circle arc is drawn from gets segments,
     # not the arc itself.  
-    bottom_half_square = back( rad/2)(square( [2*rad, rad], center=True))
-    top_half_square = forward( rad/2 )( square( [2*rad, rad], center=True))
+    bottom_half_square = back( rad/2.0)(square( [2*rad, rad], center=True))
+    top_half_square = forward( rad/2.0)( square( [2*rad, rad], center=True))
     
     if abs( (end_degrees - start_degrees)%360) <=  180:
         end_angle = end_degrees - 180
