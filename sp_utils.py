@@ -97,97 +97,33 @@ def back( y):
 # =======
 # = Arc =
 # =======
-def arc( rad, start_degrees, end_degrees, invert=False, segments=None):
-    # Draws a portion of a circle specified by start_degrees & end_degrees.
-    # invert=True specifies will draw portions of that arc that lie in a 
-    # square of sidelength 2*rad, but not in the circle itself.  This is
-    # useful for creating fillets
-    if start_degrees > 360 or start_degrees < 0:
-        start_degrees %= 360
-    if end_degrees > 360 or end_degrees < 0:
-        end_degrees %= 360
-    # if start_degrees > end_degrees:
-    #     start_degrees, end_degrees = end_degrees, start_degrees
+def arc( rad, start_degrees, end_degrees, segments=None):
+    # Note: the circle arc is drawn from gets segments,
+    # not the arc itself.  
+    bottom_half_square = back( rad/2)(square( [2*rad, rad], center=True))
+    top_half_square = forward( rad/2 )( square( [2*rad, rad], center=True))
     
-    start_point = [rad* cos( radians( start_degrees)), rad*sin( radians( start_degrees))] 
-    end_point   = [rad* cos( radians( end_degrees)),   rad*sin( radians( end_degrees))] 
-    
-    points = [[0,0], start_point]
-    
-    # second point is on the square, but in line (vertically or horizontally) with start_point
-    # penultimate_point is the same w.r.t to end_point
-    if start_degrees not in [0, 90, 180, 270, 360]: 
-        points.append( _side_point_for_degrees( start_degrees, rad))
-    
-    # From start_point, work counterclockwise to end_point, with all intermediate 
-    # points on the circumscribed square
-    start_side = _which_side(start_degrees)
-    end_side = _which_side( end_degrees)
-    if end_side < start_side:
-        end_side += 4
-    for side in range( start_side, end_side):
-        points.append( _next_corner_for_side( side, rad))
+    if abs( (end_degrees - start_degrees)%360) <=  180:
+        end_angle = end_degrees - 180
         
-    
-    if end_degrees not in [0, 90, 180, 270, 360]: 
-        points.append( _side_point_for_degrees( end_degrees, rad))
-    points.append( end_point)
-    paths = [range(len(points))]
-    
-    square_poly = polygon( points, paths)
-    
-    if segments:
-        circle_segs = ( 360 * segments)/abs( end_degrees - start_degrees)
-        whole_circle = circle( rad, segments=circle_segs)
+        ret = difference()(
+            circle(rad, segments=segments),
+            rotate( a=start_degrees)(   bottom_half_square.copy()),
+            rotate( a= end_angle)(      bottom_half_square.copy())
+        )
     else:
-        whole_circle = circle( rad)
-        
-    if invert:
-        top = square_poly - whole_circle
-    else:
-        top = whole_circle * square_poly
-    
-    return top
+        ret = intersection( )(
+            circle( rad, segments=segments),
+            union()(
+                rotate( a=start_degrees)(   top_half_square.copy()),
+                rotate( a=end_degrees)(     bottom_half_square.copy())
+            )
+        )
+    return ret
 
 # TODO: arc_to that creates an arc from point to another point.
 # This is useful for making paths.  See the SVG path command:
 # See: http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
-
-
-# =========================
-# = Arc Helpers... ignore =
-# =========================
-def _next_corner_for_side( side, rad):
-    corners = { RIGHT:  [rad, rad],
-                TOP:    [-rad, rad],
-                LEFT:   [-rad, -rad],
-                BOTTOM: [rad, -rad]
-         }
-    return corners[side % 4]
-
-def _side_point_for_degrees( degrees, rad):
-    # returns a line on a circle's circumscribed square
-    # that is horizontally or vertically aligned with the
-    # point at degrees on the circle
-    x = rad * cos( radians( degrees))
-    y = rad * sin( radians( degrees))
-    
-    side = _which_side(degrees)
-    points = {  RIGHT:  [rad, y],
-                TOP:    [x, rad],
-                LEFT:   [-rad, y],
-                BOTTOM: [x, -rad],
-            }
-    
-    return points[side]
-
-def _which_side( degrees):
-    # sides:  0: right, 1: top, 2:left, 3:bottom
-    if degrees > 315 or degrees <=45:   return RIGHT
-    if degrees > 45 and degrees <=135:  return TOP
-    if degrees > 135 and degrees <=225: return LEFT
-    else:                               return BOTTOM
-
 
 # =====================
 # = Bill of Materials =
