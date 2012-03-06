@@ -7,21 +7,20 @@ code from Python code with minimal overhead.  Here's a simple example:
     
 This Python code: 
 
-```from pyopenscad import *
-d = difference()(
-    cube(10),
-    sphere(15)
-)
-print scad_render( d)
-```
+    from pyopenscad import *
+    d = difference()(
+        cube(10),
+        sphere(15)
+    )
+    print scad_render( d)
+ 
 
 Generates this OpenSCAD code:
 
-```difference(){
-	cube(10);
-	sphere(15);
-}
-```
+    difference(){
+        cube(10);
+        sphere(15);
+    }
 
 Steps to using PyOpenSCAD
 -------------------------
@@ -31,28 +30,29 @@ Steps to using PyOpenSCAD
 *   OpenSCAD uses curly-brace blocks ({}) to create its tree.  PyOpenSCAD uses
     parentheses with comma-delimited lists.
     *   OpenSCAD:
-```difference(){
-    cube(10);
-    sphere(15);
-}
-```
+    
+    difference(){
+        cube(10);
+        sphere(15);
+    }
+
     *   PyOpenSCAD:
-```d = difference()(
-    cube(10),  # Note the comma between each element!
-    sphere(15)
-)
-```
+    
+    d = difference()(
+        cube(10),  # Note the comma between each element!
+        sphere(15)
+    )
            
 *   Call ```scad_render( py_scad_obj)``` to generate SCAD code. This returns a string 
     of valid OpenSCAD code.
 *   *or*: call ```scad_render_to_file( py_scad_obj, filepath)``` to
     store that code in a file. 
-    *   If 'filepath' is open in the OpenSCAD IDE and Design =>
-        'Automatic Reload and Compile' is checked, calling
-        scad_render_to_file() from Python will load the object in
-        the IDE.
-    *   Alternately, you could call OpenSCAD's command line and render straight 
-        to STL.   
+*   If 'filepath' is open in the OpenSCAD IDE and Design =>
+    'Automatic Reload and Compile' is checked, calling
+    scad_render_to_file() from Python will load the object in
+    the IDE.
+*   Alternately, you could call OpenSCAD's command line and render straight 
+    to STL.   
 
 Extra syntactic sugar
 ---------------------
@@ -60,23 +60,26 @@ Extra syntactic sugar
 Following Elmo Mäntynen's suggestion, SCAD objects override 
 the basic operators + (union), - (difference), and * (intersection).
 So
-```c = cylinder( r=10, h=5) + cylinder( r=2, h=30)```
+
+    c = cylinder( r=10, h=5) + cylinder( r=2, h=30)
 is the same as:
-```c = union()(
-    cylinder( r=10, h=5),
-    cylinder( r=2, h=30)
-)
-```
+
+    c = union()(
+        cylinder( r=10, h=5),
+        cylinder( r=2, h=30)
+    )
+
 Likewise:
-```c = cylinder( r=10, h=5)
-c -= cylinder( r=2, h=30)
-```
+
+    c = cylinder( r=10, h=5)
+    c -= cylinder( r=2, h=30)
+
 is the same as:
-```c = difference()(
-    cylinder( r=10, h=5),
-    cylinder( r=2, h=30)
-)
-```
+
+    c = difference()(
+        cylinder( r=10, h=5),
+        cylinder( r=2, h=30)
+    )
 
 SP_utils
 --------
@@ -87,15 +90,16 @@ ashamed that I can't find the original source.  I owe someone some
 attribution.
     
 ### Directions: (up, down, left, right, forward, back) for arranging things:
-```up(10)(
-    cylinder()
-)
-```
+    
+    up(10)(
+        cylinder()
+    )
+
 seems a lot clearer to me than:
-```transform( [0,0,10])(
-    cylinder()
-)
-```
+
+    transform( [0,0,10])(
+        cylinder()
+    )
     
 Again, I took this from someone's SCAD work and have lost track of the 
 original author.  My apologies.
