@@ -145,8 +145,9 @@ def arc( rad, start_degrees, end_degrees, segments=None):
 # =====================
 # = Bill of Materials =
 # =====================
-#   Any part defined in a method can be automatically using the @part()
-# decorator. After all parts have been created, call bill_of_materials()
+#   Any part defined in a method can be automatically counted using the 
+# @part() decorator. After all parts have been created, call 
+# bill_of_materials()
 # to generate a report.  Se examples/bom_scad.py for usage
 g_parts_dict = {}
 def part( description='', per_unit_price=None):
