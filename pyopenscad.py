@@ -33,7 +33,7 @@ openscad_builtins = [
     {'name': 'translate',       'args': [],         'kwargs': ['v']} ,
     {'name': 'scale',           'args': [],         'kwargs': ['v']} ,
     {'name': 'rotate',          'args': [],         'kwargs': ['a', 'v']} ,
-    {'name': 'mirror',          'args': ['normal'], 'kwargs': []},
+    {'name': 'mirror',          'args': ['v'],      'kwargs': []},
     {'name': 'multmatrix',      'args': ['n'],      'kwargs': []},
     {'name': 'color',           'args': ['c'],      'kwargs': []},
     {'name': 'minkowski',       'args': [],         'kwargs': []}  ,
