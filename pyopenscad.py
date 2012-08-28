@@ -396,18 +396,19 @@ def extract_callable_signatures( scad_file_path):
 
 def parse_scad_callables( scad_code_str): 
     """>>> test_str = '''module hex (width=10, height=10,    
-...      flats= true, center=false){}
-...      function righty (angle=90) = 1;
-...      function lefty( avar) = 2;
-...      module more( a=[something, other]) {}
-...      module pyramid(side=10, height=-1, square=false, centerHorizontal=true, centerVertical=false){}
-...      module no_comments( arg=10,   //test comment
-...                          other_arg=2, /* some extra comments
-...                          on empty lines */
-...                          last_arg=4){}
-...  ''' 
+...     flats= true, center=false){}
+...     function righty (angle=90) = 1;
+...     function lefty( avar) = 2;
+...     module more( a=[something, other]) {}
+...     module pyramid(side=10, height=-1, square=false, centerHorizontal=true, centerVertical=false){}
+...     module no_comments( arg=10,   //test comment
+...                         other_arg=2, /* some extra comments
+...                         on empty lines */
+...                         last_arg=4){}
+...    module float_arg( arg=1.0){}
+... '''
 >>> parse_scad_callables( test_str)
-[{'args': [], 'name': 'hex', 'kwargs': ['width', 'height', 'flats', 'center']}, {'args': [], 'name': 'righty', 'kwargs': ['angle']}, {'args': ['avar'], 'name': 'lefty', 'kwargs': []}, {'args': [], 'name': 'more', 'kwargs': ['a']}, {'args': [], 'name': 'pyramid', 'kwargs': ['side', 'height', 'square', 'centerHorizontal', 'centerVertical']}, {'args': [], 'name': 'no_comments', 'kwargs': ['arg', 'other_arg', 'last_arg']}]
+[{'args': [], 'name': 'hex', 'kwargs': ['width', 'height', 'flats', 'center']}, {'args': [], 'name': 'righty', 'kwargs': ['angle']}, {'args': ['avar'], 'name': 'lefty', 'kwargs': []}, {'args': [], 'name': 'more', 'kwargs': ['a']}, {'args': ['1'], 'name': 'pyramid', 'kwargs': ['side', 'square', 'centerHorizontal', 'centerVertical']}, {'args': [], 'name': 'no_comments', 'kwargs': ['arg', 'other_arg', 'last_arg']}, {'args': [], 'name': 'float_arg', 'kwargs': ['arg']}]
 >>> """         
     callables = []
     
@@ -429,7 +430,7 @@ def parse_scad_callables( scad_code_str):
     # This is brittle.  To get a generally applicable expression for all arguments,
     # we'd need a real parser to handle nested-list default args or parenthesized statements.  
     # For the moment, assume a maximum of one square-bracket-delimited list 
-    args_re = r'(?mxs)(?P<arg_name>\w+)(?:\s*=\s*(?P<default_val>[\w-]+|\[.*\]))?(?:,|$)'
+    args_re = r'(?mxs)(?P<arg_name>\w+)(?:\s*=\s*(?P<default_val>[\w.]+|\[.*\]))?(?:,|$)'
              
     # remove all comments from SCAD code
     scad_code_str = re.sub(no_comments_re,'', scad_code_str)
