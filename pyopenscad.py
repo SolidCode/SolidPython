@@ -80,7 +80,7 @@ builtin_literals = {
 # ===============
 def use( scad_file_path, use_not_include=True):
     '''
-    FIXME:  doctest needed
+    TODO:  doctest needed
     '''
     # Opens scad_file_path, parses it for all usable calls, 
     # and adds them to caller's namespace
@@ -394,33 +394,34 @@ def extract_callable_signatures( scad_file_path):
     scad_code_str = open(scad_file_path).read()
     return parse_scad_callables( scad_code_str)
 
-def parse_scad_callables( scad_code_str):
-    """
-    >>> test_str = '''module hex (width=10, height=10,    
-...  flats= true, center=false){}
-...     function righty (angle=90) = 1;
-...     function lefty( avar) = 2;
-...     module more( a=[something, other]) {}
-...     module pyramid(side=10, height=-1, square=false, centerHorizontal=true, centerVertical=false){}
-... '''
+def parse_scad_callables( scad_code_str): 
+    """>>> test_str = '''module hex (width=10, height=10,    
+...      flats= true, center=false){}
+...      function righty (angle=90) = 1;
+...      function lefty( avar) = 2;
+...      module more( a=[something, other]) {}
+...      module pyramid(side=10, height=-1, square=false, centerHorizontal=true, centerVertical=false){}
+...      module no_comments( arg=10,   //test comment
+...                          other_arg=2, /* some extra comments
+...                          on empty lines */
+...                          last_arg=4){}
+...  ''' 
 >>> parse_scad_callables( test_str)
-[{'args': [], 'name': 'hex', 'kwargs': ['width', 'height', 'flats', 'center']}, {'args': [], 'name': 'righty', 'kwargs': ['angle']}, {'args': ['avar'], 'name': 'lefty', 'kwargs': []}, {'args': [], 'name': 'more', 'kwargs': ['a']}, {'args': [], 'name': 'pyramid', 'kwargs': ['side', 'height', 'square', 'centerHorizontal', 'centerVertical']}]
-    """
+[{'args': [], 'name': 'hex', 'kwargs': ['width', 'height', 'flats', 'center']}, {'args': [], 'name': 'righty', 'kwargs': ['angle']}, {'args': ['avar'], 'name': 'lefty', 'kwargs': []}, {'args': [], 'name': 'more', 'kwargs': ['a']}, {'args': [], 'name': 'pyramid', 'kwargs': ['side', 'height', 'square', 'centerHorizontal', 'centerVertical']}, {'args': [], 'name': 'no_comments', 'kwargs': ['arg', 'other_arg', 'last_arg']}]
+>>> """         
     callables = []
     
-    # Note that this isn't comprehensive; tuples or comments in a module definition
-    # will defeat it.  Functions/modules that have been commented out will also be included, 
-    # which will cause errors if multiple versions of a callable exist in the file: e.g
-    # function a( x, y) = x+y;
-    # /*
-    # function a( x) = x+3;
-    # */
+    # Note that this isn't comprehensive; tuples or nested data structures in 
+    # a module definition will defeat it.  
     
-    # Current implementation would throw an error if you tried to call a(x, y) since Python would 
-    # expect a( x); 
+    # Current implementation would throw an error if you tried to call a(x, y) 
+    # since Python would expect a( x);  OpenSCAD itself ignores extra arguments, 
+    # but that's not really preferable behavior 
     
     # TODO:  write a pyparsing grammar for OpenSCAD, or, even better, use the yacc parse grammar
-    # used by the language itself.  -ETJ 06 Feb 2011
+    # used by the language itself.  -ETJ 06 Feb 2011   
+           
+    no_comments_re = r'(?mxs)(//.*?\n|/\*.*?\*/)'
     
     # Also note: this accepts: 'module x(arg) =' and 'function y(arg) {', both of which are incorrect syntax
     mod_re  = r'(?mxs)^\s*(?:module|function)\s+(?P<callable_name>\w+)\s*\((?P<all_args>.*?)\)\s*(?:{|=)'
@@ -429,8 +430,10 @@ def parse_scad_callables( scad_code_str):
     # we'd need a real parser to handle nested-list default args or parenthesized statements.  
     # For the moment, assume a maximum of one square-bracket-delimited list 
     args_re = r'(?mxs)(?P<arg_name>\w+)(?:\s*=\s*(?P<default_val>[\w-]+|\[.*\]))?(?:,|$)'
-    
-    
+             
+    # remove all comments from SCAD code
+    scad_code_str = re.sub(no_comments_re,'', scad_code_str)
+    # get all SCAD callables
     mod_matches = re.finditer( mod_re, scad_code_str)
     
     for m in mod_matches:
@@ -462,4 +465,3 @@ for sym_dict in openscad_builtins:
     
     exec class_str 
     
-

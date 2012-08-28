@@ -1,5 +1,3 @@
--- Add **kwargs to all SCAD objects so all Python-rendered SCAD functions accept
-    extra unspecified arguments, since OpenSCAD has this behavior.
 -- Unit testing.
 -- Comprehensive docs
 -- Applescript or other inter-app communication that will recompile in OpenSCAD
@@ -9,8 +7,12 @@
 -- Gui for setting parameters - sliders, dropdowns, etc.  Well... that's a separate project.
 -- More robust threading -- lead-in, lead-out, and cross-sectional support
 -- Some way to interrogate objects about their shape.  bounding_box() for all
-    openscad objects? With that in place, you could do things like 'move piece 
-    A up so its northern edge lines up with object B's northern edge.
+    openscad objects? With that in place, you could do things like "move piece 
+    A up so its northern edge lines up with object B's northern edge."
+-- Some way to split an object into two shapes as if it's been cut. The way
+    I go about that is to intersect an object with two different shapes, and
+    then move those results around.  It would be nice if this were more 
+    automatic. -ETJ 07 Jul 2012
 
 
 Completed:
