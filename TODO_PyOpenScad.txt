@@ -12,7 +12,13 @@
 -- Some way to split an object into two shapes as if it's been cut. The way
     I go about that is to intersect an object with two different shapes, and
     then move those results around.  It would be nice if this were more 
-    automatic. -ETJ 07 Jul 2012
+    automatic. -ETJ 07 Jul 2012         
+-- Current practice prevents any re-use of the SCAD code generated.  A Python
+    function called a hundred times will compile to 100 separate lists of SCAD
+    code, rather than 100 calls to a function, which makes the SCAD code larger
+    than necessary and harder to read.  It would be nice if Python functions
+    were compiled to SCAD functions somehow.  Haven't figured out how to make
+    this work yet. -ETJ 29 Aug 2012
 
 
 Completed:
