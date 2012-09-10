@@ -47,7 +47,7 @@ def t_slot_holes( poly, point, normal,
     # move it back (down in Y) by material_thickness/2
     tab_holes = back( material_thickness/2)( tab_poly(material_thickness))
     
-    # Only valid for m3 screws now
+    # Only valid for m3-m5 screws now
     screw_dict = screw_dimensions.get( screw_type.lower())
     if screw_dict:
         screw_w = screw_dict['screw_outer_diam']
@@ -99,7 +99,7 @@ def nut_trap_slot( screw_type='m3', screw_length=12, material_thickness=5):
     # tighten onto the shaft
     
     
-    # Only valid for m3 screws now
+    # Only valid for m3-m5 screws now
     screw_dict = screw_dimensions.get( screw_type.lower())
     if screw_dict:
         screw_w = screw_dict['screw_outer_diam']

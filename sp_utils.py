@@ -204,6 +204,8 @@ def bounding_box( points):
 screw_dimensions = {
     'm3': { 'nut_thickness':2.4, 'nut_inner_diam': 5.4, 'nut_outer_diam':6.1, 'screw_outer_diam':3.0, 'cap_diam':5.5 ,'cap_height':3.0 },
     'm4': { 'nut_thickness':3.1, 'nut_inner_diam': 7.0, 'nut_outer_diam':7.9, 'screw_outer_diam':4.0, 'cap_diam':6.9 ,'cap_height':3.9 },
+    'm5': { 'nut_thickness':4.7, 'nut_inner_diam': 7.9, 'nut_outer_diam':8.8, 'screw_outer_diam':5.0, 'cap_diam':8.7 ,'cap_height':5 },
+    
 }
 
 def screw( screw_type='m3', screw_length=16):
