@@ -41,7 +41,7 @@ def head():
     return cylinder( h=head_height, r =head_rad)
 
 
-@part("M3x16 Bolt", 0.12)
+@part("M3x16 Bolt", 0.12, currency="€")
 def m3_16( a=3):
     bolt_height = 16
     m = union()(
@@ -65,7 +65,7 @@ def m3_12():
     return m
 
 
-@part()
+@part("M3 Nut", 0.04, currency="R$")
 def m3_nut():
     hx = cylinder( r=nut_rad, h=nut_height)
     hx.add_param('$fn', 6) # make the nut hexagonal
