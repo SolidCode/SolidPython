@@ -36,7 +36,8 @@ openscad_builtins = [
     {'name': 'mirror',          'args': ['v'],      'kwargs': []},
     {'name': 'multmatrix',      'args': ['n'],      'kwargs': []},
     {'name': 'color',           'args': ['c'],      'kwargs': []},
-    {'name': 'minkowski',       'args': [],         'kwargs': []}  ,
+    {'name': 'minkowski',       'args': [],         'kwargs': []},
+    {'name': 'hull',            'args': [],         'kwargs': []},
     {'name': 'render',          'args': [],         'kwargs': ['convexity']}, 
         
     # 2D to 3D transitions
