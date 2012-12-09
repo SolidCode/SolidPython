@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import os, sys, re
 
-from pyopenscad import *
+from solid import *
 from math import *
 
 RIGHT, TOP, LEFT, BOTTOM = range(4)
@@ -175,7 +175,7 @@ def bill_of_materials():
                   all_costs[currency] += total
                 except:
                   all_costs[currency] = total
-
+                  
                 res += "%8s\t%8d\t%s %8f\t%s %8.2f\n"%(desc, count, currency, price, currency, total)
             else:
                 res += "%8s\t%8d\n"%(desc, count)

@@ -1,6 +1,8 @@
-from distutils.core import setup
-setup(name='pyopenscad',
+# from distutils.core import setup 
+from setuptools import setup, find_packages
+
+setup(name='solidpython',
       version='0.0',
-      py_modules=['pyopenscad', 'sp_utils'],
+      packages = find_packages(),      
       )
 

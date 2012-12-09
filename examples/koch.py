@@ -2,10 +2,8 @@
 # -*- coding: utf-8 -*-
 import os, sys, re
 
-sys.path.append(os.path.join( os.getenv('HOME'), 'Desktop', 'SolidPython'))
-
-from pyopenscad import *
-from sp_utils import *
+from solid import *
+from solid.utils import *
 
 sys.path.append( os.path.join( os.getenv('HOME'), 'Desktop','pyeuclid'))
 from euclid import *

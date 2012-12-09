@@ -20,12 +20,8 @@
 
 import os, sys
 
-# Make sure we have access to pyopenscad
-superdir = os.path.dirname( os.path.dirname(__file__))
-sys.path.append( superdir)
-
-from pyopenscad import *
-from sp_utils import *
+from solid import *
+from solid.utils import *
 
 head_rad = 2.65
 head_height = 2.8

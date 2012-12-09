@@ -5,11 +5,9 @@
 
 # Make sure we can import the OpenScad translation module
 import sys, os
-cur_dir = os.path.split( os.path.abspath(__file__))[0]
-sys.path.append(cur_dir+ '/../..') # Works on Windows?
 
 from math import *
-from pyopenscad import *
+from solid import *
 # Requires pypng module, which can be found with 'pip install pypng', 
 # 'easy_install pypng', or at http://code.google.com/p/pypng/
 from testpng import *

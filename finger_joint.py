@@ -4,8 +4,8 @@ from __future__ import division
 import os, sys, re
 
 # Assumes SolidPython is in site-packages or elsewhwere in sys.path
-from SolidPython.pyopenscad import *
-from SolidPython.sp_utils import *
+from solid import *
+from solid.utils import *
 
 SEGMENTS = 48
 

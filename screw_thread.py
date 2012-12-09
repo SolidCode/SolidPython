@@ -3,8 +3,8 @@
 import os, sys, re
 
 # Make sure we have access to pyopenscad
-from SolidPython.pyopenscad import *
-from SolidPython.sp_utils import *
+from solid import *
+from solid.utils import *
 from pyeuclid.euclid import *
 
 def thread( outline_pts, inner_rad, pitch, length, segments_per_rot=32,

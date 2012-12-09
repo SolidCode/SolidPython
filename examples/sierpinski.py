@@ -2,11 +2,9 @@
 # -*- coding: utf-8 -*-
 import os, sys
 
-# Make sure we have access to pyopenscad
-superdir = os.path.dirname( os.path.dirname(__file__))
-sys.path.append( superdir)
+from solid import *
+from solid.utils import *
 
-from pyopenscad import *
 import random
 import math
 

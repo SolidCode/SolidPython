@@ -2,11 +2,7 @@
 # -*- coding: utf-8 -*-
 import sys, os
 
-# Make sure we have access to pyopenscad
-superdir = os.path.dirname( os.path.dirname(__file__))
-sys.path.append( superdir)
-
-from pyopenscad import *
+from solid import *
 
 
 # NOTE: Insert the path to the MCAD (or other SCAD) library here.
