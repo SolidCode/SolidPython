@@ -150,10 +150,10 @@ def arc( rad, start_degrees, end_degrees, segments=None):
 # bill_of_materials()
 # to generate a report.  Se examples/bom_scad.py for usage
 g_parts_dict = {}
-def part( description='', per_unit_price=None):
+def part( description='', per_unit_price=None, currency='US$'):
     def wrap(f):
         name = description if description else f.__name__
-        g_parts_dict[name] = [0, per_unit_price]
+        g_parts_dict[name] = [0, currency, per_unit_price]
         def wrapped_f( *args):
             name = description if description else f.__name__
             g_parts_dict[name][0] += 1
@@ -166,18 +166,25 @@ def part( description='', per_unit_price=None):
 def bill_of_materials():
     res = ''
     res +=  "%8s\t%8s\t%8s\t%8s\n"%("Desc.", "Count", "Unit Price", "Total Price")
-    all_costs = 0
-    for desc,(count, price) in g_parts_dict.items():
+    all_costs = {}
+    for desc,(count, currency, price) in g_parts_dict.items():
         if count > 0:
             if price:
                 total = price*count
-                all_costs += total
-                res += "%8s\t%8d\t%8f\t%8.2f\n"%(desc, count, price, total)
+                try:
+                  all_costs[currency] += total
+                except:
+                  all_costs[currency] = total
+
+                res += "%8s\t%8d\t%s %8f\t%s %8.2f\n"%(desc, count, currency, price, currency, total)
             else:
                 res += "%8s\t%8d\n"%(desc, count)
     if all_costs > 0:
         res += "_"*60+'\n'
-        res += "Total Cost: %.2f\n"%all_costs
+        res += "Total Cost:\n"
+        for currency in all_costs.keys():
+          res += "\t\t%s %.2f\n"%(currency, all_costs[currency])
+        res+="\n"
     return res
 
 
