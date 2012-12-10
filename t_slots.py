@@ -3,8 +3,8 @@
 import os, sys, re
 
 # Assumes SolidPython is in site-packages or elsewhwere in sys.path
-from SolidPython.pyopenscad import *
-from SolidPython.sp_utils import *
+from solid import *
+from solid.utils import *
 
 
 tab_width = 5
@@ -82,7 +82,7 @@ def t_slot( poly, point=None, normal=None,
     
     tab = tab_poly()
     slot = nut_trap_slot( screw_type, screw_length)
-
+    
     tab  = transform_to_point( tab,  point, normal, two_d=True)
     slot = transform_to_point( slot, point, normal, two_d=True)
             

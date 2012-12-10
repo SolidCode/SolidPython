@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import os, sys, re
 
-# Make sure we have access to pyopenscad
 from solid import *
 from solid.utils import *
 from pyeuclid.euclid import *

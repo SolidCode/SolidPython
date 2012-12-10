@@ -1,13 +1,13 @@
-PyOpenSCAD/ SolidPython
+SolidPython:  OpenSCAD for Python
 -----------------------
 
-PyOpenSCAD is a generalization of Phillip Tiefenbacher's openscad module, 
+SolidPython is a generalization of Phillip Tiefenbacher's openscad module, 
 found at http://www.thingiverse.com/thing:1481.  It generates valid OpenSCAD 
 code from Python code with minimal overhead.  Here's a simple example:
     
 This Python code: 
 
-    from pyopenscad import *
+    from solid import *
     d = difference()(
         cube(10),
         sphere(15)
@@ -22,12 +22,12 @@ Generates this OpenSCAD code:
         sphere(15);
     }
 
-Steps to using PyOpenSCAD
+Steps to using SolidPython
 -------------------------
-*   ```from pyopenscad import *```
+*   ```from solid import *```
 *   call ```use( "/path/to/scadfile.scad")``` or ```include("/path/to/scadfile.scad")```
     for any included SCAD code
-*   OpenSCAD uses curly-brace blocks ({}) to create its tree.  PyOpenSCAD uses
+*   OpenSCAD uses curly-brace blocks ({}) to create its tree.  SolidPython uses
     parentheses with comma-delimited lists.
     *   OpenSCAD:
     
@@ -36,7 +36,7 @@ Steps to using PyOpenSCAD
         sphere(15);
     }
 
-    *   PyOpenSCAD:
+    *   SolidPython:
     
     d = difference()(
         cube(10),  # Note the comma between each element!
@@ -81,9 +81,9 @@ is the same as:
         cylinder( r=2, h=30)
     )
 
-SP_utils
+solid.utils
 --------
-I've been adding utilities to sp_utils.py.  Currently these include:
+I've been adding utilities to solid/utils.py.  Currently these include:
 ### Basic color library
 I took this from someone on Thingiverse and I'm 
 ashamed that I can't find the original source.  I owe someone some 
