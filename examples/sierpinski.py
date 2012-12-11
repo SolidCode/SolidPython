@@ -10,7 +10,7 @@ import math
 
 # =========================================================
 # = A basic recursive Sierpinski's gasket implementation,
-# outputting a file 'gasket_x.scad' to the Desktop 
+# outputting a file 'gasket_x.scad' to the argv[1] or $PWD
 # =========================================================
 
 class SierpinskiTetrahedron(object):
@@ -79,7 +79,9 @@ def sierpinski_3d( generation, scale= 1, midpoint_weight=0.5, jitter_range_vec=N
     
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':     
+    out_dir = sys.argv[1] if len(sys.argv) > 1 else os.curdir
+    
     generations = 3
     midpoint_weight = 0.5
     # jitter_range_vec adds some randomness to the generated shape,
@@ -94,6 +96,9 @@ if __name__ == '__main__':
         t.add( tet.scad_code())
         # Draw cubes at all intersections to make the shape manifold. 
         for p in tet.points:
-            t.add( translate(p).add( cube(5, center=True)))
-    outfile = os.path.join( os.getenv('HOME'), 'Desktop', 'gasket_%s.scad'%generations) 
-    scad_render_to_file( t, outfile)
+            t.add( translate(p).add( cube(5, center=True)))  
+                                                            
+            
+    file_out = os.path.join( out_dir, 'gasket_%s_gen.scad'%generations) 
+    print "%(__file__)s: SCAD file written to: %(file_out)s \n"%vars()
+    scad_render_to_file( t, file_out)

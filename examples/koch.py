@@ -5,7 +5,6 @@ import os, sys, re
 from solid import *
 from solid.utils import *
 
-sys.path.append( os.path.join( os.getenv('HOME'), 'Desktop','pyeuclid'))
 from euclid import *
 
 ONE_THIRD = 1/3.0
@@ -68,7 +67,7 @@ def kochify( seg, height_ratio=0.33, left_loc= 0.33, midpoint_loc=0.5, right_loc
              LineSegment2( perp_pt, r),
              LineSegment2( r, b)]
 
-def main_3d():
+def main_3d( out_dir):
     gens = 4
     
     # Parameters
@@ -128,9 +127,11 @@ def main_3d():
             )
         )
     
-    scad_render_to_file( all_polys, os.path.join( os.getenv('HOME'), 'Desktop', 'koch_3d.scad'))    
+    file_out = os.path.join( out_dir, 'koch_3d.scad')
+    print "%(__file__)s: SCAD file written to: %(file_out)s"%vars()
+    scad_render_to_file( all_polys, file_out)    
 
-def main():
+def main( out_dir):
     # Parameters
     midpoint_weight = 0.5
     height_ratio = 0.25
@@ -176,9 +177,12 @@ def main():
         # Do the SCAD
         edges = [range(len(points))]
         all_polys.add( forward( h)( polygon(points=points, paths=edges )))
-    
-    scad_render_to_file( all_polys, os.path.join( os.getenv('HOME'), 'Desktop', 'koch.scad'))
+                   
+    file_out = os.path.join( out_dir,'koch.scad')   
+    print "%(__file__)s: SCAD file written to: %(file_out)s "%vars()
+    scad_render_to_file( all_polys, file_out )
 
 if __name__ == '__main__':
-    main_3d()
-    main()
+    out_dir = sys.argv[1] if len(sys.argv) > 1 else os.curdir
+    main_3d( out_dir)
+    main( out_dir)
