@@ -78,17 +78,20 @@ builtin_literals = {
 
 # ===============
 # = Including OpenSCAD code =
-# ===============
+# =============== 
+
+# use() & include() mimic OpenSCAD's use/include mechanics. 
+# -- use() makes methods in scad_file_path.scad available to 
+#   be called.
+# --include() makes those methods available AND executes all code in
+#   scad_file_path.scad, which may have side effects.  
+#   Unless you have a specific need, call use(). 
 def use( scad_file_path, use_not_include=True):
     '''
     TODO:  doctest needed
     '''
     # Opens scad_file_path, parses it for all usable calls, 
     # and adds them to caller's namespace
-    
-    # TODO: add something along the lines of PYTHONPATH for scad files?
-    # That way you could 'use( a_file.scad)' without using an absolute
-    # path or having the library in the same directory
     try:
         module = open( scad_file_path)
         contents = module.read()
@@ -149,7 +152,7 @@ def scad_render_to_file( scad_object, filepath=None, file_header='', include_ori
     
         pyopenscad_str = '''
 /***********************************************
-******      PyOpenSCAD code:       *************
+******      SolidPython code:      *************
 ************************************************
  
 %(pyopenscad_str)s 
@@ -314,7 +317,8 @@ class included_openscad_object( openscad_object):
     to the scad file it's included from.
     '''
     def __init__( self, name, params, include_file_path, use_not_include=False):
-        self.include_file_path = include_file_path
+        self.include_file_path = self._get_include_path( include_file_path)
+        
         if use_not_include:
             self.include_string = 'use <%s>\n'%self.include_file_path
         else:
@@ -322,7 +326,27 @@ class included_openscad_object( openscad_object):
         
         openscad_object.__init__( self, name, params)
     
-
+    def _get_include_path( self, include_file_path):
+        # Look through sys.path for anyplace we can find a valid file ending
+        # in include_file_path.  Return that absolute path
+        if os.path.isabs( include_file_path): 
+            # ETJ DEBUG
+            print "path is absolute: %(include_file_path)s "%vars()
+            # END DEBUG
+            return include_file_path
+        else:
+            for p in sys.path:       
+                whole_path = os.path.join( p, include_file_path)
+                if os.path.isfile( whole_path):
+                    # ETJ DEBUG
+                    print "including path: %s"%(os.path.abspath(whole_path))
+                    # END DEBUG
+                    return os.path.abspath(whole_path)
+            
+        # No loadable SCAD file was found in sys.path.  Raise an error
+        raise( ValueError, "Unable to find included SCAD file: "
+                            "%(include_file_path)s in sys.path"%vars())
+    
 
 def calling_module():
     '''

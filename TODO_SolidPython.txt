@@ -6,7 +6,6 @@
 -- Debugging info?  This isn't really present for SCAD, so it's hard from Python.
 -- Programmatic way to designate parameters users might want to change
 -- Gui for setting parameters - sliders, dropdowns, etc.  Well... that's a separate project.
--- More robust threading -- lead-in, lead-out, and cross-sectional support
 -- Some way to interrogate objects about their shape.  bounding_box() for all
     openscad objects? With that in place, you could do things like "move piece 
     A up so its northern edge lines up with object B's northern edge."
@@ -22,7 +21,8 @@
     this work yet. -ETJ 29 Aug 2012
 
 
-Completed:
+Completed:    
+-- More robust screw threads -- lead-in, lead-out, and cross-sectional support
 -- Add handling for the #*!% SCAD characters (debug, disable, root, background) -ETJ 15 Feb 2011
 -- Improving syntax so it's as close as possible to OpenSCAD's -ETJ 15 Feb 2011
 -- By default, let polygon assume that connectivity between specified points (the paths argument) is

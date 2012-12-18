@@ -12,7 +12,8 @@
                 # def my_part():
                 #     pass
 #   -- Optionally, you can add a description and a per-unit cost to the 
-#       decorator invocations.  If cost is supplied, 
+#       decorator invocations.  
+#
 #   -- To generate the bill of materials, call bill_of_materials()
 #
 #       -ETJ 08 Mar 2011
@@ -107,7 +108,7 @@ if __name__ == '__main__':
     
     bom = bill_of_materials()
     
-    print "%(__file__)s: SCAD file written to: %(file_out)s \n"%vars()
+    print "%(__file__)s: SCAD file written to: \n%(file_out)s \n"%vars()
     print bom
     
     scad_render_to_file( a, file_out)

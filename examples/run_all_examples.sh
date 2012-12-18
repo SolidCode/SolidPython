@@ -9,4 +9,9 @@ fi
 for py in *.py;
 do python $py $COMPILED_EXAMPLES;  
 echo;
-done
+done 
+
+# Note: mazebox example isn't included because it requires a 
+# significant python package (pypng) to be installed. 
+# Comments in examples/mazebox/mazebox_clean2_stable.py
+# explain how to install pypng

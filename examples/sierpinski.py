@@ -100,5 +100,5 @@ if __name__ == '__main__':
                                                             
             
     file_out = os.path.join( out_dir, 'gasket_%s_gen.scad'%generations) 
-    print "%(__file__)s: SCAD file written to: %(file_out)s \n"%vars()
+    print "%(__file__)s: SCAD file written to: \n%(file_out)s \n"%vars()
     scad_render_to_file( t, file_out)
