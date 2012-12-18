@@ -19,8 +19,16 @@ def thread( outline_pts, inner_rad, pitch, length, segments_per_rot=32,
     require a lot of transforms and unions to be done in the SCAD code rather than
     in the python, as here.  Also would take some doing to make the neck-in work
     as well.  Not sure how the two approaches compare in terms of render-time. 
-    -ETJ 16 Mar 2011
+    -ETJ 16 Mar 2011     
     
+    outline_pts: a list of points (NOT an OpenSCAD polygon) that define the cross 
+            section of the thread
+            
+    inner_rad: 
+    length:
+    segments_per_rot:
+    neck_in_degrees: 
+    neck_out_degrees:
     '''
     a = union()
     rotations = float(length)/pitch
@@ -101,6 +109,13 @@ def thread( outline_pts, inner_rad, pitch, length, segments_per_rot=32,
                 up( cube_side/2 + length)(  cube( cube_side, center=True))
             )
     return render()(a - subs)
+
+def default_thread_section( tooth_height, tooth_depth):
+    return [ [ 0, -tooth_height/2],
+             [ tooth_depth, 0],
+             [ 0, tooth_height/2]
+            ]
+
 
 def assembly():
     # Scad code here
