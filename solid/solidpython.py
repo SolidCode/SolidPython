@@ -45,6 +45,7 @@ openscad_builtins = [
     {'name': 'rotate_extrude',  'args': [],         'kwargs': ['convexity']} ,
     {'name': 'dxf_linear_extrude', 'args': ['file'], 'kwargs': ['layer', 'height', 'center', 'convexity', 'twist', 'slices']} ,
     {'name': 'projection',      'args': [],         'kwargs': ['cut']} ,
+    {'name': 'surface',         'args': ['file'],   'kwargs': ['center','convexity']} ,
     
     # Import/export
     {'name': 'import_stl',      'args': ['filename'], 'kwargs': ['convexity']} ,

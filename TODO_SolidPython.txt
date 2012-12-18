@@ -1,3 +1,4 @@
+-- setup.py should include PyPi-required metadata.
 -- bill_of_materials() entries should be left-justified in their columns.
 -- Unit testing.
 -- Comprehensive docs
