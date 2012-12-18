@@ -330,17 +330,11 @@ class included_openscad_object( openscad_object):
         # Look through sys.path for anyplace we can find a valid file ending
         # in include_file_path.  Return that absolute path
         if os.path.isabs( include_file_path): 
-            # ETJ DEBUG
-            print "path is absolute: %(include_file_path)s "%vars()
-            # END DEBUG
             return include_file_path
         else:
             for p in sys.path:       
                 whole_path = os.path.join( p, include_file_path)
                 if os.path.isfile( whole_path):
-                    # ETJ DEBUG
-                    print "including path: %s"%(os.path.abspath(whole_path))
-                    # END DEBUG
                     return os.path.abspath(whole_path)
             
         # No loadable SCAD file was found in sys.path.  Raise an error
