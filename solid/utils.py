@@ -358,6 +358,7 @@ try:
     # = Offset =
     # = ------ =          
     def draw_segment( euc_line=None, endless=False, vec_color=None):
+        # Draw a tradtional arrow-head vector in 3-space.
         vec_arrow_rad = 7
         vec_arrow_head_rad = vec_arrow_rad * 1.5
         vec_arrow_head_length = vec_arrow_rad * 3
@@ -391,7 +392,10 @@ try:
         
         return arrow
     
+
     def parallel_seg( p, q, offset, normal=Vector3( 0, 0, 1), direction=LEFT):
+        # returns a PyEuclid Line3 parallel to pq, in the plane determined
+        # by p,normal, to the left or right of pq.
         v = q - p
         angle = direction
         rot_v = v.rotate_around( axis=normal, theta=angle)
@@ -399,6 +403,8 @@ try:
         return Line3( p+rot_v, v )
     
     def inside_direction( a, b, c, offset=10):
+        # determines which direction (LEFT, RIGHT) is 'inside' the triangle
+        # made by a, b, c.  If ab and bc are parallel, return LEFT
         x = three_point_normal( a, b, c)
         
         # Make two vectors (left & right) for each segment.
@@ -436,11 +442,11 @@ try:
         x = seg_ab.v.cross( seg_bc.v)   
         return x
     
-    def offset_polygon( point_arr, offset, inside=True, connect_ends=False):
+    def offset_polygon( point_arr, offset, inside=True):
+        # returns a closed solidPython polygon offset by offset distance
+        # from the polygon described by point_arr.
         op = offset_points( point_arr, offset=offset, inside=inside)
         segments = range( len(op))
-        if connect_ends:
-            segments.append( 0)
         return polygon( [p.as_arr() for p in op], paths=[segments])
     
     def offset_points( point_arr, offset, inside=True):
