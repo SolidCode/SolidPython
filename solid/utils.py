@@ -123,24 +123,32 @@ def back( y):
 # =======
 # = Arc =
 # =======
-def arc( rad, start_degrees, end_degrees, segments=None):
-    # Note: the circle arc is drawn from gets segments,
+def arc( rad, start_degrees, end_degrees, segments=None, invert=False):
+    # Note: the circle that this arc is drawn from gets segments,
     # not the arc itself.  That means a quarter-circle arc will
-    # have segments/4 segments
-    bottom_half_square = back( rad/2.0)(square( [2*rad, rad], center=True))
-    top_half_square = forward( rad/2.0)( square( [2*rad, rad], center=True))
+    # have segments/4 segments.
     
+    # invert=True will leave the portion of a circumscribed square of sides
+    # 2*rad that is NOT in the arc behind.  This is most useful for 90-degree
+    # segments, since it's what you'll add to create fillets and take away
+    # to create rounds. 
+    bottom_half_square = back( rad)(square( [3*rad, 2*rad], center=True))
+    top_half_square = forward( rad)( square( [3*rad, 2*rad], center=True))
+    
+    start_shape = circle( rad, segments=segments)
+    if invert:
+        start_shape = square(2*rad, center=True) - start_shape
+          
     if abs( (end_degrees - start_degrees)%360) <=  180:
         end_angle = end_degrees - 180
-        
         ret = difference()(
-            circle(rad, segments=segments),
+            start_shape,
             rotate( a=start_degrees)(   bottom_half_square.copy()),
             rotate( a= end_angle)(      bottom_half_square.copy())
         )
     else:
         ret = intersection( )(
-            circle( rad, segments=segments),
+            start_shape,
             union()(
                 rotate( a=start_degrees)(   top_half_square.copy()),
                 rotate( a=end_degrees)(     bottom_half_square.copy())
