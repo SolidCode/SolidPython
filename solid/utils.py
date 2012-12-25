@@ -9,13 +9,22 @@ RIGHT, TOP, LEFT, BOTTOM = range(4)
 EPSILON = 0.01
 TAU = 2*pi
 
+ORIGIN      = [ 0, 0, 0]
 UP_VEC      = [ 0, 0, 1]
 RIGHT_VEC   = [ 1, 0, 0]
 FORWARD_VEC = [ 0, 1, 0]
 
 # ==========
 # = Colors =
-# ==========
+# ========== 
+Red         = [ 1, 0, 0]
+Green       = [ 0, 1, 0]
+Blue        = [ 0, 0, 1]
+Cyan        = [ 0, 1, 1]
+Magenta     = [ 1, 0, 1]
+Yellow      = [ 1, 1, 0]
+Black       = [ 0, 0, 0]
+White       = [ 1, 1, 1]
 Oak         = [0.65, 0.50, 0.40]
 Pine        = [0.85, 0.70, 0.45]
 Birch       = [0.90, 0.80, 0.60]
@@ -116,7 +125,8 @@ def back( y):
 # =======
 def arc( rad, start_degrees, end_degrees, segments=None):
     # Note: the circle arc is drawn from gets segments,
-    # not the arc itself.  
+    # not the arc itself.  That means a quarter-circle arc will
+    # have segments/4 segments
     bottom_half_square = back( rad/2.0)(square( [2*rad, rad], center=True))
     top_half_square = forward( rad/2.0)( square( [2*rad, rad], center=True))
     
@@ -136,7 +146,18 @@ def arc( rad, start_degrees, end_degrees, segments=None):
                 rotate( a=end_degrees)(     bottom_half_square.copy())
             )
         )
+     
     return ret
+
+def fillet_2d( a, b, c, rad):
+    # a, b, and c are three points that form a corner at b.  
+    # Return a negative arc (the area NOT covered by a circle) of radius rad
+    # in the direction of the more acute angle between 
+    
+    # Note that if rad is greater than a.distance(b) or c.distance(b), for a 
+    # 90-degree corner, the returned shape will include a jagged edge. In
+    # general, best to 
+    pass
 
 # TODO: arc_to that creates an arc from point to another point.
 # This is useful for making paths.  See the SVG path command:
@@ -187,6 +208,31 @@ def bill_of_materials():
         res+="\n"
     return res
 
+
+#FIXME: finish this.
+def bill_of_materials_justified():
+    res = ''
+    columns = [s.rjust(8) for s in ("Desc.", "Count", "Unit Price", "Total Price")]
+    all_costs = {}
+    for desc, (count, currency, price) in g_parts_dict.items():
+        if count > 0:
+            if price:
+                total = price*count
+                try: 
+                    all_costs[currency] += total
+                except: 
+                    all_costs[currency] = total
+                    
+                res += "%(desc)s %(count)s %(currency)s %(price)s %(currency)s %(total)s \n"%vars()
+            else:
+                res += "%(desc)s %(count)s "%vars()  
+    if all_costs > 0:
+        res += "_"*60+'\n'
+        res += "Total Cost:\n"
+        for currency in all_costs.keys():
+          res += "\t\t%s %.2f\n"%(currency, all_costs[currency])
+        res+="\n"
+    return res
 
 # ================
 # = Bounding Box =
@@ -240,67 +286,213 @@ def nut( screw_type='m3'):
     )
     return ret
 
-    
+
+# ==================
+# = PyEuclid Utils =
+# = -------------- =
+try:
+    from euclid import *    
 # ==============
 # = Transforms =
 # ==============
-def transform_to_point( body, point, normal, two_d=False):
-    '''
-    Transforms body from horizontal at the origin to point, rotating it so
-    vertical now matches the supplied normal.
-    
-    If two_d is False, rotate the up vector ( [0,0,1]) to match normal.
-    If two_d is True, assume we're functioning in XY, and rotate [0,1] to match normal
-    
-    This is useful for adding objects to arbitrary points on existing objects
-    
-    Returns body, transformed appropriately
-    
-    Use case:
-        -- make a 2-d shape that will be the side of an acrylic box
-        -- identify points on that shape that will need t-slots, and the normals
-            to the sides where the slots will be added
-        -- draw the t-slot shape at the origin, facing up.
-        -- at each point you want to place a slot, call 
-            transform_to_point( t_slot_poly, p, n, two_d=True)
-    '''
-    # TODO: move euclid  functions to a separate file
-    from pyeuclid.euclid import Vector3
-    
-    if two_d:
-        up = FORWARD_VEC
-    else:
-        up = UP_VEC
-    
-    euc_up = Vector3( *up)
-    euc_norm = Vector3( *normal)
-    
-    rot_angle = degrees( euc_norm.angle_between( euc_up))
-    rot_vec = euc_up.cross( euc_norm).as_arr()
-    
-    if rot_angle == 180:
-        rot_vec = up
+    def transform_to_point( body, point, normal, two_d=False):
+        '''
+        Transforms body from horizontal at the origin to point, rotating it so
+        vertical now matches the supplied normal.
+        
+        If two_d is False, rotate the up vector ( [0,0,1]) to match normal.
+        If two_d is True, assume we're functioning in XY, and rotate [0,1] to match normal
+        
+        This is useful for adding objects to arbitrary points on existing objects
+        
+        Returns body, transformed appropriately
+        
+        Use case:
+            -- make a 2-d shape that will be the side of an acrylic box
+            -- identify points on that shape that will need t-slots, and the normals
+                to the sides where the slots will be added
+            -- draw the t-slot shape at the origin, facing up.
+            -- at each point you want to place a slot, call 
+                transform_to_point( t_slot_poly, p, n, two_d=True)
+        '''
+        # TODO: move euclid  functions to a separate file
+        from euclid import Vector3
+        
+        if two_d:
+            up = FORWARD_VEC
+        else:
+            up = UP_VEC
+        
+        euc_up = Vector3( *up)
+        euc_norm = Vector3( *normal)
+        
+        rot_angle = degrees( euc_norm.angle_between( euc_up))
+        rot_vec = euc_up.cross( euc_norm).as_arr()
+        
+        if rot_angle == 180:
+            rot_vec = up
             
-    # # ETJ DEBUG
-    # print "************************************************************"
-    # classOrFile = self.__class__.__name__ if 'self' in vars() else os.path.basename(__file__)
-    # method = sys._getframe().f_code.co_name
-    # print "%(classOrFile)s:%(method)s"%vars()
-    # print '\trot_angle:  %s'% rot_angle
-    # print '\trot_vec:    %s'% rot_vec
-    # print "************************************************************"
-    # 
-    # # END DEBUG
-    
-    
-    
-    # TODO: figure out how to get these points
-    return translate( point)(
-                rotate( a=rot_angle, v=rot_vec)(
-                    body
+        # # ETJ DEBUG
+        # print "************************************************************"
+        # classOrFile = self.__class__.__name__ if 'self' in vars() else os.path.basename(__file__)
+        # method = sys._getframe().f_code.co_name
+        # print "%(classOrFile)s:%(method)s"%vars()
+        # print '\trot_angle:  %s'% rot_angle
+        # print '\trot_vec:    %s'% rot_vec
+        # print "************************************************************"
+        # 
+        # # END DEBUG
+        
+        
+        
+        # TODO: figure out how to get these points
+        return translate( point)(
+                    rotate( a=rot_angle, v=rot_vec)(
+                        body
+                    )
                 )
-            )
-
+                
+                
+    LEFT, RIGHT = radians(90), radians(-90)
+    # ==========
+    # = Offset =
+    # = ------ =          
+    def draw_segment( euc_line=None, endless=False, vec_color=None):
+        vec_arrow_rad = 7
+        vec_arrow_head_rad = vec_arrow_rad * 1.5
+        vec_arrow_head_length = vec_arrow_rad * 3
+        
+        if isinstance( euc_line, Vector3):
+            p = ORIGIN
+            v = euc_line
+        elif isinstance( euc_line, Line3): 
+            p = euc_line.p
+            v = euc_line.v
+        elif isinstance( euc_line, list) or isinstance( euc_line, tuple):
+            # TODO: we're assuming p & v are PyEuclid classes.  
+            # Really, they could as easily be two 3-tuples. Should
+            # check for this.   
+            p, v = euc_line[0], euc_line[1]
+                 
+        
+        shaft_length = v.magnitude() - vec_arrow_head_length    
+        arrow = cylinder( r= vec_arrow_rad, h = shaft_length)
+        arrow += up( shaft_length )( 
+                    cylinder(r1=vec_arrow_head_rad, r2=0, h = vec_arrow_head_length)
+                 )
+        if endless:
+            endless_length = max( v.magnitude()*10, 200)
+            arrow += cylinder( r=vec_arrow_rad/3, h = endless_length, center=True)
+        
+        arrow = transform_to_point( body=arrow, point=p.as_arr(), normal=v.as_arr())
+        
+        if vec_color:
+            arrow = color( vec_color)(arrow)
+        
+        return arrow
+    
+    def parallel_seg( p, q, offset, normal=Vector3( 0, 0, 1), direction=LEFT):
+        v = q - p
+        angle = direction
+        rot_v = v.rotate_around( axis=normal, theta=angle)
+        rot_v.set_length( offset)
+        return Line3( p+rot_v, v )
+    
+    def inside_direction( a, b, c, offset=10):
+        x = three_point_normal( a, b, c)
+        
+        # Make two vectors (left & right) for each segment.
+        l_segs = [parallel_seg( p, q, normal=x, offset=offset, direction=LEFT) for p,q in ( (a,b), (b,c))]
+        r_segs = [parallel_seg( p, q, normal=x, offset=offset, direction=RIGHT) for p,q in ( (a,b), (b,c))]
+        
+        # Find their intersections.  
+        p1 = l_segs[0].intersect( l_segs[1])
+        p2 = r_segs[0].intersect( r_segs[1])
+        
+        # The only way I've figured out to determine which direction is 
+        # 'inside' or 'outside' a joint is to calculate both inner and outer
+        # vectors and then to find the intersection point closest to point a.
+        # This ought to work but it seems like there ought to be a more direct
+        # way to figure this out. -ETJ 21 Dec 2012
+        
+        # The point that's closer to point a is the inside point. 
+        if a.distance( p1) <= a.distance( p2):
+            return LEFT
+        else:
+            return RIGHT
+    
+    def other_dir( left_or_right):
+        if left_or_right == LEFT: 
+            return RIGHT
+        else:
+            return LEFT
+    
+    def three_point_normal( a, b, c):
+        ab = b - a
+        bc = c - b
+        
+        seg_ab = Line3( a, ab)
+        seg_bc = Line3( b, bc)
+        x = seg_ab.v.cross( seg_bc.v)   
+        return x
+    
+    def offset_polygon( point_arr, offset, inside=True, connect_ends=False):
+        op = offset_points( point_arr, offset=offset, inside=inside)
+        segments = range( len(op))
+        if connect_ends:
+            segments.append( 0)
+        return polygon( [p.as_arr() for p in op], paths=[segments])
+    
+    def offset_points( point_arr, offset, inside=True):
+        # Given a set of points, return a set of points offset from 
+        # them.  
+        # To get reasonable results, the points need to be all in a plane.
+        # ( Non-planar point_arr will still return results, but what constituetes
+        # 'inside' or 'outside' would be different in that situation.)
+        #
+        # What direction inside and outside lie is determined by the first
+        # three points (first corner).  In a convex closed shape, this corresponds
+        # to inside and outside.  If the first three points describe a concave
+        # portion of a closed shape, inside and outside will be switched.  
+        #
+        # CAD programs generally require an interactive user choice about which
+        # side is outside and which is inside.  Robust behavior with this
+        # function will require similar checking.  
+        
+        # Also note that short segments or narrow areas can cause problems
+        # as well.  This method suffices for most planar convex figures where
+        # segment length is greater than offset, but changing any of those
+        # assumptions will cause unattractive results.  If you want real 
+        # offsets, use SolidWorks.
+        
+        # TODO: check for self-intersections in the line connecting the 
+        # offset points, and remove them.
+        
+        # Using the first three points in point_arr, figure out which direction
+        # is inside and what plane to put the points in
+        in_dir = inside_direction(   *point_arr[0:3])
+        normal = three_point_normal( *point_arr[0:3])
+        direction = in_dir if inside else other_dir( in_dir)
+        
+        # Generate offset points for the correct direction
+        # for all of point_arr.
+        segs = []  
+        offset_pts = []
+        point_arr += point_arr[ 0:2] # Add first two points to the end as well
+        for i in range( len(point_arr) - 1):
+            a, b = point_arr[i:i+2]
+            par_seg = parallel_seg( a, b, normal=normal, offset=offset, direction=direction )
+            segs.append( par_seg)
+            if len(segs) > 1:
+                int_pt = segs[-2].intersect(segs[-1])
+                if int_pt:
+                    offset_pts.append( int_pt)
+            
+        return offset_pts
+    
+except:
+    # euclid isn't available; these methods won't be either
+    pass
 
 ## {{{ http://code.activestate.com/recipes/577068/ (r1)
 def frange(*args):
