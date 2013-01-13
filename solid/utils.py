@@ -300,6 +300,21 @@ def nut( screw_type='m3'):
 # = -------------- =
 try:
     from euclid import *    
+
+    def euclidify( an_obj, intended_class=Vector3):
+        # If an_obj is an instance of the appropriate PyEuclid class, 
+        # return it.  Otherwise, try to turn an_obj into the appropriate
+        # class and throw an exception on failure
+        ret = an_obj
+        if not isinstance( an_obj, intended_class):
+            try:
+                ret = intended_class( *an_obj)
+            except:
+                raise TypeError( "Object: %s ought to be PyEuclid class %s or "
+                "able to form one, but is not."%(an_obj, intended_class.__name__))
+        return ret
+    
+
 # ==============
 # = Transforms =
 # ==============
@@ -340,19 +355,6 @@ try:
         if rot_angle == 180:
             rot_vec = up
             
-        # # ETJ DEBUG
-        # print "************************************************************"
-        # classOrFile = self.__class__.__name__ if 'self' in vars() else os.path.basename(__file__)
-        # method = sys._getframe().f_code.co_name
-        # print "%(classOrFile)s:%(method)s"%vars()
-        # print '\trot_angle:  %s'% rot_angle
-        # print '\trot_vec:    %s'% rot_vec
-        # print "************************************************************"
-        # 
-        # # END DEBUG
-        
-        
-        
         # TODO: figure out how to get these points
         return translate( point)(
                     rotate( a=rot_angle, v=rot_vec)(
@@ -360,11 +362,7 @@ try:
                     )
                 )
     
-            
-    LEFT, RIGHT = radians(90), radians(-90)
-    # ==========
-    # = Offset =
-    # = ------ =          
+    
     def draw_segment( euc_line=None, endless=False, vec_color=None):
         # Draw a tradtional arrow-head vector in 3-space.
         vec_arrow_rad = 7
@@ -400,7 +398,10 @@ try:
         
         return arrow
     
-
+    # ==========
+    # = Offset =
+    # = ------ = 
+    LEFT, RIGHT = radians(90), radians(-90)
     def parallel_seg( p, q, offset, normal=Vector3( 0, 0, 1), direction=LEFT):
         # returns a PyEuclid Line3 parallel to pq, in the plane determined
         # by p,normal, to the left or right of pq.
@@ -504,6 +505,98 @@ try:
             
         return offset_pts
     
+
+
+    # ==========================
+    # = Extrusion along a path =
+    # = ---------------------- =
+    def extrude_along_path( shape_pts, path_pts, scale_factors=None): # Possible: twist
+        # Extrude the closed curve defined by shape_pts along path_pts.  
+        # shape_pts need not be planar, but should be oriented in the xy plane and around the origin.
+        #   ( Extruding a shape in the xz plane will return a very thin blade along path_pts)
+        #   ( Extruding a shape that's not centered on the origin will cause scaling problems)
+        # len( scale_factors) should equal len( path_pts).  If not present, scale
+        #   will be assumed to be 1.0 for each point in path_pts
+        # Future additions might include corner styles (sharp, flattened, round) 
+        #   or a twist factor
+        polyhedron_pts = []
+        facet_indices = []   
+        
+        if not scale_factors:
+            scale_factors = [1.0] * len(path_pts)
+        
+        # Make sure we've got Euclid Point3's for all elements
+        for i in range(len( shape_pts)):
+            p = shape_pts[i]
+            # Turn the point into a Point3, or barf if this doesn't work
+            shape_pts[i] = euclidify( p, Point3)
+        
+        euc_up = Vector3( *UP_VEC)
+        
+        # Make sure all points in path are Point3s as well. 
+        for which_loop in range( len( path_pts)):
+            path_pts[which_loop] = euclidify( path_pts[which_loop], Point3)
+        
+        for which_loop in range( len( path_pts)):
+            path_pt = path_pts[which_loop]
+            scale = scale_factors[which_loop]
+            
+            # calculate the normal to the curve at this point
+            if which_loop > 0 and which_loop < len(path_pts) - 1:
+                prev_pt = path_pts[which_loop-1]
+                next_pt = path_pts[which_loop+1]
+                
+                v_prev = path_pt - prev_pt
+                v_next = next_pt - path_pt
+                tangent = v_prev + v_next
+            elif which_loop == 0:
+                tangent = path_pts[which_loop+1] - path_pt
+            elif which_loop == len( path_pts) - 1:
+                tangent = path_pt - path_pts[ which_loop -1]
+            
+            euc_norm = tangent 
+            rot_angle = euc_norm.angle_between( euc_up)
+            rot_vec = euc_up.cross( euc_norm)
+            if rot_angle == 180:
+                rot_vec = up    
+            
+            # Scale points
+            if scale != 1.0:
+                this_loop = [ (scale*sh) for sh in shape_pts]
+            else:
+                this_loop = shape_pts[:]
+            # Rotate
+            if rot_vec != Vector3( 0,0,0):
+                this_loop = [ th.rotate_around( theta=rot_angle, axis=rot_vec) for th in this_loop]
+            
+            # Translate, and output as arrays OpenSCAD can handle
+            this_loop = [ (th + path_pt).as_arr() for th in this_loop ]
+            
+            # Add the transformed points to our final list
+            polyhedron_pts += this_loop
+            # And calculate the triangulation factor
+            shape_pt_count = len(shape_pts)
+            segment_start = which_loop*shape_pt_count
+            segment_end = segment_start + shape_pt_count - 1
+            for i in range( segment_start, segment_end):
+                facet_indices.append( [i, i+shape_pt_count, i+1])
+                facet_indices.append( [i+1, i+shape_pt_count, i+shape_pt_count+1]) 
+            facet_indices.append( [segment_start, segment_end, segment_end + shape_pt_count])
+            facet_indices.append( [segment_start, segment_end + shape_pt_count, segment_start+shape_pt_count])
+        
+        # Cap the start of the polyhedron
+        for i in range(1, shape_pt_count - 1):
+            facet_indices.append( [0, i, i+1])
+        
+        # And the end ( could be rolled into the earlier loop)
+        end_cap_base = len( polyhedron_pts) - shape_pt_count 
+        for i in range( end_cap_base + 1, len(polyhedron_pts) -1):
+            facet_indices.append( [ end_cap_base, i, i+1])     
+        
+        return polyhedron( points = polyhedron_pts, triangles=facet_indices)         
+    
+
+        
 except:
     # euclid isn't available; these methods won't be either
     pass
