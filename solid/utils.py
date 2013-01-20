@@ -165,7 +165,7 @@ def fillet_2d( a, b, c, rad):
     # Note that if rad is greater than a.distance(b) or c.distance(b), for a 
     # 90-degree corner, the returned shape will include a jagged edge. In
     # general, best to 
-    pass
+    raise NotImplementedError
 
 # TODO: arc_to that creates an arc from point to another point.
 # This is useful for making paths.  See the SVG path command:
@@ -318,6 +318,12 @@ try:
             elif isinstance( an_obj[0], intended_class):
                 # this array is already euclidified; return it
                 ret = an_obj
+            else:
+                try:
+                    ret = intended_class( *an_obj)
+                except:
+                    raise TypeError( "Object: %s ought to be PyEuclid class %s or "
+                    "able to form one, but is not."%(an_obj, intended_class.__name__))
         elif not isinstance( an_obj, intended_class):
             try:
                 ret = intended_class( *an_obj)
@@ -327,7 +333,7 @@ try:
         return ret
     
     def euc_to_arr( euc_obj_or_list): # Inverse of euclidify()
-        # Call as_arr on an_obj or all its members if it's a list
+        # Call as_arr on euc_obj_or_list or on all its members if it's a list
         if hasattr(euc_obj_or_list, "as_arr"):
             return euc_obj_or_list.as_arr()
         elif isinstance( euc_obj_or_list, (list, tuple)) and hasattr(euc_obj_or_list[0], 'as_arr'):
@@ -337,7 +343,6 @@ try:
             # nor a list of them.  Assume it's a list of points or vectors,
             # and return the list unchanged.  We could be wrong about this, though.
             return euc_obj_or_list
-            # raise TypeError( "euc_to_arr() requires a PyEuclid object or a list of ""them. It doesn't know to handle %s"%euc_obj_or_list)
     
     def is_scad( obj):
         return isinstance( obj, openscad_object)
@@ -351,12 +356,20 @@ try:
                ]
     
 
-# ==============
-# = Transforms =
-# ==============
+    # ==============
+    # = Transforms =
+    # ==============
     def transform_to_point( body, dest_point, dest_normal,
             src_point=Point3(0,0,0), src_normal=Vector3(0,1,0), src_up=Vector3(0,0,1)):
+        # Transform body to dest_point, looking at dest_normal. 
+        # Orientation & offset can be changed by supplying the src arguments
         
+        # Body may be:  
+        #   -- an openSCAD object
+        #   -- a list of 3-tuples  or PyEuclid Point3s
+        #   -- a single 3-tuple or Point3
+        dest_point = euclidify( dest_point, Point3)
+        dest_normal = euclidify( dest_normal, Vector3)
         at = dest_point + dest_normal
         
         look_at_matrix = Matrix4.new_look_at( eye=dest_point, at=at, up=src_up )
@@ -365,11 +378,13 @@ try:
             # If the body being altered is a SCAD object, do the matrix mult
             # in OpenSCAD
             sc_matrix = scad_matrix( look_at_matrix)
-            res = multmatrix( m=sc_matrix)( body)
+            res = multmatrix( m=sc_matrix)( body) 
         else:
-            # Otherwise, do the mult in Python using PyEuclid
-            res = [look_at_matrix * euclidify(p, Point3) for p in body]
-        
+            body = euclidify( body, Point3)
+            if isinstance( body, (list, tuple)):
+                res = [look_at_matrix * p for p in body]  
+            else:
+                res = look_at_matrix *  body
         return res
                      
     
@@ -467,8 +482,7 @@ try:
         # returns a closed solidPython polygon offset by offset distance
         # from the polygon described by point_arr.
         op = offset_points( point_arr, offset=offset, inside=inside)
-        segments = range( len(op))
-        return polygon( euc_to_arr(op), paths=[segments])
+        return polygon( euc_to_arr(op))
     
     def offset_points( point_arr, offset, inside=True):
         # Given a set of points, return a set of points offset from 
@@ -523,14 +537,14 @@ try:
     def extrude_along_path( shape_pts, path_pts, scale_factors=None): # Possible: twist
         # FIXME: doesn't work with paths of the form [[0,0,0], [0,0,100]]
         
-        # Extrude the closed curve defined by shape_pts along path_pts.
-        # shape_pts need not be planar, but should be oriented in the xy plane and around the origin.
-        #   ( Extruding a shape in the xz plane will return a very thin blade along path_pts)
-        #   ( Extruding a shape that's not centered on the origin will cause scaling problems)
-        # len( scale_factors) should equal len( path_pts).  If not present, scale
-        #   will be assumed to be 1.0 for each point in path_pts
-        # Future additions might include corner styles (sharp, flattened, round)
-        #   or a twist factor
+        # Extrude the convex curve defined by shape_pts along path_pts.
+        # -- For predictable results, shape_pts must be planar, convex, and lie
+        # in the XY plane centered around the origin.
+        #
+        # -- len( scale_factors) should equal len( path_pts).  If not present, scale
+        #       will be assumed to be 1.0 for each point in path_pts
+        # -- Future additions might include corner styles (sharp, flattened, round)
+        #       or a twist factor
         polyhedron_pts = []
         facet_indices = []
         
