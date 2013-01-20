@@ -302,11 +302,23 @@ try:
     from euclid import *    
 
     def euclidify( an_obj, intended_class=Vector3):
-        # If an_obj is an instance of the appropriate PyEuclid class, 
+        # If an_obj is an instance of the appropriate PyEuclid class,
         # return it.  Otherwise, try to turn an_obj into the appropriate
         # class and throw an exception on failure
+        
+        # Since we often want to convert an entire array
+        # of objects (points, etc.) accept arrays of arrays
+        
         ret = an_obj
-        if not isinstance( an_obj, intended_class):
+        
+        # See if this is an array of arrays.  If so, convert all sublists 
+        if isinstance( an_obj, (list, tuple)): 
+            if isinstance( an_obj[0], (list,tuple)):
+                ret = [intended_class(*p) for p in an_obj]
+            elif isinstance( an_obj[0], intended_class):
+                # this array is already euclidified; return it
+                ret = an_obj
+        elif not isinstance( an_obj, intended_class):
             try:
                 ret = intended_class( *an_obj)
             except:
@@ -314,74 +326,74 @@ try:
                 "able to form one, but is not."%(an_obj, intended_class.__name__))
         return ret
     
+    def euc_to_arr( euc_obj_or_list): # Inverse of euclidify()
+        # Call as_arr on an_obj or all its members if it's a list
+        if hasattr(euc_obj_or_list, "as_arr"):
+            return euc_obj_or_list.as_arr()
+        elif isinstance( euc_obj_or_list, (list, tuple)) and hasattr(euc_obj_or_list[0], 'as_arr'):
+            return [euc_to_arr( p) for p in euc_obj_or_list]
+        else:
+            # euc_obj_or_list is neither an array-based PyEuclid object,
+            # nor a list of them.  Assume it's a list of points or vectors,
+            # and return the list unchanged.  We could be wrong about this, though.
+            return euc_obj_or_list
+            # raise TypeError( "euc_to_arr() requires a PyEuclid object or a list of ""them. It doesn't know to handle %s"%euc_obj_or_list)
+    
+    def is_scad( obj):
+        return isinstance( obj, openscad_object)
+    
+    def scad_matrix( euclid_matrix4):
+        a = euclid_matrix4
+        return [[a.a, a.b, a.c, a.d],
+                [a.e, a.f, a.g, a.h],
+                [a.i, a.j, a.k, a.l],
+                [a.m, a.n, a.o, a.p]
+               ]
+    
 
 # ==============
 # = Transforms =
 # ==============
-    def transform_to_point( body, point, normal, two_d=False):
-        '''
-        Transforms body from horizontal at the origin to point, rotating it so
-        vertical now matches the supplied normal.
+    def transform_to_point( body, dest_point, dest_normal,
+            src_point=Point3(0,0,0), src_normal=Vector3(0,1,0), src_up=Vector3(0,0,1)):
         
-        If two_d is False, rotate the up vector ( [0,0,1]) to match normal.
-        If two_d is True, assume we're functioning in XY, and rotate [0,1] to match normal
+        at = dest_point + dest_normal
         
-        This is useful for adding objects to arbitrary points on existing objects
+        look_at_matrix = Matrix4.new_look_at( eye=dest_point, at=at, up=src_up )
         
-        Returns body, transformed appropriately
-        
-        Use case:
-            -- make a 2-d shape that will be the side of an acrylic box
-            -- identify points on that shape that will need t-slots, and the normals
-                to the sides where the slots will be added
-            -- draw the t-slot shape at the origin, facing up.
-            -- at each point you want to place a slot, call 
-                transform_to_point( t_slot_poly, p, n, two_d=True)
-        '''
-        # TODO: move euclid  functions to a separate file
-        from euclid import Vector3
-        
-        if two_d:
-            up = FORWARD_VEC
+        if is_scad( body):
+            # If the body being altered is a SCAD object, do the matrix mult
+            # in OpenSCAD
+            sc_matrix = scad_matrix( look_at_matrix)
+            res = multmatrix( m=sc_matrix)( body)
         else:
-            up = UP_VEC
+            # Otherwise, do the mult in Python using PyEuclid
+            res = [look_at_matrix * euclidify(p, Point3) for p in body]
         
-        euc_up = Vector3( *up)
-        euc_norm = Vector3( *normal)
-        
-        rot_angle = degrees( euc_norm.angle_between( euc_up))
-        rot_vec = euc_up.cross( euc_norm).as_arr()
-        
-        if rot_angle == 180:
-            rot_vec = up
-            
-        # TODO: figure out how to get these points
-        return translate( point)(
-                    rotate( a=rot_angle, v=rot_vec)(
-                        body
-                    )
-                )
+        return res
+                     
     
-    
-    def draw_segment( euc_line=None, endless=False, vec_color=None):
+    # ==================
+    # = Vector drawing =
+    # = -------------- =
+    def draw_segment( euc_line=None, endless=False, arrow_rad=7, vec_color=None):
         # Draw a tradtional arrow-head vector in 3-space.
-        vec_arrow_rad = 7
+        vec_arrow_rad = arrow_rad
         vec_arrow_head_rad = vec_arrow_rad * 1.5
         vec_arrow_head_length = vec_arrow_rad * 3
         
         if isinstance( euc_line, Vector3):
-            p = ORIGIN
+            p = Point3( *ORIGIN)
             v = euc_line
         elif isinstance( euc_line, Line3): 
             p = euc_line.p
             v = euc_line.v
         elif isinstance( euc_line, list) or isinstance( euc_line, tuple):
-            # TODO: we're assuming p & v are PyEuclid classes.  
+            # TODO: This assumes p & v are PyEuclid classes.  
             # Really, they could as easily be two 3-tuples. Should
             # check for this.   
             p, v = euc_line[0], euc_line[1]
                  
-        
         shaft_length = v.magnitude() - vec_arrow_head_length    
         arrow = cylinder( r= vec_arrow_rad, h = shaft_length)
         arrow += up( shaft_length )( 
@@ -391,7 +403,7 @@ try:
             endless_length = max( v.magnitude()*10, 200)
             arrow += cylinder( r=vec_arrow_rad/3, h = endless_length, center=True)
         
-        arrow = transform_to_point( body=arrow, point=p.as_arr(), normal=v.as_arr())
+        arrow = transform_to_point( body=arrow, dest_point=p, dest_normal=v)
         
         if vec_color:
             arrow = color( vec_color)(arrow)
@@ -456,16 +468,16 @@ try:
         # from the polygon described by point_arr.
         op = offset_points( point_arr, offset=offset, inside=inside)
         segments = range( len(op))
-        return polygon( [p.as_arr() for p in op], paths=[segments])
+        return polygon( euc_to_arr(op), paths=[segments])
     
     def offset_points( point_arr, offset, inside=True):
         # Given a set of points, return a set of points offset from 
         # them.  
         # To get reasonable results, the points need to be all in a plane.
-        # ( Non-planar point_arr will still return results, but what constituetes
+        # ( Non-planar point_arr will still return results, but what constitutes
         # 'inside' or 'outside' would be different in that situation.)
         #
-        # What direction inside and outside lie is determined by the first
+        # What direction inside and outside lie in is determined by the first
         # three points (first corner).  In a convex closed shape, this corresponds
         # to inside and outside.  If the first three points describe a concave
         # portion of a closed shape, inside and outside will be switched.  
@@ -505,43 +517,37 @@ try:
             
         return offset_pts
     
-
-
     # ==========================
     # = Extrusion along a path =
     # = ---------------------- =
     def extrude_along_path( shape_pts, path_pts, scale_factors=None): # Possible: twist
-        # Extrude the closed curve defined by shape_pts along path_pts.  
+        # FIXME: doesn't work with paths of the form [[0,0,0], [0,0,100]]
+        
+        # Extrude the closed curve defined by shape_pts along path_pts.
         # shape_pts need not be planar, but should be oriented in the xy plane and around the origin.
         #   ( Extruding a shape in the xz plane will return a very thin blade along path_pts)
         #   ( Extruding a shape that's not centered on the origin will cause scaling problems)
         # len( scale_factors) should equal len( path_pts).  If not present, scale
         #   will be assumed to be 1.0 for each point in path_pts
-        # Future additions might include corner styles (sharp, flattened, round) 
+        # Future additions might include corner styles (sharp, flattened, round)
         #   or a twist factor
         polyhedron_pts = []
-        facet_indices = []   
+        facet_indices = []
         
         if not scale_factors:
             scale_factors = [1.0] * len(path_pts)
         
         # Make sure we've got Euclid Point3's for all elements
-        for i in range(len( shape_pts)):
-            p = shape_pts[i]
-            # Turn the point into a Point3, or barf if this doesn't work
-            shape_pts[i] = euclidify( p, Point3)
+        shape_pts = euclidify( shape_pts, Point3)
+        path_pts =  euclidify( path_pts, Point3)
         
-        euc_up = Vector3( *UP_VEC)
+        src_up = Vector3( *UP_VEC)
         
-        # Make sure all points in path are Point3s as well. 
-        for which_loop in range( len( path_pts)):
-            path_pts[which_loop] = euclidify( path_pts[which_loop], Point3)
-        
-        for which_loop in range( len( path_pts)):
+        for which_loop in range( len( path_pts) ):
             path_pt = path_pts[which_loop]
             scale = scale_factors[which_loop]
             
-            # calculate the normal to the curve at this point
+            # calculate the tangent to the curve at this point
             if which_loop > 0 and which_loop < len(path_pts) - 1:
                 prev_pt = path_pts[which_loop-1]
                 next_pt = path_pts[which_loop+1]
@@ -554,48 +560,37 @@ try:
             elif which_loop == len( path_pts) - 1:
                 tangent = path_pt - path_pts[ which_loop -1]
             
-            euc_norm = tangent 
-            rot_angle = euc_norm.angle_between( euc_up)
-            rot_vec = euc_up.cross( euc_norm)
-            if rot_angle == 180:
-                rot_vec = up    
-            
             # Scale points
-            if scale != 1.0:
-                this_loop = [ (scale*sh) for sh in shape_pts]
-            else:
-                this_loop = shape_pts[:]
-            # Rotate
-            if rot_vec != Vector3( 0,0,0):
-                this_loop = [ th.rotate_around( theta=rot_angle, axis=rot_vec) for th in this_loop]
-            
-            # Translate, and output as arrays OpenSCAD can handle
-            this_loop = [ (th + path_pt).as_arr() for th in this_loop ]
+            this_loop = [ (scale*sh) for sh in shape_pts] if scale != 1.0 else shape_pts[:]
+                
+            # Rotate & translate
+            this_loop = transform_to_point( this_loop, dest_point=path_pt, dest_normal=tangent, src_up=src_up)
             
             # Add the transformed points to our final list
             polyhedron_pts += this_loop
-            # And calculate the triangulation factor
+            # And calculate the facet indices
             shape_pt_count = len(shape_pts)
             segment_start = which_loop*shape_pt_count
             segment_end = segment_start + shape_pt_count - 1
-            for i in range( segment_start, segment_end):
-                facet_indices.append( [i, i+shape_pt_count, i+1])
-                facet_indices.append( [i+1, i+shape_pt_count, i+shape_pt_count+1]) 
-            facet_indices.append( [segment_start, segment_end, segment_end + shape_pt_count])
-            facet_indices.append( [segment_start, segment_end + shape_pt_count, segment_start+shape_pt_count])
+            if which_loop < len(path_pts) - 1:
+                for i in range( segment_start, segment_end):
+                    facet_indices.append( [i, i+shape_pt_count, i+1])
+                    facet_indices.append( [i+1, i+shape_pt_count, i+shape_pt_count+1])
+                facet_indices.append( [segment_start, segment_end, segment_end + shape_pt_count])
+                facet_indices.append( [segment_start, segment_end + shape_pt_count, segment_start+shape_pt_count])
         
         # Cap the start of the polyhedron
         for i in range(1, shape_pt_count - 1):
             facet_indices.append( [0, i, i+1])
         
         # And the end ( could be rolled into the earlier loop)
-        end_cap_base = len( polyhedron_pts) - shape_pt_count 
+        # FIXME: concave cross-sections will cause this end-capping algorithm to fail
+        end_cap_base = len( polyhedron_pts) - shape_pt_count
         for i in range( end_cap_base + 1, len(polyhedron_pts) -1):
-            facet_indices.append( [ end_cap_base, i, i+1])     
+            facet_indices.append( [ end_cap_base, i+1, i])
         
-        return polyhedron( points = polyhedron_pts, triangles=facet_indices)         
+        return polyhedron( points = euc_to_arr(polyhedron_pts), triangles=facet_indices)
     
-
         
 except:
     # euclid isn't available; these methods won't be either
