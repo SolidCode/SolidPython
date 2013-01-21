@@ -24,11 +24,17 @@ def thread( outline_pts, inner_rad, pitch, length, segments_per_rot=32,
     outline_pts: a list of points (NOT an OpenSCAD polygon) that define the cross 
             section of the thread
             
-    inner_rad: 
-    length:
-    segments_per_rot:
-    neck_in_degrees: 
-    neck_out_degrees:
+    inner_rad: radius of cylinder the screw will wrap around
+    pitch: height for one revolution
+    length: distance from bottom-most point of screw to topmost
+    segments_per_rot: segments per rotatio
+    neck_in_degrees: degrees through which the outer edge of the screw thread will move from 
+                    a thickness of zero (inner_rad) to its full thickness
+    neck_out_degrees: degrees through which outer edge of the screw thread will move from 
+                    full thickness back to zero
+                    
+    NOTE: if pitch is less than the height of each tooth (outline_pts), OpenSCAD will likely
+    crash, since the resulting screw would self-intersect all over the place
     '''
     a = union()
     rotations = float(length)/pitch
@@ -46,6 +52,7 @@ def thread( outline_pts, inner_rad, pitch, length, segments_per_rot=32,
     # Figure out how wide the tooth profile is
     min_bb, max_bb = bounding_box( outline_pts)
     outline_w = max_bb[0] - min_bb[0]
+    outline_h = max_bb[1] - min_bb[1]
     
     min_rad = max( 0, inner_rad-outline_w-EPSILON)    
     
@@ -85,16 +92,16 @@ def thread( outline_pts, inner_rad, pitch, length, segments_per_rot=32,
         if i < total_steps -1:
             ind = i*poly_sides
             for j in range( ind, ind + poly_sides - 1):
-                all_tris.append( [ j,   j+poly_sides, j+1])
-                all_tris.append( [ j+1, j+poly_sides, j+poly_sides+1])
-            all_tris.append( [ ind + poly_sides-1, ind + poly_sides-1+poly_sides, ind])
-            all_tris.append( [ ind, ind +poly_sides-1+poly_sides, ind + poly_sides])       
+                all_tris.append( [ j, j+1,   j+poly_sides])
+                all_tris.append( [ j+1, j+poly_sides+1, j+poly_sides])
+            all_tris.append( [ ind, ind + poly_sides-1+poly_sides, ind + poly_sides-1])
+            all_tris.append( [ ind, ind + poly_sides, ind +poly_sides-1+poly_sides])       
         
     # End triangle fans for beginning and end
     last_loop = len(all_points) - poly_sides
     for i in range( poly_sides -2):
-        all_tris.append( [ 0, i+1, i+2])
-        all_tris.append( [ last_loop, last_loop + i + 2, last_loop + i+1])
+        all_tris.append( [ 0,  i+2, i+1])
+        all_tris.append( [ last_loop, last_loop + i+1, last_loop + i + 2])
         
         
     # Make the polyhedron
@@ -102,12 +109,13 @@ def thread( outline_pts, inner_rad, pitch, length, segments_per_rot=32,
     
     # Subtract the center, to remove the neck-in pieces
     # subtract above and below to make sure the entire screw fits within height 'length'
-    cube_side = 2*(inner_rad + EPSILON + outline_w)
+    cube_side = 2*(inner_rad + outline_w)
     subs = union()(
-                cylinder( inner_rad, length),
+                down( outline_h/2)( cylinder( inner_rad, length + outline_h)),
                 down( cube_side/2)(         cube( cube_side, center=True)),
                 up( cube_side/2 + length)(  cube( cube_side, center=True))
             )
+            
     return render()(a - subs)
 
 def default_thread_section( tooth_height, tooth_depth):
