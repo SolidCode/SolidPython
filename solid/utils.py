@@ -171,6 +171,32 @@ def fillet_2d( a, b, c, rad):
 # This is useful for making paths.  See the SVG path command:
 # See: http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
 
+# ===================
+# = Model Splitting =
+# ===================
+def split_body_horizontal( body, plane_z=0, 
+                            dowel_holes=False, dowel_rad=4.5, hole_depth=15):
+    # split body along a plane, returning two pieces
+    
+    # Optionally, leave holes in both bodies to allow the pieces to be put
+    # back together with short dowels.  
+    big_num = 10000
+    bot_body = body * down( big_num/2 - plane_z)(cube( big_num, center=True)) 
+    top_body = body *  up( big_num/2 + plane_z)(cube( big_num, center=True))
+    
+    # Make holes for dowels if requested. 
+    # In case the bodies need to be aligned properly, make two holes, 
+    # along the x-axis, separated by one dowel-width
+    if dowel_holes:
+        dowel = cylinder( r=dowel_rad, h=hole_depth*2, center=True)
+        l_dowel = translate([-2*dowel_rad, 0, plane_z])(dowel)
+        r_dowel = translate([ 2*dowel_rad, 0, plane_z])(dowel)
+        dowels = l_dowel + r_dowel
+        bot_body -= dowels
+        top_body -= dowels
+    
+    return ( bot_body, top_body)
+
 # =====================
 # = Bill of Materials =
 # =====================

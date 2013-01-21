@@ -38,13 +38,19 @@ other_test_cases = [
     ( 'transform_to_point_single_pt3', transform_to_point, [Point3(1,0,0), [2,2,2], [3,3,1]], 'Point3(2.71, 1.29, 2.00)'),
     ( 'transform_to_point_arr_arr',     transform_to_point, [[[1,0,0], [0,1,0], [0,0,1]]  , [2,2,2], [3,3,1]], '[Point3(2.71, 1.29, 2.00), Point3(1.84, 1.84, 2.97), Point3(1.31, 1.31, 1.77)]'),
     ( 'transform_to_point_pt3_arr',     transform_to_point, [[Point3(1,0,0), Point3(0,1,0), Point3(0,0,1)], [2,2,2], [3,3,1]], '[Point3(2.71, 1.29, 2.00), Point3(1.84, 1.84, 2.97), Point3(1.31, 1.31, 1.77)]') ,
+    
 ]
 
 
 class TestSPUtils( unittest.TestCase):
     # test cases will be dynamically added to this instance
-    pass
-
+    def test_split_body_horizontal( self):
+        body = sphere( 20)
+        actual_tuple = split_body_horizontal( body, plane_z=10, dowel_holes=True)
+        actual = [scad_render( b) for b in actual_tuple]
+        expected = ['\n\ndifference() {\n\tintersection() {\n\t\tsphere(r = 20);\n\t\ttranslate(v = [0, 0, -4990]) {\n\t\t\tcube(center = true, size = 10000);\n\t\t}\n\t}\n\tunion() {\n\t\ttranslate(v = [-9.0000000000, 0, 10]) {\n\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t}\n\t\ttranslate(v = [9.0000000000, 0, 10]) {\n\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t}\n\t}\n}',
+                    '\n\ndifference() {\n\tintersection() {\n\t\tsphere(r = 20);\n\t\ttranslate(v = [0, 0, 5010]) {\n\t\t\tcube(center = true, size = 10000);\n\t\t}\n\t}\n\tunion() {\n\t\ttranslate(v = [-9.0000000000, 0, 10]) {\n\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t}\n\t\ttranslate(v = [9.0000000000, 0, 10]) {\n\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t}\n\t}\n}']
+        self.assertEqual( expected, actual)
 
 def test_generator_scad( func, args, expected):
     def test_scad(self):
