@@ -4,12 +4,13 @@ import os, sys, re
 
 import unittest
 
-# ETJ DEBUG
-# make sure solidPython is available.  This probably isn't the best way to 
-# do things
 from solid import *
 from solid.utils import *
-# END DEBUG
+# TODO: many of these tests require pyeuclid, but SolidPython, to date, does
+# not.  These tests should account for the possibility of not having PyEuclid
+# installed -ETJ 20 Jan 2013
+from euclid import *
+
 scad_test_cases = [
     ( up,           [2],   '\n\ntranslate(v = [0, 0, 2]);'),
     ( down,         [2],   '\n\ntranslate(v = [0, 0, -2]);'),
