@@ -1,4 +1,4 @@
-for i in `ls ./test_*.py`;
+for i in test_*.py;
 do 
 echo $i;
 python $i;
