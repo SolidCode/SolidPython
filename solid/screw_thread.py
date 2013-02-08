@@ -118,11 +118,14 @@ def thread( outline_pts, inner_rad, pitch, length, segments_per_rot=32,
             
     return render()(a - subs)
 
-def default_thread_section( tooth_height, tooth_depth):
-    return [ [ 0, -tooth_height/2],
+def default_thread_section( tooth_height, tooth_depth, exterior=True):
+    if not exterior:
+        tooth_depth = -tooth_depth
+    res = [ [ 0, -tooth_height/2],
              [ tooth_depth, 0],
              [ 0, tooth_height/2]
             ]
+    return res
 
 
 def assembly():
