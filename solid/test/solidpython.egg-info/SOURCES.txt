@@ -1,0 +1,4 @@
+solidpython.egg-info/PKG-INFO
+solidpython.egg-info/SOURCES.txt
+solidpython.egg-info/dependency_links.txt
+solidpython.egg-info/top_level.txt
