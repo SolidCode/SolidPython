@@ -139,7 +139,7 @@ def scad_render( scad_object, file_header=''):
     scad_body = root._render()
     return file_header + includes + scad_body
 
-def scad_render_to_file( scad_object, filepath=None, file_header='', include_orig_code=False):
+def scad_render_to_file( scad_object, filepath=None, file_header='', include_orig_code=True):
     rendered_string = scad_render( scad_object, file_header)
     
     calling_file = os.path.abspath( calling_module().__file__) 
