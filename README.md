@@ -185,25 +185,17 @@ You can change an object's color by using the OpenSCAD ```color([rgba_array])```
 
 These colors are pre-defined in solid.utils:
 
-* Red        
-* Green      
-* Blue       
-* Cyan       
-* Magenta    
-* Yellow     
-* Black      
-* White      
-* Oak        
-* Pine       
-* Birch      
-* FiberBoard 
-* BlackPaint 
-* Iron       
-* Steel      
-* Stainless  
-* Aluminum   
-* Brass      
-* Transparent
+<table border="0" cellspacing="5" cellpadding="0">
+    <tr><td>Red        </td><td>Green      </td><td>Blue       </td></tr>
+    <tr><td>Cyan       </td><td>Magenta    </td><td>Yellow     </td></tr>
+    <tr><td>Black      </td><td>White      </td><td>Transparent</td></tr>
+    <tr><td>Oak        </td><td>Pine       </td><td>Birch      </td></tr>
+    <tr><td>FiberBoard </td><td>BlackPaint </td></tr>
+    <tr><td>Iron       </td><td>Steel      </td><td>Stainless  </td></tr>
+    <tr><td>Aluminum   </td><td>Brass      </td></tr>
+</table>
+
+
 
 
 I took this from someone on Thingiverse and I'm 
