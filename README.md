@@ -1,7 +1,22 @@
-* auto-gen TOC:
-{:toc}
+SolidPython
+-----------
+- [SolidPython:  OpenSCAD for Python](#solidpython--openscad-for-python)
+- [Advantages](#advantages)
+- [Installing SolidPython](#installing-solidpython)
+- [Using SolidPython](#using-solidpython)
+- [Example Code](#example-code)
+- [Extra syntactic sugar](#extra-syntactic-sugar)
+	- [Basic operators](#basic-operators)
+- [solid.utils](#solidutils)
+	- [Directions: (up, down, left, right, forward, back) for arranging things:](#directions-up-down-left-right-forward-back-for-arranging-things)
+	- [Arcs](#arcs)
+	- [Basic color library](#basic-color-library)
+	- [Bill Of Materials](#bill-of-materials)
+- [Contact](#contact)
+**Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
 
-SolidPython:  OpenSCAD for Python
+
+SolidPython:  OpenSCAD for Python<a id="solidpython--openscad-for-python"></a>
 -----------------------
 
 SolidPython is a generalization of Phillip Tiefenbacher's openscad module, 
@@ -42,7 +57,7 @@ Generates this OpenSCAD code:
         cylinder( r=2, h=6);
     }
 
-Advantages
+Advantages<a id="advantages"></a>
 ----------
 Because you're using Python, a lot of things are easy that would be hard or 
 impossible in pure OpenSCAD.  Among these are:
@@ -52,7 +67,7 @@ impossible in pure OpenSCAD.  Among these are:
 * recursion
 * external libraries (images! 3D geometry!  web-scraping! ...)
 
-Installing SolidPython
+Installing SolidPython<a id="installing-solidpython"></a>
 ----------------------
 *   Install via [PyPI](python setup.py sdist bdist_wininst upload):
 
@@ -74,7 +89,7 @@ Installing SolidPython
 
             sudo python setup.py --install
 
-Using SolidPython
+Using SolidPython<a id="using-solidpython"></a>
 -------------------------
 *   Include SolidPython at the top of your Python file:
 
@@ -108,7 +123,7 @@ Using SolidPython
 *   Alternately, you could call OpenSCAD's command line and render straight 
     to STL.   
     
-Example Code
+Example Code<a id="example-code"></a>
 ------------
 The best way to learn how SolidPython works is to look at the included example code. 
 If you've installed SolidPython, the  following line of Python will print the location of 
@@ -120,9 +135,9 @@ Or browse the example code on Github [here](https://github.com/SolidCode/SolidPy
 
 Adding your own code to the example file `solidpython_template.py` will make some of the setup easier.
 
-Extra syntactic sugar
+Extra syntactic sugar<a id="extra-syntactic-sugar"></a>
 ---------------------
-### Basic operators
+### Basic operators<a id="basic-operators"></a>
 Following Elmo Mäntynen's suggestion, SCAD objects override 
 the basic operators + (union), - (difference), and * (intersection).
 So
@@ -149,11 +164,11 @@ is the same as:
 
 
 
-solid.utils
+solid.utils<a id="solidutils"></a>
 -----------
 SolidPython includes a number of useful functions in solid/utils.py.  Currently these include:
     
-### Directions: (up, down, left, right, forward, back) for arranging things:
+### Directions: (up, down, left, right, forward, back) for arranging things:<a id="directions-up-down-left-right-forward-back-for-arranging-things"></a>
     
     up(10)(
         cylinder()
@@ -168,7 +183,7 @@ seems a lot clearer to me than:
 Again, I took this from someone's SCAD work and have lost track of the 
 original author.  My apologies.
     
-### Arcs
+### Arcs<a id="arcs"></a>
 I've found this useful for fillets and rounds.
 
     arc( rad=10, start_degrees=90, end_degrees=210)
@@ -180,7 +195,7 @@ draws an arc of radius 10 counterclockwise from 90 to 210 degrees.
 draws the portion of a 10x10 square NOT in a 90 degree circle of radius 10.
 This is the shape you need to add to make fillets or remove to make rounds.
     
-### Basic color library
+### Basic color library<a id="basic-color-library"></a>
 You can change an object's color by using the OpenSCAD ```color([rgba_array])``` function:
 
     transparent_blue = color( [0,0,1, 0.5])( cube(10))  # Specify with RGB[A]
@@ -202,14 +217,14 @@ I took this from someone on Thingiverse and I'm
 ashamed that I can't find the original source.  I owe someone some 
 attribution.
     
-### Bill Of Materials
+### Bill Of Materials<a id="bill-of-materials"></a>
 Put ```@part()``` before any method that defines a part, then 
 call ```bill_of_materials()``` after the program is run, and all parts will be 
 counted, priced and reported. 
 
 The example file `bom_scad.py` illustrates this. Check it out.
 
-Contact
+Contact<a id="contact"></a>
 -------
 Enjoy, and please send any questions or bug reports to me at ```evan_t_jones@mac.com```. Cheers!
 Evan
