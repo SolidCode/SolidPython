@@ -186,17 +186,14 @@ You can change an object's color by using the OpenSCAD ```color([rgba_array])```
 These colors are pre-defined in solid.utils:
 
 <table border="0" cellspacing="5" cellpadding="0">
-    <tr><td>Red        </td><td>Green      </td><td>Blue       </td></tr>
-    <tr><td>Cyan       </td><td>Magenta    </td><td>Yellow     </td></tr>
-    <tr><td>Black      </td><td>White      </td><td>Transparent</td></tr>
-    <tr><td>Oak        </td><td>Pine       </td><td>Birch      </td></tr>
-    <tr><td>FiberBoard </td><td>BlackPaint </td></tr>
-    <tr><td>Iron       </td><td>Steel      </td><td>Stainless  </td></tr>
-    <tr><td>Aluminum   </td><td>Brass      </td></tr>
+    <tr><td>* Red        </td><td>* Green      </td><td>* Blue       </td></tr>
+    <tr><td>* Cyan       </td><td>* Magenta    </td><td>* Yellow     </td></tr>
+    <tr><td>* Black      </td><td>* White      </td><td>* Transparent</td></tr>
+    <tr><td>* Oak        </td><td>* Pine       </td><td>* Birch      </td></tr>
+    <tr><td>* Iron       </td><td>* Steel      </td><td>* Stainless  </td></tr>
+    <tr><td>* Aluminum   </td><td>* Brass      </td><td>* BlackPaint </td></tr>
+    <tr><td>* FiberBoard </td></tr>
 </table>
-
-
-
 
 I took this from someone on Thingiverse and I'm 
 ashamed that I can't find the original source.  I owe someone some 
