@@ -1,3 +1,5 @@
+-- Add to PyPI so SolidPython can be installed with pip install solidpython
+-- Update README with PyEuclid information and PyPI-aware install info
 -- bill_of_materials() entries should be left-justified in their columns.
 -- Comprehensive docs
 -- Applescript or other inter-app communication that will recompile in OpenSCAD
