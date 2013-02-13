@@ -1,4 +1,3 @@
--- setup.py should include PyPi-required metadata.
 -- bill_of_materials() entries should be left-justified in their columns.
 -- Comprehensive docs
 -- Applescript or other inter-app communication that will recompile in OpenSCAD
@@ -31,4 +30,6 @@ Completed:
 -- Add 'segments' arguments to circle(), sphere() and cylinder()? This breaks 
     with OpenSCAD, but is simpler than circle(10).add_param('$fn', 30)    
 -- Unit testing.
+-- setup.py should include PyPi-required metadata.
+
     
