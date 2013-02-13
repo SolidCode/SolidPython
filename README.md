@@ -1,3 +1,6 @@
+* auto-gen TOC:
+{:toc}
+
 SolidPython:  OpenSCAD for Python
 -----------------------
 
