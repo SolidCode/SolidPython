@@ -326,6 +326,15 @@ def nut( screw_type='m3'):
 # = -------------- =
 try:
     from euclid import *    
+    # NOTE: The PyEuclid on PyPi doesn't include several elements added to 
+    # the module as of 13 Feb 2013.  Add them here until euclid supports them
+    def patch_euclid():
+        def as_arr_local( self):
+            return [ self.x, self.y, self.z]
+    
+        if 'as_arr' not in dir( Vector3):
+            Vector3.as_arr = as_arr_local
+    patch_euclid()
 
     def euclidify( an_obj, intended_class=Vector3):
         # If an_obj is an instance of the appropriate PyEuclid class,
