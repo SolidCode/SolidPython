@@ -20,7 +20,11 @@ setup(name='solidpython',
           "Topic :: Scientific/Engineering :: Mathematics",
           ],
       packages = find_packages(),  
-      data_files = [ ('solid/test',['solid/test/run_all_tests.sh'])],   
+      data_files = [  ('solid/test',    ['solid/test/run_all_tests.sh']), 
+                      ('solid/examples',['solid/examples/run_all_examples.sh',
+                                   'solid/examples/scad_to_include.scad']),
+                      ('', ['README.md']),
+                     ],   
       install_requires = ['euclid'] ,          
       )
 
