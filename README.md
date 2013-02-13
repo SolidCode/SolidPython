@@ -51,21 +51,32 @@ impossible in pure OpenSCAD.  Among these are:
 
 Installing SolidPython
 ----------------------
-*   Download SolidPython ( Click [here](https://github.com/SolidCode/SolidPython/archive/master.zip) to download directly, or use git to pull it all down ) ** TODO: Put SolidPyton on PyPI
-*   Unzip the file, probably in ~/Downloads/SolidPython-master
-*   In a terminal, cd to location of file:
-  
-        cd ~/Downloads/SolidPython-master
-*   Run the install script: 
+*   Install via [PyPI](python setup.py sdist bdist_wininst upload):
 
-        sudo python setup.py --install
+        sudo easy_install solidpython
+        
+
+    At time of writing, `pip install solidpython` will NOT work (13 Feb 2013)
+
+*   **OR:** Download SolidPython ( Click [here](https://github.com/SolidCode/SolidPython/archive/master.zip) to download directly, or use git to pull it all down)
+
+    ( Note that SolidPython also depends on the [PyEuclid](http://pypi.python.org/pypi/euclid) Vector math library, installable via `sudo pip install euclid`)
+    
+    *   Unzip the file, probably in ~/Downloads/SolidPython-master
+    *   In a terminal, cd to location of file:
+  
+            cd ~/Downloads/SolidPython-master
+
+    *   Run the install script: 
+
+            sudo python setup.py --install
 
 Using SolidPython
 -------------------------
 *   Include SolidPython at the top of your Python file:
 
         from solid import *
-        from solid.utils import *  # Not required, but the utils file is useful
+        from solid.utils import *  # Not required, but the utils module is useful
 *   To include other scad code, call ```use("/path/to/scadfile.scad")``` or ```include("/path/to/scadfile.scad")```
 *   OpenSCAD uses curly-brace blocks ({}) to create its tree.  SolidPython uses
     parentheses with comma-delimited lists.
@@ -97,7 +108,7 @@ Using SolidPython
 Example Code
 ------------
 The best way to learn how SolidPython works is to look at the included example code. 
-If you've installed SolidPython, the  following line will print the location of 
+If you've installed SolidPython, the  following line of Python will print the location of 
 the examples directory:
 
         import os, solid; print os.path.dirname( solid.__file__) + '/examples'
