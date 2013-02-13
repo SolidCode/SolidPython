@@ -26,10 +26,7 @@ if __name__ == '__main__':
     
     a = assembly()
     
-    bom = bill_of_materials()
-    
     print "%(__file__)s: SCAD file written to: \n%(file_out)s \n"%vars()
-    print bom
     
     scad_render_to_file( a, file_out, include_orig_code=True)
     
