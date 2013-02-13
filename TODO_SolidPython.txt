@@ -1,3 +1,4 @@
+-- README needs a table of contents with #hash links
 -- bill_of_materials() entries should be left-justified in their columns.
 -- Comprehensive docs
 -- Applescript or other inter-app communication that will recompile in OpenSCAD
