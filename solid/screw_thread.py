@@ -67,6 +67,7 @@ def thread( outline_pts, inner_rad, pitch, length, external=True, segments_per_r
     outline_h = max_bb[1] - min_bb[1]
     
     min_rad = max( 0, inner_rad-outline_w-EPSILON)    
+    max_rad = inner_rad + outline_w + EPSILON
     
     # outline_pts, since they were created in 2D , are in the XY plane.
     # But spirals move a profile in XZ around the Z-axis.  So swap Y and Z
@@ -89,12 +90,27 @@ def thread( outline_pts, inner_rad, pitch, length, external=True, segments_per_r
             angle = total_angle
             elevation = length
         
+        # Handle the neck-in radius for internal and external threads
         rad = inner_rad
-        if angle < neck_in_degrees:
-            rad = min_rad + angle/neck_in_degrees * outline_w
-        elif angle > total_angle - neck_out_degrees:
-            rad =min_rad +  (total_angle - angle)/neck_out_degrees * outline_w
+        int_ext_mult = 1 if external else -1
+        neck_in_rad = min_rad if external else max_rad
         
+        if angle < neck_in_degrees:
+            rad = neck_in_rad + int_ext_mult * angle / neck_in_degrees * outline_w
+        elif angle > total_angle - neck_in_degrees:
+            rad = neck_in_rad + int_ext_mult * (total_angle - angle)/neck_out_degrees * outline_w
+        
+        # if angle < neck_in_degrees:
+        #     if external:
+        #         rad = min_rad + angle/neck_in_degrees * outline_w
+        #     else:
+        #         rad = max_rad - angle/neck_out_degrees *outline_w
+        # elif angle > total_angle - neck_out_degrees:
+        #     if external:
+        #         rad = min_rad + (total_angle - angle)/neck_out_degrees * outline_w
+        #     else:
+        #         rad = max_rad - (total_angle - angle)/neck_out_degrees *outline_w
+        #         
         elev_vec = Vector3( rad, 0, elevation)
         
         for p in euc_points:
