@@ -16,8 +16,7 @@ def patch_euclid():
         Vector3.as_arr = as_arr_local
 patch_euclid()
 
-def thread( outline_pts, inner_rad, pitch, length, segments_per_rot=32,
-                        neck_in_degrees=0, neck_out_degrees=0):
+def thread( outline_pts, inner_rad, pitch, length, external=True, segments_per_rot=32,neck_in_degrees=0, neck_out_degrees=0):
     '''
     Sweeps outline_pts (an array of points describing a closed polygon in XY)
     through a spiral. 
@@ -37,7 +36,10 @@ def thread( outline_pts, inner_rad, pitch, length, segments_per_rot=32,
     inner_rad: radius of cylinder the screw will wrap around
     pitch: height for one revolution
     length: distance from bottom-most point of screw to topmost
-    segments_per_rot: segments per rotatio
+    external: if True, the cross-section is external to a cylinder. If False,
+                    the segment is internal to it, and outline_pts will be
+                    mirrored right-to-left
+    segments_per_rot: segments per rotation
     neck_in_degrees: degrees through which the outer edge of the screw thread will move from 
                     a thickness of zero (inner_rad) to its full thickness
     neck_out_degrees: degrees through which outer edge of the screw thread will move from 
@@ -76,7 +78,8 @@ def thread( outline_pts, inner_rad, pitch, length, segments_per_rot=32,
         if len( p) == 2:
             p.append( 0)
         # [x, y, z] => [ x+inner_rad, z, y]
-        s =  Point3( p[0], p[2], p[1]) # adding inner_rad, swapping Y & Z
+        external_mult = 1 if external else -1
+        s =  Point3( external_mult*p[0], p[2], p[1]) # adding inner_rad, swapping Y & Z
         euc_points.append( s)
         
     for i in range( total_steps):
@@ -117,20 +120,24 @@ def thread( outline_pts, inner_rad, pitch, length, segments_per_rot=32,
     # Make the polyhedron
     a = polyhedron( points=all_points, triangles=all_tris)
     
-    # Subtract the center, to remove the neck-in pieces
-    # subtract above and below to make sure the entire screw fits within height 'length'
-    cube_side = 2*(inner_rad + outline_w)
-    subs = union()(
-                down( outline_h/2)( cylinder( inner_rad, length + outline_h)),
-                down( cube_side/2)(         cube( cube_side, center=True)),
-                up( cube_side/2 + length)(  cube( cube_side, center=True))
-            )
-            
-    return render()(a - subs)
+    if external:
+        # Subtract the center, to remove the neck-in pieces
+        # subtract above and below to make sure the entire screw fits within height 'length'
+        cube_side = 2*(inner_rad + outline_w)
+        subs = union()(
+                    down( outline_h/2)( cylinder( inner_rad, length + outline_h)),
+                    down( cube_side/2)(         cube( cube_side, center=True)),
+                    up( cube_side/2 + length)(  cube( cube_side, center=True))
+                )
+        a -= subs
+    else:
+        # If the threading is internal, intersect with a central cylinder 
+        # to make sure nothing else remains
+        a = a* cylinder( r=inner_rad, h=length, segments=segments_per_rot)        
+    return render()(a)
 
-def default_thread_section( tooth_height, tooth_depth, exterior=True):
-    if not exterior:
-        tooth_depth = -tooth_depth
+def default_thread_section( tooth_height, tooth_depth):
+    # An isoceles triangle, tooth_height vertically, tooth_depth wide:
     res = [ [ 0, -tooth_height/2],
              [ tooth_depth, 0],
              [ 0, tooth_height/2]
