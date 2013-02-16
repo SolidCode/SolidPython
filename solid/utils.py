@@ -325,6 +325,7 @@ def nut( screw_type='m3'):
 # = PyEuclid Utils =
 # = -------------- =
 try:
+    import euclid
     from euclid import *    
     # NOTE: The PyEuclid on PyPi doesn't include several elements added to 
     # the module as of 13 Feb 2013.  Add them here until euclid supports them
@@ -332,10 +333,34 @@ try:
         def as_arr_local( self):
             return [ self.x, self.y, self.z]
     
+        def set_length_local( self, length):
+            d = self.magnitude()
+            if d:
+                factor = length/d
+                self.x *= factor
+                self.y *= factor
+            
+            return self            
+        
+        def _intersect_line3_line3( A, B):
+            # Connect A & B
+            # If the length of the connecting segment  is 0, they intersect
+            # at the endpoint(s) of the connecting segment
+            sol = euclid._connect_line3_line3( A, B)
+            # TODO: Ray3 and LineSegment3 would like to be able to know 
+            # if their intersection points fall within the segment.
+            if sol.magnitude_squared() < EPSILON:
+                return sol.p
+            else:
+                return None        
         if 'as_arr' not in dir( Vector3):
             Vector3.as_arr = as_arr_local
+        if 'set_length' not in dir( Vector3):
+            Vector3.set_length = set_length_local
+        if '_intersect_line3' not in dir(Line3):
+            Line3._intersect_line3 = _intersect_line3_line3
     patch_euclid()
-
+    
     def euclidify( an_obj, intended_class=Vector3):
         # If an_obj is an instance of the appropriate PyEuclid class,
         # return it.  Otherwise, try to turn an_obj into the appropriate
@@ -394,8 +419,7 @@ try:
     # ==============
     # = Transforms =
     # ==============
-    def transform_to_point( body, dest_point, dest_normal,
-            src_point=Point3(0,0,0), src_normal=Vector3(0,1,0), src_up=Vector3(0,0,1)):
+    def transform_to_point( body, dest_point, dest_normal, src_point=Point3(0,0,0), src_normal=Vector3(0,1,0), src_up=Vector3(0,0,1)):
         # Transform body to dest_point, looking at dest_normal. 
         # Orientation & offset can be changed by supplying the src arguments
         
@@ -403,10 +427,24 @@ try:
         #   -- an openSCAD object
         #   -- a list of 3-tuples  or PyEuclid Point3s
         #   -- a single 3-tuple or Point3
+        
+        # FIXME: if dest_normal and src_up are parallel, all points in body 
+        # get changed to dest_point
+        
         dest_point = euclidify( dest_point, Point3)
         dest_normal = euclidify( dest_normal, Vector3)
         at = dest_point + dest_normal
         
+        EUC_UP = euclidify( UP_VEC)
+        EUC_FORWARD = euclidify( FORWARD_VEC)
+        EUC_ORIGIN = euclidify( ORIGIN, Vector3)
+        # if dest_normal and src_up are parallel, the transform collapses
+        # all points to dest_point.  Instead, use EUC_FORWARD if needed
+        if dest_normal.cross( src_up) == EUC_ORIGIN:
+            if src_up.cross( EUC_UP) == EUC_ORIGIN:
+                src_up = EUC_FORWARD
+            else: src_up = EUC_UP
+            
         look_at_matrix = Matrix4.new_look_at( eye=dest_point, at=at, up=src_up )
         
         if is_scad( body):
@@ -464,55 +502,6 @@ try:
     # = Offset =
     # = ------ = 
     LEFT, RIGHT = radians(90), radians(-90)
-    def parallel_seg( p, q, offset, normal=Vector3( 0, 0, 1), direction=LEFT):
-        # returns a PyEuclid Line3 parallel to pq, in the plane determined
-        # by p,normal, to the left or right of pq.
-        v = q - p
-        angle = direction
-        rot_v = v.rotate_around( axis=normal, theta=angle)
-        rot_v.set_length( offset)
-        return Line3( p+rot_v, v )
-    
-    def inside_direction( a, b, c, offset=10):
-        # determines which direction (LEFT, RIGHT) is 'inside' the triangle
-        # made by a, b, c.  If ab and bc are parallel, return LEFT
-        x = three_point_normal( a, b, c)
-        
-        # Make two vectors (left & right) for each segment.
-        l_segs = [parallel_seg( p, q, normal=x, offset=offset, direction=LEFT) for p,q in ( (a,b), (b,c))]
-        r_segs = [parallel_seg( p, q, normal=x, offset=offset, direction=RIGHT) for p,q in ( (a,b), (b,c))]
-        
-        # Find their intersections.  
-        p1 = l_segs[0].intersect( l_segs[1])
-        p2 = r_segs[0].intersect( r_segs[1])
-        
-        # The only way I've figured out to determine which direction is 
-        # 'inside' or 'outside' a joint is to calculate both inner and outer
-        # vectors and then to find the intersection point closest to point a.
-        # This ought to work but it seems like there ought to be a more direct
-        # way to figure this out. -ETJ 21 Dec 2012
-        
-        # The point that's closer to point a is the inside point. 
-        if a.distance( p1) <= a.distance( p2):
-            return LEFT
-        else:
-            return RIGHT
-    
-    def other_dir( left_or_right):
-        if left_or_right == LEFT: 
-            return RIGHT
-        else:
-            return LEFT
-    
-    def three_point_normal( a, b, c):
-        ab = b - a
-        bc = c - b
-        
-        seg_ab = Line3( a, ab)
-        seg_bc = Line3( b, bc)
-        x = seg_ab.v.cross( seg_bc.v)   
-        return x
-    
     def offset_polygon( point_arr, offset, inside=True):
         # returns a closed solidPython polygon offset by offset distance
         # from the polygon described by point_arr.
@@ -531,6 +520,10 @@ try:
         # to inside and outside.  If the first three points describe a concave
         # portion of a closed shape, inside and outside will be switched.  
         #
+        # Basically this means that if you're offsetting a complicated shape,
+        # you'll likely have to try both directions (inside=True/False) to 
+        # figure out which direction you're offsetting to. 
+        #
         # CAD programs generally require an interactive user choice about which
         # side is outside and which is inside.  Robust behavior with this
         # function will require similar checking.  
@@ -546,9 +539,9 @@ try:
         
         # Using the first three points in point_arr, figure out which direction
         # is inside and what plane to put the points in
-        in_dir = inside_direction(   *point_arr[0:3])
-        normal = three_point_normal( *point_arr[0:3])
-        direction = in_dir if inside else other_dir( in_dir)
+        in_dir = _inside_direction(   *point_arr[0:3])
+        normal = _three_point_normal( *point_arr[0:3])
+        direction = in_dir if inside else _other_dir( in_dir)
         
         # Generate offset points for the correct direction
         # for all of point_arr.
@@ -557,7 +550,7 @@ try:
         point_arr += point_arr[ 0:2] # Add first two points to the end as well
         for i in range( len(point_arr) - 1):
             a, b = point_arr[i:i+2]
-            par_seg = parallel_seg( a, b, normal=normal, offset=offset, direction=direction )
+            par_seg = _parallel_seg( a, b, normal=normal, offset=offset, direction=direction )
             segs.append( par_seg)
             if len(segs) > 1:
                 int_pt = segs[-2].intersect(segs[-1])
@@ -566,12 +559,62 @@ try:
             
         return offset_pts
     
+    # ==================
+    # = Offset helpers =
+    # ==================
+    def _parallel_seg( p, q, offset, normal=Vector3( 0, 0, 1), direction=LEFT):
+        # returns a PyEuclid Line3 parallel to pq, in the plane determined
+        # by p,normal, to the left or right of pq.
+        v = q - p
+        angle = direction
+        rot_v = v.rotate_around( axis=normal, theta=angle)
+        rot_v.set_length( offset)
+        return Line3( p+rot_v, v )
+    
+    def _inside_direction( a, b, c, offset=10):
+        # determines which direction (LEFT, RIGHT) is 'inside' the triangle
+        # made by a, b, c.  If ab and bc are parallel, return LEFT
+        x = _three_point_normal( a, b, c)
+        
+        # Make two vectors (left & right) for each segment.
+        l_segs = [_parallel_seg( p, q, normal=x, offset=offset, direction=LEFT) for p,q in ( (a,b), (b,c))]
+        r_segs = [_parallel_seg( p, q, normal=x, offset=offset, direction=RIGHT) for p,q in ( (a,b), (b,c))]
+        
+        # Find their intersections.  
+        p1 = l_segs[0].intersect( l_segs[1])
+        p2 = r_segs[0].intersect( r_segs[1])
+        
+        # The only way I've figured out to determine which direction is 
+        # 'inside' or 'outside' a joint is to calculate both inner and outer
+        # vectors and then to find the intersection point closest to point a.
+        # This ought to work but it seems like there ought to be a more direct
+        # way to figure this out. -ETJ 21 Dec 2012
+        
+        # The point that's closer to point a is the inside point. 
+        if a.distance( p1) <= a.distance( p2):
+            return LEFT
+        else:
+            return RIGHT
+    
+    def _other_dir( left_or_right):
+        if left_or_right == LEFT: 
+            return RIGHT
+        else:
+            return LEFT
+    
+    def _three_point_normal( a, b, c):
+        ab = b - a
+        bc = c - b
+        
+        seg_ab = Line3( a, ab)
+        seg_bc = Line3( b, bc)
+        x = seg_ab.v.cross( seg_bc.v)   
+        return x
+    
     # ==========================
     # = Extrusion along a path =
     # = ---------------------- =
     def extrude_along_path( shape_pts, path_pts, scale_factors=None): # Possible: twist
-        # FIXME: doesn't work with paths of the form [[0,0,0], [0,0,100]]
-        
         # Extrude the convex curve defined by shape_pts along path_pts.
         # -- For predictable results, shape_pts must be planar, convex, and lie
         # in the XY plane centered around the origin.
@@ -611,8 +654,8 @@ try:
             
             # Scale points
             this_loop = [ (scale*sh) for sh in shape_pts] if scale != 1.0 else shape_pts[:]
-                
-            # Rotate & translate
+            
+            # Rotate & translate            
             this_loop = transform_to_point( this_loop, dest_point=path_pt, dest_normal=tangent, src_up=src_up)
             
             # Add the transformed points to our final list
@@ -627,7 +670,7 @@ try:
                     facet_indices.append( [i+1, i+shape_pt_count, i+shape_pt_count+1])
                 facet_indices.append( [segment_start, segment_end, segment_end + shape_pt_count])
                 facet_indices.append( [segment_start, segment_end + shape_pt_count, segment_start+shape_pt_count])
-        
+            
         # Cap the start of the polyhedron
         for i in range(1, shape_pt_count - 1):
             facet_indices.append( [0, i, i+1])
@@ -640,7 +683,7 @@ try:
         
         return polyhedron( points = euc_to_arr(polyhedron_pts), triangles=facet_indices)
     
-        
+
 except:
     # euclid isn't available; these methods won't be either
     pass
