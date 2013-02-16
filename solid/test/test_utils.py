@@ -53,11 +53,17 @@ class TestSPUtils( unittest.TestCase):
         body = sphere( 20)
         actual_tuple = split_body_horizontal( body, plane_z=10, dowel_holes=True)
         actual = [scad_render( b) for b in actual_tuple]
-        expected = ['\n\ndifference() {\n\tintersection() {\n\t\tsphere(r = 20);\n\t\ttranslate(v = [0, 0, -4990]) {\n\t\t\tcube(center = true, size = 10000);\n\t\t}\n\t}\n\tunion() {\n\t\ttranslate(v = [-9.0000000000, 0, 10]) {\n\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t}\n\t\ttranslate(v = [9.0000000000, 0, 10]) {\n\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t}\n\t}\n}',
-                    '\n\ndifference() {\n\tintersection() {\n\t\tsphere(r = 20);\n\t\ttranslate(v = [0, 0, 5010]) {\n\t\t\tcube(center = true, size = 10000);\n\t\t}\n\t}\n\tunion() {\n\t\ttranslate(v = [-9.0000000000, 0, 10]) {\n\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t}\n\t\ttranslate(v = [9.0000000000, 0, 10]) {\n\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t}\n\t}\n}']
-        self.assertEqual( expected, actual)
+        expected = ['\n\ndifference() {\n\tintersection() {\n\t\tsphere(r = 20);\n\t\ttranslate(v = [0, 0, -49990]) {\n\t\t\tcube(center = true, size = 100000);\n\t\t}\n\t}\n\tunion() {\n\t\ttranslate(v = [9.0000000000, 0, 10]) {\n\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t}\n\t\ttranslate(v = [-9.0000000000, 0, 10]) {\n\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t}\n\t}\n}',
+                    '\n\ndifference() {\n\tintersection() {\n\t\tsphere(r = 20);\n\t\ttranslate(v = [0, 0, 50010]) {\n\t\t\tcube(center = true, size = 100000);\n\t\t}\n\t}\n\tunion() {\n\t\ttranslate(v = [9.0000000000, 0, 10]) {\n\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t}\n\t\ttranslate(v = [-9.0000000000, 0, 10]) {\n\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t}\n\t}\n}']
+        self.assertEqual( actual, expected)
+    def test_split_body_vertical( self):
+        body = sphere( 20)
+        actual_tuple = split_body_vertical( body, plane_x=10, dowel_holes=True)
+        actual = [scad_render( b) for b in actual_tuple]
+        expected = ['\n\ndifference() {\n\tintersection() {\n\t\tsphere(r = 20);\n\t\ttranslate(v = [-49990, 0, 0]) {\n\t\t\tcube(center = true, size = 100000);\n\t\t}\n\t}\n\tunion() {\n\t\ttranslate(v = [10, 9.0000000000, 0]) {\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t\t}\n\t\t}\n\t\ttranslate(v = [10, -9.0000000000, 0]) {\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t\t}\n\t\t}\n\t}\n}',
+                    '\n\ndifference() {\n\tintersection() {\n\t\tsphere(r = 20);\n\t\ttranslate(v = [50010, 0, 0]) {\n\t\t\tcube(center = true, size = 100000);\n\t\t}\n\t}\n\tunion() {\n\t\ttranslate(v = [10, 9.0000000000, 0]) {\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t\t}\n\t\t}\n\t\ttranslate(v = [10, -9.0000000000, 0]) {\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t\t}\n\t\t}\n\t}\n}']
+        self.assertEqual( actual, expected)        
     
-        
 
 def test_generator_scad( func, args, expected):
     def test_scad(self):

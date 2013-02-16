@@ -174,29 +174,59 @@ def fillet_2d( a, b, c, rad):
 # ===================
 # = Model Splitting =
 # ===================
-def split_body_horizontal( body, plane_z=0, 
-                            dowel_holes=False, dowel_rad=4.5, hole_depth=15):
-    # split body along a plane, returning two pieces
+X_PLANE, Y_PLANE, Z_PLANE = range(3)
+def split_body_planar( body, cut_point=0, cutting_plane=Z_PLANE, dowel_holes=False, dowel_rad=4.5, hole_depth=15):
+    # split body along the specified plane, returning two pieces
     
     # Optionally, leave holes in both bodies to allow the pieces to be put
     # back together with short dowels.  
-    big_num = 10000
-    bot_body = body * down( big_num/2 - plane_z)(cube( big_num, center=True)) 
-    top_body = body *  up( big_num/2 + plane_z)(cube( big_num, center=True))
+    
+    big_num = 100000
+    plane_transform_a = [0,0,0]
+    plane_transform_b = [0,0,0]
+    plane_transform_a[ cutting_plane] = -big_num/2 + cut_point
+    plane_transform_b[ cutting_plane] =  big_num/2 + cut_point
+    
+    body_a = body * translate( plane_transform_a)( cube( big_num, center=True))
+    body_b = body * translate( plane_transform_b)( cube( big_num, center=True))
     
     # Make holes for dowels if requested. 
     # In case the bodies need to be aligned properly, make two holes, 
-    # along the x-axis, separated by one dowel-width
+    # separated by one dowel-width
     if dowel_holes:
         dowel = cylinder( r=dowel_rad, h=hole_depth*2, center=True)
-        l_dowel = translate([-2*dowel_rad, 0, plane_z])(dowel)
-        r_dowel = translate([ 2*dowel_rad, 0, plane_z])(dowel)
-        dowels = l_dowel + r_dowel
-        bot_body -= dowels
-        top_body -= dowels
+        # rotate dowels to correct axis
+        if cutting_plane != Z_PLANE:
+            rot_vec = RIGHT_VEC if cutting_plane == Y_PLANE else FORWARD_VEC
+            dowel = rotate( a=90, v=rot_vec)( dowel)
+        
+        dowel_translate_a = [0,0,0]
+        dowel_translate_b = [0,0,0]
+        
+        dowel_translate_a[ cutting_plane] = cut_point
+        dowel_translate_b[ cutting_plane] = cut_point
+        
+        separation_index = {0:1, 1:2, 2:0}[cutting_plane]
+        dowel_translate_a[ separation_index] = 2*dowel_rad
+        dowel_translate_b[ separation_index] = -2*dowel_rad
+        
+        dowel_a = translate( dowel_translate_a)(dowel)
+        dowel_b = translate( dowel_translate_b)(dowel)
+        
+        dowels = dowel_a + dowel_b
+        body_a -= dowels
+        body_b -= dowels
     
-    return ( bot_body, top_body)
+    return ( body_a, body_b)
+   
+def split_body_horizontal( body, plane_z=0, dowel_holes=False, dowel_rad=4.5, hole_depth=15):
+    # Returns a tuple of the portions of body below and above plane_z
+    return split_body_planar( body, cut_point=plane_z, cutting_plane=Z_PLANE, dowel_holes=dowel_holes, dowel_rad=dowel_rad, hole_depth=hole_depth)
 
+def split_body_vertical( body, plane_x=0, dowel_holes=False, dowel_rad=4.5, hole_depth=15):
+    # Returns a tuple of the portions of body left and right of plane_x
+    return split_body_planar( body, cut_point=plane_x, cutting_plane=X_PLANE, dowel_holes=dowel_holes, dowel_rad=dowel_rad, hole_depth=hole_depth)
+    
 # =====================
 # = Bill of Materials =
 # =====================
