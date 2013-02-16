@@ -34,7 +34,8 @@ def thread( outline_pts, inner_rad, pitch, length, external=True, segments_per_r
             section of the thread
             
     inner_rad: radius of cylinder the screw will wrap around
-    pitch: height for one revolution
+    pitch: height for one revolution; must be <= the height of outline_pts 
+                    bounding box to avoid self-intersection
     length: distance from bottom-most point of screw to topmost
     external: if True, the cross-section is external to a cylinder. If False,
                     the segment is internal to it, and outline_pts will be
@@ -45,16 +46,20 @@ def thread( outline_pts, inner_rad, pitch, length, external=True, segments_per_r
     neck_out_degrees: degrees through which outer edge of the screw thread will move from 
                     full thickness back to zero
                     
-    NOTE: if pitch is less than the height of each tooth (outline_pts), OpenSCAD will likely
-    crash, since the resulting screw would self-intersect all over the place
+    NOTE: if pitch is less than the or equal to the height of each tooth (outline_pts), 
+    OpenSCAD will likely crash, since the resulting screw would self-intersect 
+    all over the place.  For screws with essentially no space between 
+    threads, (i.e., pitch=tooth_height), I use pitch= tooth_height+EPSILON, 
+    since pitch=tooth_height will self-intersect for rotations >=1
     '''
     a = union()
     rotations = float(length)/pitch
     
     total_angle = 360.0*rotations
     up_step = float(length) / (rotations*segments_per_rot)
-    total_steps = int(ceil( rotations * segments_per_rot))
-    step_angle = total_angle/ total_steps
+    # Add one to total_steps so we have total_steps *segments*
+    total_steps = int(ceil( rotations * segments_per_rot)) + 1
+    step_angle = total_angle/ (total_steps -1)
     
     all_points = []
     all_tris = []
@@ -85,6 +90,7 @@ def thread( outline_pts, inner_rad, pitch, length, external=True, segments_per_r
         
     for i in range( total_steps):
         angle = i*step_angle
+        
         elevation = i*up_step
         if angle > total_angle:
             angle = total_angle
@@ -100,19 +106,9 @@ def thread( outline_pts, inner_rad, pitch, length, external=True, segments_per_r
         elif angle > total_angle - neck_in_degrees:
             rad = neck_in_rad + int_ext_mult * (total_angle - angle)/neck_out_degrees * outline_w
         
-        # if angle < neck_in_degrees:
-        #     if external:
-        #         rad = min_rad + angle/neck_in_degrees * outline_w
-        #     else:
-        #         rad = max_rad - angle/neck_out_degrees *outline_w
-        # elif angle > total_angle - neck_out_degrees:
-        #     if external:
-        #         rad = min_rad + (total_angle - angle)/neck_out_degrees * outline_w
-        #     else:
-        #         rad = max_rad - (total_angle - angle)/neck_out_degrees *outline_w
-        #         
         elev_vec = Vector3( rad, 0, elevation)
         
+        # create new points
         for p in euc_points:
             pt = (p + elev_vec).rotate_around( axis=euc_up, theta=radians( angle))
             all_points.append( pt.as_arr())
@@ -137,20 +133,18 @@ def thread( outline_pts, inner_rad, pitch, length, external=True, segments_per_r
     a = polyhedron( points=all_points, triangles=all_tris)
     
     if external:
-        # Subtract the center, to remove the neck-in pieces
-        # subtract above and below to make sure the entire screw fits within height 'length'
-        cube_side = 2*(inner_rad + outline_w)
-        subs = union()(
-                    down( outline_h/2)( cylinder( inner_rad, length + outline_h)),
-                    down( cube_side/2)(         cube( cube_side, center=True)),
-                    up( cube_side/2 + length)(  cube( cube_side, center=True))
-                )
-        a -= subs
+        # Intersect with a cylindrical tube to make sure we fit into
+        # the correct dimensions
+        tube = cylinder( r=inner_rad+outline_w+EPSILON, h=length, segments=segments_per_rot) 
+        tube -= cylinder( r=inner_rad, h=length, segments=segments_per_rot)
     else:
         # If the threading is internal, intersect with a central cylinder 
         # to make sure nothing else remains
-        a = a* cylinder( r=inner_rad, h=length, segments=segments_per_rot)        
+        tube = cylinder( r=inner_rad, h=length, segments=segments_per_rot)        
+    a *= tube
     return render()(a)
+
+
 
 def default_thread_section( tooth_height, tooth_depth):
     # An isoceles triangle, tooth_height vertically, tooth_depth wide:
