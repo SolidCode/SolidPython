@@ -683,11 +683,17 @@ try:
                 tangent = path_pt - path_pts[ which_loop -1]
             
             # Scale points
-            this_loop = [ (scale*sh) for sh in shape_pts] if scale != 1.0 else shape_pts[:]
+            if scale != 1.0:
+                this_loop = [ (scale*sh) for sh in shape_pts]
+                # Convert this_loop back to points; scaling changes them to Vectors
+                this_loop= [Point3(v.x, v.y, v.z) for v in this_loop]    
+            else:
+                this_loop = shape_pts[:]
+            
             
             # Rotate & translate            
             this_loop = transform_to_point( this_loop, dest_point=path_pt, dest_normal=tangent, src_up=src_up)
-            
+         
             # Add the transformed points to our final list
             polyhedron_pts += this_loop
             # And calculate the facet indices

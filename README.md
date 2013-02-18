@@ -10,8 +10,11 @@ SolidPython
 - [solid.utils](#solidutils)
 	- [Directions: (up, down, left, right, forward, back) for arranging things:](#directions-up-down-left-right-forward-back-for-arranging-things)
 	- [Arcs](#arcs)
+    - [Offsets](#offsets)
+    - [Extrude Along Path](#extrude_along_path)
 	- [Basic color library](#basic-color-library)
 	- [Bill Of Materials](#bill-of-materials)
+- [solid.screw_thread](#solidscrew_thread)
 - [Contact](#contact)
 
 **Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
@@ -182,7 +185,7 @@ seems a lot clearer to me than:
     )
     
 Again, I took this from someone's SCAD work and have lost track of the 
-original author.  My apologies.
+`original author.  My apologies.
     
 ### Arcs<a id="arcs"></a>
 I've found this useful for fillets and rounds.
@@ -195,6 +198,16 @@ draws an arc of radius 10 counterclockwise from 90 to 210 degrees.
 
 draws the portion of a 10x10 square NOT in a 90 degree circle of radius 10.
 This is the shape you need to add to make fillets or remove to make rounds.
+
+###Offsets<a id="offsets"></a>
+To offset a set of points in one direction or another ( inside or outside a closed 
+figure, for example) use `solid.utils.offset_points( point_arr, offset, inside=True)`
+
+###Extrude Along Path<a id="extrude_along_path"></a>
+`solid.utils.extrude_along_path( shape_pts, path_pts, scale_factors=None)`
+
+See `solid/examples/path_extrude_example.py` for use.
+
     
 ### Basic color library<a id="basic-color-library"></a>
 You can change an object's color by using the OpenSCAD ```color([rgba_array])``` function:
@@ -223,7 +236,16 @@ Put ```@part()``` before any method that defines a part, then
 call ```bill_of_materials()``` after the program is run, and all parts will be 
 counted, priced and reported. 
 
-The example file `bom_scad.py` illustrates this. Check it out.
+The example file `solid/examples/bom_scad.py` illustrates this. Check it out.
+
+
+
+solid.screw_thread<a id="solidscrew_thread"></a>
+------------------
+solid.screw_thread includes a method, thread() that makes internal and external 
+screw threads.  
+
+See ``solid/examples/screw_thread_example.py` for more details.
 
 Contact<a id="contact"></a>
 -------
