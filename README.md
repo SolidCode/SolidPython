@@ -208,7 +208,7 @@ Note that, for a non-convex figure, inside and outside may be non-intuitive.  Th
 simple solution is to manually check that your offset is going in the direction you
 intend, and change the boolean value of `inside` if you're not happy. 
 
-See the code for futher explanation. Improvements on the inside/outside would be welcome.
+See the code for futher explanation. Improvements on the inside/outside algorithm would be welcome.
 
 ###Extrude Along Path<a id="extrude_along_path"></a>
 `solid.utils.extrude_along_path( shape_pts, path_pts, scale_factors=None)`
