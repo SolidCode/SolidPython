@@ -184,8 +184,9 @@ seems a lot clearer to me than:
         cylinder()
     )
     
+
 Again, I took this from someone's SCAD work and have lost track of the 
-`original author.  My apologies.
+original author.  My apologies.
     
 ### Arcs<a id="arcs"></a>
 I've found this useful for fillets and rounds.
@@ -202,6 +203,12 @@ This is the shape you need to add to make fillets or remove to make rounds.
 ###Offsets<a id="offsets"></a>
 To offset a set of points in one direction or another ( inside or outside a closed 
 figure, for example) use `solid.utils.offset_points( point_arr, offset, inside=True)`
+
+Note that, for a non-convex figure, inside and outside may be non-intuitive.  The 
+simple solution is to manually check that your offset is going in the direction you
+intend, and change the boolean value of `inside` if you're not happy. 
+
+See the code for futher explanation. Improvements on the inside/outside would be welcome.
 
 ###Extrude Along Path<a id="extrude_along_path"></a>
 `solid.utils.extrude_along_path( shape_pts, path_pts, scale_factors=None)`
@@ -245,7 +252,7 @@ solid.screw_thread<a id="solidscrew_thread"></a>
 solid.screw_thread includes a method, thread() that makes internal and external 
 screw threads.  
 
-See ``solid/examples/screw_thread_example.py` for more details.
+See `solid/examples/screw_thread_example.py` for more details.
 
 Contact<a id="contact"></a>
 -------
