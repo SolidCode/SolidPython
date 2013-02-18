@@ -135,7 +135,7 @@ the examples directory:
 
         import os, solid; print os.path.dirname( solid.__file__) + '/examples'
         
-Or browse the example code on Github [here](https://github.com/SolidCode/SolidPython/tree/master/examples)
+Or browse the example code on Github [here](https://github.com/SolidCode/SolidPython/tree/master/solid/examples)
 
 Adding your own code to the example file `solidpython_template.py` will make some of the setup easier.
 
