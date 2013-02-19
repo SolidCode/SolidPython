@@ -28,6 +28,7 @@ openscad_builtins = [
     {'name': 'union',           'args': [],         'kwargs': []} ,
     {'name': 'intersection',    'args': [],         'kwargs': []} ,
     {'name': 'difference',      'args': [],         'kwargs': []} ,
+    {'name': 'hole',           'args': [],         'kwargs': []} ,
     
     # Transforms
     {'name': 'translate',       'args': [],         'kwargs': ['v']} ,
@@ -73,7 +74,13 @@ builtin_literals = {
                 paths = [ range( len( points))]
             openscad_object.__init__( self, 'polygon', {'points':points, 'paths': paths})
         
-'''
+''',
+    'hole':'''class hole( openscad_object):
+    def __init__( self):
+        openscad_object.__init__( self, 'union', {})
+        self.set_hole( True)
+    
+    '''
 
 }
 
@@ -185,6 +192,26 @@ class openscad_object( object):
         self.children = []
         self.modifier = ""
         self.parent= None
+        self.is_hole = False
+        self.has_hole_children = False
+    
+    def set_hole( self, is_hole=True):
+        self.is_hole = is_hole
+    
+    def find_hole_children( self):
+        hole_kids = []
+        for child in self.children:
+            if child.is_hole:
+                hole_kids.append( child)
+                # Mark that there are holes below all upper nodes,
+                # so the necessary transforms can be written later
+                p = child
+                while p.parent:
+                    p = p.parent
+                    p.has_hole_children = True
+            else:
+                hole_kids += child.find_hole_children()
+        return hole_kids
     
     def set_modifier(self, m):
         # Used to add one of the 4 single-character modifiers: #(debug)  !(root) %(background) or *(disable)
@@ -200,13 +227,9 @@ class openscad_object( object):
         self.modifier = string_vals.get(m.lower(), '')
         return self
     
-    def _render(self):
-        '''
-        NOTE: In general, you won't want to call this method. For most purposes,
-        you really want scad_render(), 
-        Calling obj._render won't include necessary 'use' or 'include' statements
-        '''        
-        s = "\n" + self.modifier + self.name + "("
+    def _render_str_no_children( self):
+        s = ""
+        s += "\n" + self.modifier + self.name + "("
         first = True
             
         # OpenSCAD doesn't have a 'segments' argument, but it does 
@@ -238,13 +261,54 @@ class openscad_object( object):
                 s += k + " = " + py2openscad(v)
                 
         s += ")"
+        return s
+        
+    def _render(self, render_holes=False):
+        '''
+        NOTE: In general, you won't want to call this method. For most purposes,
+        you really want scad_render(), 
+        Calling obj._render won't include necessary 'use' or 'include' statements
+        '''      
+        s = self._render_str_no_children()
+        
         if self.children != None and len(self.children) > 0:
             s += " {"
             for child in self.children:
-                s += indent(child._render())
+                # Don't immediately render hole children.
+                # Add them to the parent's hole list,
+                # And render after everything else
+                if not render_holes and child.is_hole:
+                    continue
+                s += indent(child._render( render_holes))
             s += "\n}"
         else:
             s += ";"
+            
+        # If this is the root object, find all holes
+        # and subtract them after all positive geometry is rendered
+        if not self.parent:
+            hole_children = self.find_hole_children()
+            
+            if len(hole_children) > 0:
+                s += "\n/* All Holes Below*/"
+                s += self._render_hole_children()
+                
+                # wrap everything in the difference
+                s = "difference() {" + indent(s) + "\n}"
+        return s
+    
+    def _render_hole_children( self):
+        # Run down the tree, rendering only those nodes
+        # that are holes or have holes beneath them
+        if not self.has_hole_children:
+            return ""
+        s = self._render_str_no_children() + "{"
+        for child in self.children:
+            if child.is_hole:
+                s += indent( child._render()) 
+            elif child.has_hole_children:
+                s += indent( child._render_hole_children()) 
+        s += "\n}"
         return s
     
     def add(self, child):
@@ -255,11 +319,12 @@ class openscad_object( object):
         if child is a list, assume its members are all openscad_objects and
         add them all to self.children
         '''
-        if isinstance( child, list) or isinstance( child, tuple):
-            [self.add( c) for c in child]
+        if isinstance( child, (list, tuple)):
+            [self.add( c.copy() ) for c in child]
         else:
-            self.children.append(child)
-            child.set_parent( self)
+            c = child.copy()
+            self.children.append( c)
+            c.set_parent( self)
         return self
     
     def set_parent( self, parent):
@@ -273,7 +338,14 @@ class openscad_object( object):
         # Provides a copy of this object and all children, 
         # but doesn't copy self.parent, meaning the new object belongs
         # to a different tree
-        other = openscad_object( self.name, self.params)
+        # If we're copying a scad object, we know it is an instance of 
+        # a dynamically created class called self.name.  
+        # Initialize an instance of that class with the same params
+        # that created self, the object being copied.
+        other = globals()[ self.name]( **self.params)
+        other.set_modifier( self.modifier)
+        other.set_hole( self.is_hole)
+        other.has_hole_children = self.has_hole_children
         for c in self.children:
             other.add( c.copy())
         return other
@@ -382,6 +454,7 @@ def new_openscad_class_str( class_name, args=[], kwargs=[], include_file_path=No
             openscad_object.__init__(self, '%(class_name)s', {%(args_pairs)s })
         
 '''%vars()
+    
     return result
 
 def py2openscad(o):

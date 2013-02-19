@@ -7,6 +7,7 @@ SolidPython
 - [Example Code](#example-code)
 - [Extra syntactic sugar](#extra-syntactic-sugar)
 	- [Basic operators](#basic-operators)
+    - [First-class Negative Space (Holes)](#first-class-negative-space-holes)
 - [solid.utils](#solidutils)
 	- [Directions: (up, down, left, right, forward, back) for arranging things:](#directions-up-down-left-right-forward-back-for-arranging-things)
 	- [Arcs](#arcs)
@@ -20,8 +21,7 @@ SolidPython
 **Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
 
 
-SolidPython:  OpenSCAD for Python<a id="solidpython--openscad-for-python"></a>
------------------------
+# SolidPython:  OpenSCAD for Python<a id="solidpython--openscad-for-python"></a>
 
 SolidPython is a generalization of Phillip Tiefenbacher's openscad module, 
 found on [Thingiverse](http://www.thingiverse.com/thing:1481).  It generates valid OpenSCAD 
@@ -61,8 +61,7 @@ Generates this OpenSCAD code:
         cylinder( r=2, h=6);
     }
 
-Advantages<a id="advantages"></a>
-----------
+# Advantages<a id="advantages"></a>
 Because you're using Python, a lot of things are easy that would be hard or 
 impossible in pure OpenSCAD.  Among these are:
 
@@ -71,8 +70,7 @@ impossible in pure OpenSCAD.  Among these are:
 * recursion
 * external libraries (images! 3D geometry!  web-scraping! ...)
 
-Installing SolidPython<a id="installing-solidpython"></a>
-----------------------
+# Installing SolidPython<a id="installing-solidpython"></a>
 *   Install via [PyPI](python setup.py sdist bdist_wininst upload):
 
         sudo easy_install solidpython
@@ -93,8 +91,7 @@ Installing SolidPython<a id="installing-solidpython"></a>
 
             sudo python setup.py --install
 
-Using SolidPython<a id="using-solidpython"></a>
--------------------------
+# Using SolidPython<a id="using-solidpython"></a>
 *   Include SolidPython at the top of your Python file:
 
         from solid import *
@@ -127,8 +124,7 @@ Using SolidPython<a id="using-solidpython"></a>
 *   Alternately, you could call OpenSCAD's command line and render straight 
     to STL.   
     
-Example Code<a id="example-code"></a>
-------------
+# Example Code<a id="example-code"></a>
 The best way to learn how SolidPython works is to look at the included example code. 
 If you've installed SolidPython, the  following line of Python will print the location of 
 the examples directory:
@@ -139,8 +135,7 @@ Or browse the example code on Github [here](https://github.com/SolidCode/SolidPy
 
 Adding your own code to the example file `solid/examples/solidpython_template.py` will make some of the setup easier.
 
-Extra syntactic sugar<a id="extra-syntactic-sugar"></a>
----------------------
+# Extra syntactic sugar<a id="extra-syntactic-sugar"></a>
 ### Basic operators<a id="basic-operators"></a>
 Following Elmo Mäntynen's suggestion, SCAD objects override 
 the basic operators + (union), - (difference), and * (intersection).
@@ -166,10 +161,27 @@ is the same as:
         cylinder( r=2, h=30)
     )
 
+### First-class Negative Space (Holes)<a id="first-class-negative-space-holes"></a>
+OpenSCAD requires you to be very careful with the order in which you add or 
+subtract objects. SolidPython's `hole()` function makes this process easier.
 
+Consider making a joint where two pipes come together.  In OpenSCAD you need to
+make two cylinders, union them, then make two smaller cylinders, union
+them, then subtract the smaller from the larger. 
 
-solid.utils<a id="solidutils"></a>
------------
+Using hole(), you can make a pipe, specify that its center should remain open,
+and then add two pipes together knowing that the central void area will stay 
+empty no matter what other objects are added to that structure.
+
+Example: 
+
+    outer = cylinder(r=pipe_od, h=seg_length)
+    inner = cylinder(r=pipe_id, h=seg_length)
+    pipe_a = outer - hole()(inner)
+
+See `solid/examples/hole_example.py` for the complete picture.
+
+# solid.utils<a id="solidutils"></a>
 SolidPython includes a number of useful functions in solid/utils.py.  Currently these include:
     
 ### Directions: (up, down, left, right, forward, back) for arranging things:<a id="directions-up-down-left-right-forward-back-for-arranging-things"></a>
@@ -200,7 +212,7 @@ draws an arc of radius 10 counterclockwise from 90 to 210 degrees.
 draws the portion of a 10x10 square NOT in a 90 degree circle of radius 10.
 This is the shape you need to add to make fillets or remove to make rounds.
 
-###Offsets<a id="offsets"></a>
+### Offsets<a id="offsets"></a>
 To offset a set of points in one direction or another ( inside or outside a closed 
 figure, for example) use `solid.utils.offset_points( point_arr, offset, inside=True)`
 
@@ -210,7 +222,7 @@ intend, and change the boolean value of `inside` if you're not happy.
 
 See the code for futher explanation. Improvements on the inside/outside algorithm would be welcome.
 
-###Extrude Along Path<a id="extrude_along_path"></a>
+### Extrude Along Path<a id="extrude_along_path"></a>
 `solid.utils.extrude_along_path( shape_pts, path_pts, scale_factors=None)`
 
 See `solid/examples/path_extrude_example.py` for use.
@@ -234,9 +246,8 @@ These colors are pre-defined in solid.utils:
     <tr><td>* FiberBoard </td></tr>
 </table>
 
-I took this from someone on Thingiverse and I'm 
-ashamed that I can't find the original source.  I owe someone some 
-attribution.
+I took this from someone on Thingiverse and I'm ashamed that I can't find the 
+original source.  I owe someone some attribution.
     
 ### Bill Of Materials<a id="bill-of-materials"></a>
 Put ```@part()``` before any method that defines a part, then 
@@ -247,14 +258,12 @@ The example file `solid/examples/bom_scad.py` illustrates this. Check it out.
 
 
 
-solid.screw_thread<a id="solidscrew_thread"></a>
-------------------
+## solid.screw_thread<a id="solidscrew_thread"></a>
 solid.screw_thread includes a method, thread() that makes internal and external 
 screw threads.  
 
 See `solid/examples/screw_thread_example.py` for more details.
 
-Contact<a id="contact"></a>
--------
+# Contact<a id="contact"></a>
 Enjoy, and please send any questions or bug reports to me at ```evan_t_jones@mac.com```. Cheers!
 Evan
