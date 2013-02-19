@@ -305,8 +305,25 @@ class openscad_object( object):
         s = self._render_str_no_children() + "{"
         for child in self.children:
             if child.is_hole:
-                s += indent( child._render()) 
+                s += indent( child._render( render_holes=True)) 
             elif child.has_hole_children:
+                # Holes exist in the compiled tree in two pieces:
+                # The shapes of the holes themselves, ( an object for which
+                # obj.is_hole is True, and all its children) and the 
+                # transforms necessary to put that hole in place, which
+                # are inherited from non-hole geometry.
+                
+                # Non-hole Intersections can change (shrink) the size of
+                # holes, and that shouldn't happen: an intersection with
+                # an empty space should be the entirety of the empty space.
+                #  In fact, the intersection of two empty spaces should be
+                # everything contained in both of them:  their union.
+                # So... replace all super-hole intersection transforms
+                # with union in the hole segment of the compiled tree.
+                # And if you figure out a better way to explain this, 
+                # please, please do... because I think this works, but I
+                # also think my rationale is shaky and imprecise. -ETJ 19 Feb 2013
+                s = s.replace( "intersection", "union")
                 s += indent( child._render_hole_children()) 
         s += "\n}"
         return s
