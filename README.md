@@ -246,9 +246,8 @@ These colors are pre-defined in solid.utils:
     <tr><td>* FiberBoard </td></tr>
 </table>
 
-I took this from someone on Thingiverse and I'm 
-ashamed that I can't find the original source.  I owe someone some 
-attribution.
+I took this from someone on Thingiverse and I'm ashamed that I can't find the 
+original source.  I owe someone some attribution.
     
 ### Bill Of Materials<a id="bill-of-materials"></a>
 Put ```@part()``` before any method that defines a part, then 
