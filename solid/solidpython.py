@@ -337,7 +337,11 @@ class openscad_object( object):
         add them all to self.children
         '''
         if isinstance( child, (list, tuple)):
-            [self.add( c.copy() ) for c in child]
+            # __call__ passes us a list inside a tuple, but we only care
+            # about the list, so skip single-member tuples containing lists
+            if len( child) == 1 and isinstance(child[0], (list, tuple)):
+                child = child[0]
+            [self.add( c ) for c in child]
         else:
             c = child.copy()
             self.children.append( c)
