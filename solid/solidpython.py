@@ -196,16 +196,22 @@ class openscad_object( object):
         self.modifier = ""
         self.parent= None
         self.is_hole = False
+        self.has_hole_children = False
     
     def set_hole( self, is_hole=True):
         self.is_hole = is_hole
     
     def find_hole_children( self):
         hole_kids = []
-        # should only be called by a root (parent-less) instance
         for child in self.children:
             if child.is_hole:
                 hole_kids.append( child)
+                # Mark that there are holes below all upper nodes,
+                # so the necessary transforms can be written later
+                p = child
+                while p.parent:
+                    p = p.parent
+                    p.has_hole_children = True
             else:
                 hole_kids += child.find_hole_children()
         return hole_kids
@@ -285,37 +291,29 @@ class openscad_object( object):
         # and subtract them after all positive geometry is rendered
         if not self.parent:
             hole_children = self.find_hole_children()
+            
             if len(hole_children) > 0:
-                s += "\n/* All Holes */\nunion(){"
-                
-                for child in hole_children:
-                    # FIXME: We print the entire inheritance for each single hole 
-                    # object, even though they may all share a similar 
-                    # inheritance.  This works for now, but slows down 
-                    # rendering notably.
-                    s+= indent(child._inheritance_to_hole_str( ))
+                s += "\n/* All Holes Below*/"
+                s += self._render_hole_children()
                 
                 # wrap everything in the difference
-                s = "difference() {" + indent(s) + "\n\t}\n}"
+                s = "difference() {" + indent(s) + "\n}"
         return s
     
-    def _inheritance_to_hole_str( self):
-        # Output all parent transforms above self, but with _only_
-        # the children needed to arrive at self.  That is, show
-        # only the direct line of inheritance between root and self.
-        parents = []
-        p = self
-        while p.parent:
-            parents.append( p)
-            p = p.parent
-        # parents.reverse()
-        s = ""
+    def _render_hole_children( self):
+        # Run down the tree, rendering only those nodes
+        # that are holes or have holes beneath them
+        if not self.has_hole_children:
+            return ""
+        s = self._render_str_no_children() + "{"
         for child in self.children:
-            s+= child._render( render_holes=True)        
-        for p in parents:
-            s = p._render_str_no_children() + " {" + indent(s) + "\n}"
+            if child.is_hole:
+                s += indent( child._render()) 
+            elif child.has_hole_children:
+                s += indent( child._render_hole_children()) 
+        s += "\n}"
         return s
-        
+    
     def add(self, child):
         '''
         if child is a single object, assume it's an openscad_object and 
