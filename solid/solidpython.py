@@ -195,8 +195,6 @@ class openscad_object( object):
         self.children = []
         self.modifier = ""
         self.parent= None
-# ETJ DEBUG        
-        self.hole_children = []
         self.is_hole = False
     
     def set_hole( self, is_hole=True):
@@ -211,10 +209,7 @@ class openscad_object( object):
             else:
                 hole_kids += child.find_hole_children()
         return hole_kids
-        
-
     
-# END DEBUG
     def set_modifier(self, m):
         # Used to add one of the 4 single-character modifiers: #(debug)  !(root) %(background) or *(disable)
         string_vals = { 'disable':      '*',
@@ -229,26 +224,8 @@ class openscad_object( object):
         self.modifier = string_vals.get(m.lower(), '')
         return self
     
-    def _render(self, render_holes=False):
-        '''
-        NOTE: In general, you won't want to call this method. For most purposes,
-        you really want scad_render(), 
-        Calling obj._render won't include necessary 'use' or 'include' statements
-        '''      
-        # ETJ DEBUG
+    def _render_str_no_children( self):
         s = ""
-        # Start out with hole list; 
-        writing_holes = False
-        # scan through children depth-first, getting all children.
-        
-        
-        if not self.parent:
-            hole_children = self.find_hole_children()
-            if len(hole_children) > 0:
-                s += "\n" + "difference(){"  # Need indent info?
-                writing_holes = True
-        # END DEBUG
-          
         s += "\n" + self.modifier + self.name + "("
         first = True
             
@@ -281,30 +258,64 @@ class openscad_object( object):
                 s += k + " = " + py2openscad(v)
                 
         s += ")"
+        return s
+        
+    def _render(self, render_holes=False):
+        '''
+        NOTE: In general, you won't want to call this method. For most purposes,
+        you really want scad_render(), 
+        Calling obj._render won't include necessary 'use' or 'include' statements
+        '''      
+        s = self._render_str_no_children()
+        
         if self.children != None and len(self.children) > 0:
             s += " {"
             for child in self.children:
-                # ETJ DEBUG
                 # Don't immediately render hole children.
                 # Add them to the parent's hole list,
                 # And render after everything else
                 if not render_holes and child.is_hole:
                     continue
-                # END DEBUG
                 s += indent(child._render( render_holes))
             s += "\n}"
         else:
             s += ";"
             
-        # ETJ DEBUG
-        if writing_holes:
-            s += "\nunion(){" # FIXME: indent
-            for child in hole_children:
-                s+= indent( child._render( render_holes=True))
-            s += "\n}\n}"
-        # END DEBUG
+        # If this is the root object, find all holes
+        # and subtract them after all positive geometry is rendered
+        if not self.parent:
+            hole_children = self.find_hole_children()
+            if len(hole_children) > 0:
+                s += "\n/* All Holes */\nunion(){"
+                
+                for child in hole_children:
+                    # FIXME: We print the entire inheritance for each single hole 
+                    # object, even though they may all share a similar 
+                    # inheritance.  This works for now, but slows down 
+                    # rendering notably.
+                    s+= indent(child._inheritance_to_hole_str( ))
+                
+                # wrap everything in the difference
+                s = "difference() {" + indent(s) + "\n\t}\n}"
         return s
     
+    def _inheritance_to_hole_str( self):
+        # Output all parent transforms above self, but with _only_
+        # the children needed to arrive at self.  That is, show
+        # only the direct line of inheritance between root and self.
+        parents = []
+        p = self
+        while p.parent:
+            parents.append( p)
+            p = p.parent
+        # parents.reverse()
+        s = ""
+        for child in self.children:
+            s+= child._render( render_holes=True)        
+        for p in parents:
+            s = p._render_str_no_children() + " {" + indent(s) + "\n}"
+        return s
+        
     def add(self, child):
         '''
         if child is a single object, assume it's an openscad_object and 
