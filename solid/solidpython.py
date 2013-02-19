@@ -28,6 +28,10 @@ openscad_builtins = [
     {'name': 'union',           'args': [],         'kwargs': []} ,
     {'name': 'intersection',    'args': [],         'kwargs': []} ,
     {'name': 'difference',      'args': [],         'kwargs': []} ,
+    # ETJ DEBUG
+    {'name': 'hole',           'args': [],         'kwargs': []} ,
+
+    # END DEBUG    
     
     # Transforms
     {'name': 'translate',       'args': [],         'kwargs': ['v']} ,
@@ -73,7 +77,13 @@ builtin_literals = {
                 paths = [ range( len( points))]
             openscad_object.__init__( self, 'polygon', {'points':points, 'paths': paths})
         
-'''
+''',
+    'hole':'''class hole( openscad_object):
+    def __init__( self):
+        self.set_hole( True)
+        openscad_object.__init__( self, 'hole', {})
+    
+    '''
 
 }
 
@@ -185,7 +195,26 @@ class openscad_object( object):
         self.children = []
         self.modifier = ""
         self.parent= None
+# ETJ DEBUG        
+        self.hole_children = []
+        self.is_hole = False
     
+    def set_hole( self, is_hole=True):
+        self.is_hole = is_hole
+    
+    def find_hole_children( self):
+        hole_kids = []
+        # should only be called by a root (parent-less) instance
+        for child in self.children:
+            if child.is_hole:
+                hole_kids.append( child)
+            else:
+                hole_kids += child.find_hole_children()
+        return hole_kids
+        
+
+    
+# END DEBUG
     def set_modifier(self, m):
         # Used to add one of the 4 single-character modifiers: #(debug)  !(root) %(background) or *(disable)
         string_vals = { 'disable':      '*',
@@ -200,13 +229,27 @@ class openscad_object( object):
         self.modifier = string_vals.get(m.lower(), '')
         return self
     
-    def _render(self):
+    def _render(self, render_holes=False):
         '''
         NOTE: In general, you won't want to call this method. For most purposes,
         you really want scad_render(), 
         Calling obj._render won't include necessary 'use' or 'include' statements
-        '''        
-        s = "\n" + self.modifier + self.name + "("
+        '''      
+        # ETJ DEBUG
+        s = ""
+        # Start out with hole list; 
+        writing_holes = False
+        # scan through children depth-first, getting all children.
+        
+        
+        if not self.parent:
+            hole_children = self.find_hole_children()
+            if len(hole_children) > 0:
+                s += "\n" + "difference(){"  # Need indent info?
+                writing_holes = True
+        # END DEBUG
+          
+        s += "\n" + self.modifier + self.name + "("
         first = True
             
         # OpenSCAD doesn't have a 'segments' argument, but it does 
@@ -241,10 +284,25 @@ class openscad_object( object):
         if self.children != None and len(self.children) > 0:
             s += " {"
             for child in self.children:
-                s += indent(child._render())
+                # ETJ DEBUG
+                # Don't immediately render hole children.
+                # Add them to the parent's hole list,
+                # And render after everything else
+                if not render_holes and child.is_hole:
+                    continue
+                # END DEBUG
+                s += indent(child._render( render_holes))
             s += "\n}"
         else:
             s += ";"
+            
+        # ETJ DEBUG
+        if writing_holes:
+            s += "\nunion(){" # FIXME: indent
+            for child in hole_children:
+                s+= indent( child._render( render_holes=True))
+            s += "\n}\n}"
+        # END DEBUG
         return s
     
     def add(self, child):
