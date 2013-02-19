@@ -28,10 +28,7 @@ openscad_builtins = [
     {'name': 'union',           'args': [],         'kwargs': []} ,
     {'name': 'intersection',    'args': [],         'kwargs': []} ,
     {'name': 'difference',      'args': [],         'kwargs': []} ,
-    # ETJ DEBUG
     {'name': 'hole',           'args': [],         'kwargs': []} ,
-
-    # END DEBUG    
     
     # Transforms
     {'name': 'translate',       'args': [],         'kwargs': ['v']} ,
@@ -80,8 +77,8 @@ builtin_literals = {
 ''',
     'hole':'''class hole( openscad_object):
     def __init__( self):
+        openscad_object.__init__( self, 'union', {})
         self.set_hole( True)
-        openscad_object.__init__( self, 'hole', {})
     
     '''
 
@@ -322,11 +319,12 @@ class openscad_object( object):
         if child is a list, assume its members are all openscad_objects and
         add them all to self.children
         '''
-        if isinstance( child, list) or isinstance( child, tuple):
-            [self.add( c) for c in child]
+        if isinstance( child, (list, tuple)):
+            [self.add( c.copy() ) for c in child]
         else:
-            self.children.append(child)
-            child.set_parent( self)
+            c = child.copy()
+            self.children.append( c)
+            c.set_parent( self)
         return self
     
     def set_parent( self, parent):
@@ -340,7 +338,14 @@ class openscad_object( object):
         # Provides a copy of this object and all children, 
         # but doesn't copy self.parent, meaning the new object belongs
         # to a different tree
-        other = openscad_object( self.name, self.params)
+        # If we're copying a scad object, we know it is an instance of 
+        # a dynamically created class called self.name.  
+        # Initialize an instance of that class with the same params
+        # that created self, the object being copied.
+        other = globals()[ self.name]( **self.params)
+        other.set_modifier( self.modifier)
+        other.set_hole( self.is_hole)
+        other.has_hole_children = self.has_hole_children
         for c in self.children:
             other.add( c.copy())
         return other
@@ -449,6 +454,7 @@ def new_openscad_class_str( class_name, args=[], kwargs=[], include_file_path=No
             openscad_object.__init__(self, '%(class_name)s', {%(args_pairs)s })
         
 '''%vars()
+    
     return result
 
 def py2openscad(o):
