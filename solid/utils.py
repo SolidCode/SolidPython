@@ -120,6 +120,72 @@ def back( y):
     return translate( [0,-y,0])
 
 
+# ===========================
+# = Box-alignment rotations =
+# ===========================
+def rot_z_to_up( obj):
+    # NOTE: Null op
+    return rotate( a=0, v=UP_VEC)(obj)
+
+def rot_z_to_down( obj):
+    return rotate( a=180, v=RIGHT_VEC)(obj)
+
+def rot_z_to_right( obj):
+    return rotate( a=90, v=FORWARD_VEC)(obj)
+
+def rot_z_to_left( obj):
+    return rotate( a=-90, v=FORWARD_VEC)(obj)
+
+def rot_z_to_forward( obj):
+    return rotate( a=-90, v=RIGHT_VEC)(obj)
+
+def rot_z_to_back( obj):
+    return rotate( a=90, v=RIGHT_VEC)(obj)
+
+
+
+# ================================
+# = Box-aligment and translation =
+# ================================
+def box_align( direction_func, distance, obj):
+    # Given a box side (up, left, etc) and a distance,
+    # rotate obj (assumed to be facing up) in the 
+    # correct direction and move it distance in that
+    # direction
+    trans_and_rot = {
+        up:         rot_z_to_up,
+        down:       rot_z_to_down,
+        right:      rot_z_to_right,
+        left:       rot_z_to_left,
+        forward:    rot_z_to_forward,
+        back:       rot_z_to_back,
+    }
+
+    assert( direction_func in trans_and_rot)
+    rot = trans_and_rot[ direction_func]
+    return direction_func( distance)( rot( obj))
+
+# =======================
+# = 90-degree Rotations =
+# =======================
+def rot_z_to_x( obj):
+    return rotate( a=90, v=FORWARD_VEC)(obj)
+
+def rot_z_to_neg_x( obj):
+    return rotate( a=-90, v=FORWARD_VEC)(obj)
+
+def rot_z_to_neg_y( obj):
+    return rotate( a=90, v=RIGHT_VEC)(obj)
+
+def rot_z_to_y( obj):
+    return rotate( a=-90, v=RIGHT_VEC)(obj)
+
+def rot_x_to_y( obj):
+    return rotate( a=90, v=UP_VEC)(obj)
+
+def rot_x_to_neg_y( obj):
+    return rotate( a=-90, v=UP_VEC)(obj)
+
 # =======
 # = Arc =
 # =======
@@ -227,6 +293,12 @@ def split_body_vertical( body, plane_x=0, dowel_holes=False, dowel_rad=4.5, hole
     # Returns a tuple of the portions of body left and right of plane_x
     return split_body_planar( body, cut_point=plane_x, cutting_plane=X_PLANE, dowel_holes=dowel_holes, dowel_rad=dowel_rad, hole_depth=hole_depth)
     
+def section_cut_xz( body, y_cut_point=0):
+    big_w = 10000
+    d = 2
+    c = forward( d/2 + y_cut_point)( cube( [big_w, d, big_w], center=True))
+    return c * body
+
 # =====================
 # = Bill of Materials =
 # =====================
@@ -457,10 +529,6 @@ try:
         #   -- an openSCAD object
         #   -- a list of 3-tuples  or PyEuclid Point3s
         #   -- a single 3-tuple or Point3
-        
-        # FIXME: if dest_normal and src_up are parallel, all points in body 
-        # get changed to dest_point
-        
         dest_point = euclidify( dest_point, Point3)
         dest_normal = euclidify( dest_normal, Vector3)
         at = dest_point + dest_normal

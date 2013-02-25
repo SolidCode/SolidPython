@@ -343,6 +343,12 @@ class openscad_object( object):
                 child = child[0]
             [self.add( c ) for c in child]
         else:
+            # NOTE: originally, we simply appended child itself, and this 
+            # didn't normally cause problems.  It does create some issues
+            # with designated holes (one object could be a child of several 
+            # but only use a single parent's transforms), and this corrects them.
+            # However, this approach radically increases object count and 
+            # memory footprint.  So... roll back if this is an issue -ETJ 25 Feb 2013
             c = child.copy()
             self.children.append( c)
             c.set_parent( self)
@@ -363,6 +369,13 @@ class openscad_object( object):
         # a dynamically created class called self.name.  
         # Initialize an instance of that class with the same params
         # that created self, the object being copied.
+        
+        # Python can't handle an '$fn' argument, while openSCAD only wants
+        # '$fn'.  Swap back and forth as needed; the final renderer will
+        # sort this out. 
+        if '$fn' in self.params:
+            self.params['segments'] = self.params.pop('$fn')
+        
         other = globals()[ self.name]( **self.params)
         other.set_modifier( self.modifier)
         other.set_hole( self.is_hole)

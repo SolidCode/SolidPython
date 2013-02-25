@@ -1,4 +1,4 @@
--- README needs a table of contents with #hash links
+-- Include support for OpenSCAD animation
 -- bill_of_materials() entries should be left-justified in their columns.
 -- Comprehensive docs
 -- Applescript or other inter-app communication that will recompile in OpenSCAD
@@ -22,6 +22,7 @@
 
 
 Completed:    
+-- README needs a table of contents with #hash links
 -- More robust screw threads -- lead-in, lead-out, and cross-sectional support
 -- Add handling for the #*!% SCAD characters (debug, disable, root, background) -ETJ 15 Feb 2011
 -- Improving syntax so it's as close as possible to OpenSCAD's -ETJ 15 Feb 2011
