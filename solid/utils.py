@@ -559,9 +559,9 @@ try:
         return res
                      
     
-    # ==================
-    # = Vector drawing =
-    # = -------------- =
+    # ==========================================
+    # = Vector drawing: A 3D arrow from a line =
+    # = -------------- =========================
     def draw_segment( euc_line=None, endless=False, arrow_rad=7, vec_color=None):
         # Draw a tradtional arrow-head vector in 3-space.
         vec_arrow_rad = arrow_rad
@@ -573,7 +573,7 @@ try:
             v = euc_line
         elif isinstance( euc_line, Line3): 
             p = euc_line.p
-            v = euc_line.v
+            v = -euc_line.v
         elif isinstance( euc_line, list) or isinstance( euc_line, tuple):
             # TODO: This assumes p & v are PyEuclid classes.  
             # Really, they could as easily be two 3-tuples. Should
@@ -654,6 +654,13 @@ try:
                 int_pt = segs[-2].intersect(segs[-1])
                 if int_pt:
                     offset_pts.append( int_pt)
+            
+        # When calculating based on a closed curve, we can't find the 
+        # first offset point until all others have been calculated.  
+        # Now that we've done so, put the last point back to first place
+        last = offset_pts[-1]
+        offset_pts.insert( 0, last)
+        del( offset_pts[-1])
             
         return offset_pts
     
