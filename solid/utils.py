@@ -80,17 +80,20 @@ def grid_plane( grid_unit=12, count=10, line_weight=0.1, plane='xz'):
     return t
     
 
-def distribute_in_grid( objects, max_bounding_box):
+def distribute_in_grid( objects, max_bounding_box, rows_and_cols=None):
     # Distributes object in a grid in the xy plane
     # with objects spaced max_bounding_box apart
     x_trans, y_trans = max_bounding_box[0:2]
     
     ret = []
-    
-    grid_size = int(ceil( sqrt(len(objects))))
+    if rows_and_cols:
+        grid_w, grid_h = rows_and_cols
+    else:
+        grid_size = int(ceil( sqrt(len(objects))))
+        grid_w, grid_h = grid_size
     objs_placed = 0
-    for y in range( grid_size):
-        for x in range( grid_size):
+    for y in range( grid_h):
+        for x in range( grid_w):
             if objs_placed < len(objects):
                 ret.append(translate( [x*x_trans, y*y_trans])( objects[objs_placed]))
                 objs_placed += 1
