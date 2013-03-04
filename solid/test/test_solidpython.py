@@ -6,33 +6,34 @@ import unittest
 from solid import *
 
 scad_test_case_templates = [
-{'expected': '\n\npolygon(paths = [[0, 1, 2]], points = [[0, 0, 0], [1, 0, 0], [0, 1, 0]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]]}, 'name': 'polygon', 'kwargs': {'paths': [[0, 1, 2]]}},
-{'expected': '\n\ncircle(r = 1, $fn = 12);', 'args': {}, 'name': 'circle', 'kwargs': {'segments': 12, 'r': 1}},
-{'expected': '\n\nsquare(center = false, size = 1);', 'args': {}, 'name': 'square', 'kwargs': {'center': False, 'size': 1}},
-{'expected': '\n\nsphere(r = 1, $fn = 12);', 'args': {}, 'name': 'sphere', 'kwargs': {'segments': 12, 'r': 1}},
-{'expected': '\n\ncube(center = false, size = 1);', 'args': {}, 'name': 'cube', 'kwargs': {'center': False, 'size': 1}},
-{'expected': '\n\ncylinder($fn = 12, h = 1, r = 1, center = false);', 'args': {}, 'name': 'cylinder', 'kwargs': {'r1': None, 'r2': None, 'h': 1, 'segments': 12, 'r': 1, 'center': False}},
-{'expected': '\n\npolyhedron(points = [[0, 0, 0], [1, 0, 0], [0, 1, 0]], triangles = [[0, 1, 2]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]], 'triangles': [[0, 1, 2]]}, 'name': 'polyhedron', 'kwargs': {'convexity': None}},
-{'expected': '\n\nunion();', 'args': {}, 'name': 'union', 'kwargs': {}},
-{'expected': '\n\nintersection();', 'args': {}, 'name': 'intersection', 'kwargs': {}},
-{'expected': '\n\ndifference();', 'args': {}, 'name': 'difference', 'kwargs': {}},
-{'expected': '\n\ntranslate(v = [1, 0, 0]);', 'args': {}, 'name': 'translate', 'kwargs': {'v': [1, 0, 0]}},
-{'expected': '\n\nscale(v = 0.5000000000);', 'args': {}, 'name': 'scale', 'kwargs': {'v': 0.5}},
-{'expected': '\n\nrotate(a = 45, v = [0, 0, 1]);', 'args': {}, 'name': 'rotate', 'kwargs': {'a': 45, 'v': [0, 0, 1]}},
-{'expected': '\n\nmirror(v = [0, 0, 1]);', 'args': {'v': [0, 0, 1]}, 'name': 'mirror', 'kwargs': {}},
-{'expected': '\n\nmultmatrix(m = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);', 'args': {'m': [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]}, 'name': 'multmatrix', 'kwargs': {}},
-{'expected': '\n\ncolor(c = [1, 0, 0]);', 'args': {'c': [1, 0, 0]}, 'name': 'color', 'kwargs': {}},
-{'expected': '\n\nminkowski();', 'args': {}, 'name': 'minkowski', 'kwargs': {}},
-{'expected': '\n\nhull();', 'args': {}, 'name': 'hull', 'kwargs': {}},
-{'expected': '\n\nrender();', 'args': {}, 'name': 'render', 'kwargs': {'convexity': None}},
-{'expected': '\n\nlinear_extrude(center = false, height = 1);', 'args': {}, 'name': 'linear_extrude', 'kwargs': {'twist': None, 'slices': None, 'center': False, 'convexity': None, 'height': 1}},
-{'expected': '\n\nrotate_extrude();', 'args': {}, 'name': 'rotate_extrude', 'kwargs': {'convexity': None}},
-{'expected': '\n\ndxf_linear_extrude(center = false, height = 1, file = "/Path/to/dummy.dxf");', 'args': {'file': "'/Path/to/dummy.dxf'"}, 'name': 'dxf_linear_extrude', 'kwargs': {'layer': None, 'center': False, 'slices': None, 'height': 1, 'twist': None, 'convexity': None}},
-{'expected': '\n\nprojection();', 'args': {}, 'name': 'projection', 'kwargs': {'cut': None}},
-{'expected': '\n\nsurface(center = false, file = "/Path/to/dummy.dxf");', 'args': {'file': "'/Path/to/dummy.dxf'"}, 'name': 'surface', 'kwargs': {'center': False, 'convexity': None}},
-{'expected': '\n\nimport_stl(filename = "/Path/to/dummy.dxf");', 'args': {'filename': "'/Path/to/dummy.dxf'"}, 'name': 'import_stl', 'kwargs': {'convexity': None}},
-{'expected': '\n\nintersection_for(n = [0, 1, 2]);', 'args': {'n': [0, 1, 2]}, 'name': 'intersection_for', 'kwargs': {}},
+{'name': 'polygon',     'kwargs': {'paths': [[0, 1, 2]]}, 'expected': '\n\npolygon(paths = [[0, 1, 2]], points = [[0, 0, 0], [1, 0, 0], [0, 1, 0]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]]}, },
+{'name': 'circle',      'kwargs': {'segments': 12, 'r': 1}, 'expected': '\n\ncircle(r = 1, $fn = 12);', 'args': {}, },
+{'name': 'square',      'kwargs': {'center': False, 'size': 1}, 'expected': '\n\nsquare(center = false, size = 1);', 'args': {}, },
+{'name': 'sphere',      'kwargs': {'segments': 12, 'r': 1}, 'expected': '\n\nsphere(r = 1, $fn = 12);', 'args': {}, },
+{'name': 'cube',        'kwargs': {'center': False, 'size': 1}, 'expected': '\n\ncube(center = false, size = 1);', 'args': {}, },
+{'name': 'cylinder',    'kwargs': {'r1': None, 'r2': None, 'h': 1, 'segments': 12, 'r': 1, 'center': False}, 'expected': '\n\ncylinder($fn = 12, h = 1, r = 1, center = false);', 'args': {}, },
+{'name': 'polyhedron',  'kwargs': {'convexity': None}, 'expected': '\n\npolyhedron(points = [[0, 0, 0], [1, 0, 0], [0, 1, 0]], triangles = [[0, 1, 2]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]], 'triangles': [[0, 1, 2]]}, },
+{'name': 'union',       'kwargs': {}, 'expected': '\n\nunion();', 'args': {}, },
+{'name': 'intersection','kwargs': {}, 'expected': '\n\nintersection();', 'args': {}, },
+{'name': 'difference',  'kwargs': {}, 'expected': '\n\ndifference();', 'args': {}, },
+{'name': 'translate',   'kwargs': {'v': [1, 0, 0]}, 'expected': '\n\ntranslate(v = [1, 0, 0]);', 'args': {}, },
+{'name': 'scale',       'kwargs': {'v': 0.5}, 'expected': '\n\nscale(v = 0.5000000000);', 'args': {}, },
+{'name': 'rotate',      'kwargs': {'a': 45, 'v': [0, 0, 1]}, 'expected': '\n\nrotate(a = 45, v = [0, 0, 1]);', 'args': {}, },
+{'name': 'mirror',      'kwargs': {}, 'expected': '\n\nmirror(v = [0, 0, 1]);', 'args': {'v': [0, 0, 1]}, },
+{'name': 'multmatrix',  'kwargs': {}, 'expected': '\n\nmultmatrix(m = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);', 'args': {'m': [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]}, },
+{'name': 'color',       'kwargs': {}, 'expected': '\n\ncolor(c = [1, 0, 0]);', 'args': {'c': [1, 0, 0]}, },
+{'name': 'minkowski',   'kwargs': {}, 'expected': '\n\nminkowski();', 'args': {}, },
+{'name': 'hull',        'kwargs': {}, 'expected': '\n\nhull();', 'args': {}, },
+{'name': 'render',      'kwargs': {'convexity': None}, 'expected': '\n\nrender();', 'args': {}, },
+{'name': 'projection',  'kwargs': {'cut': None}, 'expected': '\n\nprojection();', 'args': {}, },
+{'name': 'surface',     'kwargs': {'center': False, 'convexity': None}, 'expected': '\n\nsurface(center = false, file = "/Path/to/dummy.dxf");', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
+{'name': 'import_stl',  'kwargs': {'convexity': None}, 'expected': '\n\nimport_stl(filename = "/Path/to/dummy.dxf");', 'args': {'filename': "'/Path/to/dummy.dxf'"}, },
+{'name': 'linear_extrude',      'kwargs': {'twist': None, 'slices': None, 'center': False, 'convexity': None, 'height': 1}, 'expected': '\n\nlinear_extrude(center = false, height = 1);', 'args': {}, },
+{'name': 'rotate_extrude',      'kwargs': {'convexity': None}, 'expected': '\n\nrotate_extrude();', 'args': {}, },
+{'name': 'dxf_linear_extrude',  'kwargs': {'layer': None, 'center': False, 'slices': None, 'height': 1, 'twist': None, 'convexity': None}, 'expected': '\n\ndxf_linear_extrude(center = false, height = 1, file = "/Path/to/dummy.dxf");', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
+{'name': 'intersection_for',    'kwargs': {}, 'expected': '\n\nintersection_for(n = [0, 1, 2]);', 'args': {'n': [0, 1, 2]}, },
 ]
+
 
 class TestSolidPython( unittest.TestCase):
     # test cases will be dynamically added to this instance
@@ -57,6 +58,32 @@ class TestSolidPython( unittest.TestCase):
         actual = scad_render( a*b)
         self.assertEqual( expected, actual)
     
+    def test_explicit_hole( self):
+        a = cube( 10, center=True) + hole()( cylinder(2, 20, center=True))        
+        expected = '\ndifference() {\n\tunion() {\n\t\tcube(center = true, size = 10);\n\t}\n\t/* All Holes Below*/\n\tunion(){\n\t\tunion() {\n\t\t\tcylinder(h = 20, r = 2, center = true);\n\t\t}\n\t}\n}'
+        actual = scad_render( a)
+        self.assertEqual( expected, actual)
+
+        
+    def test_hole_transform_propagation( self):
+        # earlier versions of holes had problems where a hole
+        # that was used a couple places wouldn't propagate correctly.
+        # Confirm that's still happening as it's supposed to
+        h = hole()( 
+                rotate( a=90, v=[0, 1, 0])( 
+                    cylinder(2, 20, center=True)
+                )
+            )
+    
+        h_vert = rotate( a=-90, v=[0, 1, 0])(
+                    h
+                )
+    
+        a = cube( 10, center=True) + h + h_vert
+        expected = '\ndifference() {\n\tunion() {\n\t\tunion() {\n\t\t\tcube(center = true, size = 10);\n\t\t}\n\t\trotate(a = -90, v = [0, 1, 0]) {\n\t\t}\n\t}\n\t/* All Holes Below*/\n\tunion(){\n\t\tunion(){\n\t\t\tunion() {\n\t\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\t\tcylinder(h = 20, r = 2, center = true);\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t\trotate(a = -90, v = [0, 1, 0]){\n\t\t\tunion() {\n\t\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\t\tcylinder(h = 20, r = 2, center = true);\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n}'
+        actual = scad_render( a)
+        self.assertEqual( expected, actual)
+
 
 def single_test( test_dict):
     name, args, kwargs, expected = test_dict['name'], test_dict['args'], test_dict['kwargs'], test_dict['expected']

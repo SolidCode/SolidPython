@@ -345,11 +345,15 @@ class openscad_object( object):
         else:
             # NOTE: originally, we simply appended child itself, and this 
             # didn't normally cause problems.  It does create some issues
-            # with designated holes (one object could be a child of several 
+            # with designated holes (one object could be a child of several parents 
             # but only use a single parent's transforms), and this corrects them.
-            # However, this approach radically increases object count and 
-            # memory footprint.  So... roll back if this is an issue -ETJ 25 Feb 2013
-            c = child.copy()
+            # So, in this case, go ahead and make a copy of the object.
+            # Beware doing this in the general; it causes crippling recursive
+            # slowdowns when adding large trees together. -ETJ 04 Mar 2013
+            if child.is_hole:
+                c = child.copy()
+            else:
+                c = child
             self.children.append( c)
             c.set_parent( self)
         return self
