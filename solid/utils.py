@@ -211,30 +211,69 @@ def arc( rad, start_degrees, end_degrees, segments=None, invert=False):
     # 2*rad that is NOT in the arc behind.  This is most useful for 90-degree
     # segments, since it's what you'll add to create fillets and take away
     # to create rounds. 
+    # Also: an inverted arc (bounded by an arc and the tangent lines at
+    # both endpoints) is only valid for end_degrees - start_degrees <= 180.
+    # This method raises ValueError for inappropriate inverted arcs.
     bottom_half_square = back( rad)(square( [3*rad, 2*rad], center=True))
     top_half_square = forward( rad)( square( [3*rad, 2*rad], center=True))
     
     start_shape = circle( rad, segments=segments)
+    
+
+    wide = 100
+    high = 100
+        
+    top_half_square    =  translate( [-(wide-rad), 0])( square([wide, high], center=False))
+    bottom_half_square =  translate( [-(wide-rad), -high])( square([wide, high], center=False))
+           
     if invert:
-        start_shape = square(2*rad, center=True) - start_shape
-          
-    if abs( (end_degrees - start_degrees)%360) <=  180:
-        end_angle = end_degrees - 180
-        ret = difference()(
-            start_shape,
-            rotate( a=start_degrees)(   bottom_half_square.copy()),
-            rotate( a= end_angle)(      bottom_half_square.copy())
-        )
+        # We want the area bounded by:  
+        # -- the circle from start_degrees to end_degrees
+        # -- line tangent to the circle at start_degrees
+        # -- line tangent to the circle at end_degrees
+        # Note that this shape is only valid if end_degrees - start_degrees < 180,
+        # since if the two angles differ by more than 180 degrees,
+        # the tangent lines don't converge
+        if end_degrees < start_degrees:
+            end_degrees += 360
+        if end_degrees - start_degrees >= 180:
+            raise ValueError( "Unable to draw inverted arc over 180 or more "
+                            "degrees. start_degrees: %s end_degrees: %s"
+                            %(start_degrees, end_degrees))
+        
+        wide = 1000
+        high = 1000
+        
+        top_half_square    =  translate( [-(wide-rad), 0])( square([wide, high], center=False))
+        bottom_half_square =  translate( [-(wide-rad), -high])( square([wide, high], center=False))
+        
+        a = rotate( start_degrees)( top_half_square)
+        b = rotate( end_degrees)( bottom_half_square)
+        if False:
+            a.set_modifier( '#')
+            b.set_modifier( '#')        
+        ret = (a*b) - start_shape
     else:
-        ret = intersection( )(
-            start_shape,
-            union()(
-                rotate( a=start_degrees)(   top_half_square.copy()),
-                rotate( a=end_degrees)(     bottom_half_square.copy())
+        if abs( (end_degrees - start_degrees)%360) <=  180:
+            end_angle = end_degrees - 180
+            
+            ret = difference()(
+                start_shape,
+                rotate( a=start_degrees)(   bottom_half_square),
+                rotate( a= end_angle)(      bottom_half_square)
             )
-        )
-     
+        else:
+            ret = intersection( )(
+                start_shape,
+                union()(
+                    rotate( a=start_degrees)(   top_half_square),
+                    rotate( a=end_degrees)(     bottom_half_square)
+                )
+            )
     return ret
+
+
+
 
 def fillet_2d( a, b, c, rad):
     # a, b, and c are three points that form a corner at b.  
