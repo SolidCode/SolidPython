@@ -81,6 +81,16 @@ def grid_plane( grid_unit=12, count=10, line_weight=0.1, plane='xz'):
     
 
 def distribute_in_grid( objects, max_bounding_box, rows_and_cols=None):
+    # Translate each object in objects in a grid with each cell of size
+    # max_bounding_box.  
+    # If 
+    # objects:  array of SCAD objects
+    # max_bounding_box: 2-tuple with x & y dimensions of grid cells
+    # rows_and_cols: 2-tuple of how many rows and columns to use. If 
+    #       not supplied, rows_and_cols will be the smallest square that
+    #       can contain all members of objects (e.g, if len(objects) == 80, 
+    #       rows_and_cols will default to (9,9))
+
     # Distributes object in a grid in the xy plane
     # with objects spaced max_bounding_box apart
     x_trans, y_trans = max_bounding_box[0:2]
@@ -89,8 +99,8 @@ def distribute_in_grid( objects, max_bounding_box, rows_and_cols=None):
     if rows_and_cols:
         grid_w, grid_h = rows_and_cols
     else:
-        grid_size = int(ceil( sqrt(len(objects))))
-        grid_w, grid_h = grid_size
+        grid_w = grid_h = int(ceil( sqrt(len(objects))))
+        
     objs_placed = 0
     for y in range( grid_h):
         for x in range( grid_w):
