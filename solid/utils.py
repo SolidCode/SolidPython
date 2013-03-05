@@ -659,13 +659,13 @@ try:
     # = Offset =
     # = ------ = 
     LEFT, RIGHT = radians(90), radians(-90)
-    def offset_polygon( point_arr, offset, inside=True):
+    def offset_polygon( point_arr, offset, inside=True, closed_poly=True):
         # returns a closed solidPython polygon offset by offset distance
         # from the polygon described by point_arr.
-        op = offset_points( point_arr, offset=offset, inside=inside)
+        op = offset_points( point_arr, offset=offset, inside=inside, closed_poly=closed_poly)
         return polygon( euc_to_arr(op))
     
-    def offset_points( point_arr, offset, inside=True):
+    def offset_points( point_arr, offset, inside=True, closed_poly=True):
         # Given a set of points, return a set of points offset from 
         # them.  
         # To get reasonable results, the points need to be all in a plane.
@@ -696,6 +696,7 @@ try:
         
         # Using the first three points in point_arr, figure out which direction
         # is inside and what plane to put the points in
+        point_arr = euclidify( point_arr[:], Point3)
         in_dir = _inside_direction(   *point_arr[0:3])
         normal = _three_point_normal( *point_arr[0:3])
         direction = in_dir if inside else _other_dir( in_dir)
@@ -705,21 +706,38 @@ try:
         segs = []  
         offset_pts = []
         point_arr += point_arr[ 0:2] # Add first two points to the end as well
-        for i in range( len(point_arr) - 1):
-            a, b = point_arr[i:i+2]
-            par_seg = _parallel_seg( a, b, normal=normal, offset=offset, direction=direction )
-            segs.append( par_seg)
-            if len(segs) > 1:
-                int_pt = segs[-2].intersect(segs[-1])
-                if int_pt:
-                    offset_pts.append( int_pt)
-            
-        # When calculating based on a closed curve, we can't find the 
-        # first offset point until all others have been calculated.  
-        # Now that we've done so, put the last point back to first place
-        last = offset_pts[-1]
-        offset_pts.insert( 0, last)
-        del( offset_pts[-1])
+        if closed_poly:
+            for i in range( len(point_arr) - 1):
+                a, b = point_arr[i:i+2]
+                par_seg = _parallel_seg( a, b, normal=normal, offset=offset, direction=direction )
+                segs.append( par_seg)
+                if len(segs) > 1:
+                    int_pt = segs[-2].intersect(segs[-1])
+                    if int_pt:
+                        offset_pts.append( int_pt)
+
+            # When calculating based on a closed curve, we can't find the 
+            # first offset point until all others have been calculated.  
+            # Now that we've done so, put the last point back to first place
+            last = offset_pts[-1]
+            offset_pts.insert( 0, last)
+            del( offset_pts[-1])
+                                
+        else:
+            for i in range( len(point_arr)-2):
+                a, b = point_arr[i:i+2]
+                par_seg = _parallel_seg( a, b, normal=normal, offset=offset, direction=direction )
+                segs.append( par_seg)
+                # In an open poly, first and last points will be parallel 
+                # to the first and last segments, not intersecting other segs
+                if i == 0:
+                    offset_pts.append( par_seg.p1)    
+                elif i == len(point_arr) - 3:
+                    offset_pts.append( segs[-2].p2)
+                else:
+                    int_pt = segs[-2].intersect(segs[-1])
+                    if int_pt:
+                        offset_pts.append( int_pt)                    
             
         return offset_pts
     
@@ -731,6 +749,7 @@ try:
         # by p,normal, to the left or right of pq.
         v = q - p
         angle = direction
+
         rot_v = v.rotate_around( axis=normal, theta=angle)
         rot_v.set_length( offset)
         return Line3( p+rot_v, v )
@@ -774,6 +793,91 @@ try:
         seg_bc = Line3( b, bc)
         x = seg_ab.v.cross( seg_bc.v)   
         return x
+    
+    # =============
+    # = 2D Fillet =
+    # =============
+    def _widen_angle_for_fillet( start_degrees, end_degrees):
+        # Fix start/end degrees as needed; find a way to make an acute angle
+        if end_degrees < start_degrees:
+            end_degrees += 360
+    
+        if end_degrees - start_degrees >= 180:
+            start_degrees, end_degrees = end_degrees, start_degrees    
+        
+        epsilon_degrees = 2
+        return start_degrees - epsilon_degrees, end_degrees + epsilon_degrees
+    
+    def fillet_2d( three_point_sets, orig_poly, fillet_rad, remove_material=True):
+        # a, b, and c are three points that form a corner at b.  
+        # Return a negative arc (the area NOT covered by a circle) of radius rad
+        # in the direction of the more acute angle between 
+    
+        # Note that if rad is greater than a.distance(b) or c.distance(b), for a 
+        # 90-degree corner, the returned shape will include a jagged edge. 
+    
+        # TODO: use fillet_rad = min( fillet_rad, a.distance(b), c.distance(b))
+    
+        # If a shape is being filleted in several places, it is FAR faster
+        # to add/ remove its set of shapes all at once rather than 
+        # to cycle through all the points, since each method call requires
+        # a relatively complex boolean with the original polygon.
+        # So... three_point_sets is either a list of three Euclid points that 
+        # determine the corner to be filleted, OR, a list of those lists, in 
+        # which case everything will be removed / added at once.
+        # NOTE that if material is being added (fillets) or removed (rounds)
+        # each must be called separately. 
+    
+        if len( three_point_sets) == 3 and isinstance( three_point_sets[0], (Vector2, Vector3)):
+            three_point_sets = [three_point_sets]
+    
+        arc_objs = []
+        for three_points in three_point_sets:
+    
+            assert len(three_points) == 3
+            # make two vectors out of the three points passed in
+        
+            a, b, c = euclidify( three_points, Point3)
+
+            # Find the center of the arc we'll have to make
+            offset = offset_points( [a, b, c], offset=fillet_rad, inside=True)
+            center_pt = offset[1]   
+    
+    
+            a2, b2, c2, cp2 = [Point2( p.x, p.y) for p in (a,b,c, center_pt)]
+    
+            a2b2 = LineSegment2( a2, b2)
+            c2b2 = LineSegment2( c2, b2)
+    
+            # Find the point on each segment where the arc starts; Point2.connect()
+            # returns a segment with two points; Take the one that's not the center
+            afs = cp2.connect( a2b2)
+            cfs = cp2.connect( c2b2)
+    
+            afp, cfp = [seg.p1 if seg.p1 != cp2 else seg.p2 for seg in (afs, cfs)]
+    
+            a_degs, c_degs = [ (degrees(math.atan2( seg.v.y, seg.v.x)))%360 for seg in (afs, cfs)]
+    
+            start_degs = a_degs 
+            end_degs = c_degs 
+    
+            # Widen start_degs and end_degs slightly so they overlap the areas
+            # they're supposed to join/ remove.
+            start_degs, end_degs = _widen_angle_for_fillet( start_degs, end_degs)
+    
+            arc_obj = translate( center_pt.as_arr() )(
+                            arc_inverted( rad=fillet_rad, start_degrees=start_degs, end_degrees=end_degs)
+                        )
+
+            arc_objs.append( arc_obj)
+        
+        if remove_material:
+            poly = orig_poly - arc_objs
+        else:
+            poly = orig_poly + arc_objs
+    
+        return poly
+
     
     # ==========================
     # = Extrusion along a path =

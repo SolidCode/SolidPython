@@ -9,6 +9,7 @@ from solid.utils import *
 from euclid import *
 
 tri = [Point3( 0,0,0), Point3( 10,0,0), Point3(0,10,0)]
+
 scad_test_cases = [
     (                               up,                 [2],   '\n\ntranslate(v = [0, 0, 2]);'),
     (                               down,               [2],   '\n\ntranslate(v = [0, 0, -2]);'),
@@ -44,6 +45,7 @@ other_test_cases = [
     ( 'transform_to_point_redundant',   transform_to_point, [ [Point3( 0,0,0), Point3( 10,0,0), Point3(0,10,0)], [2,2,2], Vector3(0,0,1), Point3(0,0,0), Vector3(0,1,0), Vector3(0,0,1)], '[Point3(2.00, 2.00, 2.00), Point3(-8.00, 2.00, 2.00), Point3(2.00, 12.00, 2.00)]'),
     ( 'offset_points_inside',           offset_points,  [tri, 2, True],  '[Point3(2.00, 2.00, 0.00), Point3(5.17, 2.00, 0.00), Point3(2.00, 5.17, 0.00)]'),
     ( 'offset_points_outside',          offset_points,  [tri, 2, False], '[Point3(-2.00, -2.00, 0.00), Point3(14.83, -2.00, 0.00), Point3(-2.00, 14.83, 0.00)]'),
+    ( 'offset_points_open_poly',        offset_points,  [tri, 2, False, False], '[Point3(0.00, -2.00, 0.00), Point3(14.83, -2.00, 0.00), Point3(1.41, 11.41, 0.00)]'),
 ]
 
 
@@ -56,15 +58,35 @@ class TestSPUtils( unittest.TestCase):
         expected = ['\n\ndifference() {\n\tintersection() {\n\t\tsphere(r = 20);\n\t\ttranslate(v = [0, 0, -49990]) {\n\t\t\tcube(center = true, size = 100000);\n\t\t}\n\t}\n\tunion() {\n\t\ttranslate(v = [9.0000000000, 0, 10]) {\n\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t}\n\t\ttranslate(v = [-9.0000000000, 0, 10]) {\n\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t}\n\t}\n}',
                     '\n\ndifference() {\n\tintersection() {\n\t\tsphere(r = 20);\n\t\ttranslate(v = [0, 0, 50010]) {\n\t\t\tcube(center = true, size = 100000);\n\t\t}\n\t}\n\tunion() {\n\t\ttranslate(v = [9.0000000000, 0, 10]) {\n\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t}\n\t\ttranslate(v = [-9.0000000000, 0, 10]) {\n\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t}\n\t}\n}']
         self.assertEqual( actual, expected)
+
     def test_split_body_vertical( self):
         body = sphere( 20)
         actual_tuple = split_body_vertical( body, plane_x=10, dowel_holes=True)
         actual = [scad_render( b) for b in actual_tuple]
         expected = ['\n\ndifference() {\n\tintersection() {\n\t\tsphere(r = 20);\n\t\ttranslate(v = [-49990, 0, 0]) {\n\t\t\tcube(center = true, size = 100000);\n\t\t}\n\t}\n\tunion() {\n\t\ttranslate(v = [10, 9.0000000000, 0]) {\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t\t}\n\t\t}\n\t\ttranslate(v = [10, -9.0000000000, 0]) {\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t\t}\n\t\t}\n\t}\n}',
                     '\n\ndifference() {\n\tintersection() {\n\t\tsphere(r = 20);\n\t\ttranslate(v = [50010, 0, 0]) {\n\t\t\tcube(center = true, size = 100000);\n\t\t}\n\t}\n\tunion() {\n\t\ttranslate(v = [10, 9.0000000000, 0]) {\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t\t}\n\t\t}\n\t\ttranslate(v = [10, -9.0000000000, 0]) {\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(h = 30, r = 4.5000000000, center = true);\n\t\t\t}\n\t\t}\n\t}\n}']
-        self.assertEqual( actual, expected)        
-    
+        self.assertEqual( actual, expected)  
 
+    def test_fillet_2d_add( self):
+        pts = [  [0,5], [5,5], [5,0], [10,0], [10,10], [0,10],]
+        p = polygon( pts)
+        newp = fillet_2d( euclidify(pts[0:3], Point3), orig_poly=p, fillet_rad=2, remove_material=False)
+        expected = '\n\nunion() {\n\tpolygon(paths = [[0, 1, 2, 3, 4, 5]], points = [[0, 5], [5, 5], [5, 0], [10, 0], [10, 10], [0, 10]]);\n\ttranslate(v = [3.0000000000, 3.0000000000, 0.0000000000]) {\n\t\tdifference() {\n\t\t\tintersection() {\n\t\t\t\trotate(a = 358.0000000000) {\n\t\t\t\t\ttranslate(v = [-998, 0]) {\n\t\t\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\trotate(a = 452.0000000000) {\n\t\t\t\t\ttranslate(v = [-998, -1000]) {\n\t\t\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t\tcircle(r = 2);\n\t\t}\n\t}\n}'
+        actual = scad_render( newp)
+        self.assertEqual( expected, actual)
+    
+    def test_fillet_2d_remove( self):
+        pts = tri
+        poly = polygon( euc_to_arr( tri))
+        
+        newp = fillet_2d( tri, orig_poly=poly, fillet_rad=2, remove_material=True)
+        expected = '\n\ndifference() {\n\tpolygon(paths = [[0, 1, 2]], points = [[0, 0, 0], [10, 0, 0], [0, 10, 0]]);\n\ttranslate(v = [5.1715728753, 2.0000000000, 0.0000000000]) {\n\t\tdifference() {\n\t\t\tintersection() {\n\t\t\t\trotate(a = 268.0000000000) {\n\t\t\t\t\ttranslate(v = [-998, 0]) {\n\t\t\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\trotate(a = 407.0000000000) {\n\t\t\t\t\ttranslate(v = [-998, -1000]) {\n\t\t\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t\tcircle(r = 2);\n\t\t}\n\t}\n}'
+        actual = scad_render( newp)
+        self.assertEqual( expected, actual)
+        
+
+
+           
 def test_generator_scad( func, args, expected):
     def test_scad(self):
         scad_obj = func( *args)
