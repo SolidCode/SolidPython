@@ -1,3 +1,34 @@
+-- Parent transforms of hole() objects still get put in the positive section
+    of SCAD code, even if there are no other positive children that need them:
+     ex: 
+            $fn = 12;
+            difference() {
+            	union() {
+            		union();
+            		union() {
+            			translate(v = [0, 0, 2.5000000000]) {
+            				cube(center = true, size = [50, 50, 5]);
+            			}
+                        /* NOTE empty transform here */
+            			translate(v = [18.0000000000, 18.0000000000]) {
+            			}
+            		}
+            	}
+            	/* All Holes Below*/
+            	union(){
+            		union(){
+            			translate(v = [18.0000000000, 18.0000000000]){
+            				union() {
+            					translate(v = [0, 0, -0.0050000000]) {
+            						cylinder(h = 5.0100000000, r = 2.5000000000, center = false);
+            					}
+            				}
+            			}
+            		}
+            	}
+            }     
+-- Once you've declared something a hole(), you *can't put anything in
+    it*.  This kind of defeats the purpose of most holes in mechanical design
 -- Include support for OpenSCAD animation
 -- bill_of_materials() entries should be left-justified in their columns.
 -- Comprehensive docs

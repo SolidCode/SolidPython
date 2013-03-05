@@ -313,17 +313,19 @@ class openscad_object( object):
                 # transforms necessary to put that hole in place, which
                 # are inherited from non-hole geometry.
                 
-                # Non-hole Intersections can change (shrink) the size of
-                # holes, and that shouldn't happen: an intersection with
-                # an empty space should be the entirety of the empty space.
+                # Non-hole Intersections & differences can change (shrink) 
+                # the size of holes, and that shouldn't happen: an 
+                # intersection/difference with an empty space should be the
+                # entirety of the empty space.
                 #  In fact, the intersection of two empty spaces should be
                 # everything contained in both of them:  their union.
-                # So... replace all super-hole intersection transforms
+                # So... replace all super-hole intersection/diff transforms
                 # with union in the hole segment of the compiled tree.
                 # And if you figure out a better way to explain this, 
                 # please, please do... because I think this works, but I
                 # also think my rationale is shaky and imprecise. -ETJ 19 Feb 2013
                 s = s.replace( "intersection", "union")
+                s = s.replace( "difference", "union")
                 s += indent( child._render_hole_children()) 
         s += "\n}"
         return s
