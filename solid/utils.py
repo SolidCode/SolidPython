@@ -160,13 +160,13 @@ def rot_z_to_back( obj):
 # ================================
 # = Box-aligment and translation =
 # ================================
-def box_align( direction_func, distance, obj):
+def box_align( obj, direction_func=up, distance=0 ):
     # Given a box side (up, left, etc) and a distance,
     # rotate obj (assumed to be facing up) in the 
     # correct direction and move it distance in that
     # direction
     trans_and_rot = {
-        up:         rot_z_to_up,
+        up:         rot_z_to_up, # Null
         down:       rot_z_to_down,
         right:      rot_z_to_right,
         left:       rot_z_to_left,
