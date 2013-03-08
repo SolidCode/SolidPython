@@ -13,6 +13,10 @@ ORIGIN      = [ 0, 0, 0]
 UP_VEC      = [ 0, 0, 1]
 RIGHT_VEC   = [ 1, 0, 0]
 FORWARD_VEC = [ 0, 1, 0]
+DOWN_VEC    = [ 0, 0,-1]
+LEFT_VEC    = [-1, 0, 0]
+BACK_VEC    = [ 0,-1, 0]
+
 
 # ==========
 # = Colors =
