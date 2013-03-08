@@ -89,8 +89,8 @@ def t_slot(       poly, point=None, screw_vec=DOWN_VEC, face_normal=UP_VEC, scre
     screw_vec   = euclidify( screw_vec, Vector3)
     face_normal = euclidify( face_normal, Vector3)
 
-    tab = tab_poly()
-    slot = nut_trap_slot( screw_type, screw_length)
+    tab = tab_poly( material_thickness=material_thickness)
+    slot = nut_trap_slot( screw_type, screw_length, material_thickness=material_thickness)
     
     # NOTE: dest_normal & src_normal are the same.  This should matter, right?
     tab  = transform_to_point( tab,  point, dest_normal=face_normal, src_normal=face_normal, src_up=-screw_vec)
@@ -170,7 +170,7 @@ def nut_trap_slot( screw_type='m3', screw_length=16, material_thickness=DFM):
                 translate( [nut_hole_x, nut_loc])( circle( tab_curve_rad)),
                 translate( [-nut_hole_x, nut_loc])( circle( tab_curve_rad))
             )
-    return slot
+    return render()(slot)
 
 def assembly():
     a = union()

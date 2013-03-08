@@ -89,7 +89,8 @@ def distribute_in_grid( objects, max_bounding_box, rows_and_cols=None):
     # max_bounding_box.  
     # If 
     # objects:  array of SCAD objects
-    # max_bounding_box: 2-tuple with x & y dimensions of grid cells
+    # max_bounding_box: 2-tuple with x & y dimensions of grid cells.
+    #   if a single number is passed, x  & y will both use it
     # rows_and_cols: 2-tuple of how many rows and columns to use. If 
     #       not supplied, rows_and_cols will be the smallest square that
     #       can contain all members of objects (e.g, if len(objects) == 80, 
@@ -97,7 +98,12 @@ def distribute_in_grid( objects, max_bounding_box, rows_and_cols=None):
 
     # Distributes object in a grid in the xy plane
     # with objects spaced max_bounding_box apart
-    x_trans, y_trans = max_bounding_box[0:2]
+    if isinstance( max_bounding_box, (list, tuple)):
+        x_trans, y_trans = max_bounding_box[0:2]
+    elif isinstance(max_bounding_box, (int, long, float, complex)):
+        x_trans = y_trans = max_bounding_box
+    else: 
+        pass # TypeError
     
     ret = []
     if rows_and_cols:
