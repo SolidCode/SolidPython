@@ -105,6 +105,12 @@ def distribute_in_grid( objects, max_bounding_box, rows_and_cols=None):
     else: 
         pass # TypeError
     
+    # If we only got passed one object, just return it
+    try:
+        l = len(objects)
+    except:
+        return objects
+    
     ret = []
     if rows_and_cols:
         grid_w, grid_h = rows_and_cols
@@ -148,10 +154,10 @@ def back( y):
 # ===========================
 def rot_z_to_up( obj):
     # NOTE: Null op
-    return rotate( a=0, v=UP_VEC)(obj)
+    return rotate( a=0, v=FORWARD_VEC)(obj)
 
 def rot_z_to_down( obj):
-    return rotate( a=180, v=RIGHT_VEC)(obj)
+    return rotate( a=180, v=FORWARD_VEC)(obj)
 
 def rot_z_to_right( obj):
     return rotate( a=90, v=FORWARD_VEC)(obj)
