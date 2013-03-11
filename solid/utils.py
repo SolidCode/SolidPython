@@ -298,16 +298,6 @@ def arc_inverted( rad, start_degrees, end_degrees, segments=None):
 
     return ret
 
-def fillet_2d( a, b, c, rad):
-    # a, b, and c are three points that form a corner at b.  
-    # Return a negative arc (the area NOT covered by a circle) of radius rad
-    # in the direction of the more acute angle between 
-    
-    # Note that if rad is greater than a.distance(b) or c.distance(b), for a 
-    # 90-degree corner, the returned shape will include a jagged edge. In
-    # general, best to 
-    raise NotImplementedError
-
 # TODO: arc_to that creates an arc from point to another point.
 # This is useful for making paths.  See the SVG path command:
 # See: http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
@@ -634,9 +624,9 @@ try:
         return res
                      
     
-    # ==========================================
-    # = Vector drawing: A 3D arrow from a line =
-    # = -------------- =========================
+    # ========================================
+    # = Vector drawing: 3D arrow from a line =
+    # = -------------- =======================
     def draw_segment( euc_line=None, endless=False, arrow_rad=7, vec_color=None):
         # Draw a tradtional arrow-head vector in 3-space.
         vec_arrow_rad = arrow_rad
