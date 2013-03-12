@@ -1,3 +1,5 @@
+-- Bounding Box class added to all objects, so they have some sense for how
+    large they are and can be queried
 -- unit tests for box_align & other rotation methods in utils.py
 -- Parent transforms of hole() objects still get put in the positive section
     of SCAD code, even if there are no other positive children that need them:
