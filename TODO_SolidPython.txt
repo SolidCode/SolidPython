@@ -1,3 +1,4 @@
+-- Add fillet_2d() section to README
 -- Bounding Box class added to all objects, so they have some sense for how
     large they are and can be queried
 -- unit tests for box_align & other rotation methods in utils.py

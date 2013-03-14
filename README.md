@@ -207,7 +207,7 @@ I've found this useful for fillets and rounds.
 
 draws an arc of radius 10 counterclockwise from 90 to 210 degrees. 
 
-    arc( rad=10, start_degrees=0, end_degrees=90, invert=True ) 
+    arc_inverted( rad=10, start_degrees=0, end_degrees=90) 
 
 draws the portion of a 10x10 square NOT in a 90 degree circle of radius 10.
 This is the shape you need to add to make fillets or remove to make rounds.
