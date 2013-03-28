@@ -1,6 +1,4 @@
 -- Add fillet_2d() section to README
--- Bounding Box class added to all objects, so they have some sense for how
-    large they are and can be queried
 -- unit tests for box_align & other rotation methods in utils.py
 -- Parent transforms of hole() objects still get put in the positive section
     of SCAD code, even if there are no other positive children that need them:
@@ -34,9 +32,8 @@
 -- Once you've declared something a hole(), you *can't put anything in
     it*.  This kind of defeats the purpose of most holes in mechanical design.
     This feature may need some rethinking.
--- Include support for OpenSCAD animation
 -- bill_of_materials() entries should be left-justified in their columns.
--- Comprehensive docs
+
 -- Applescript or other inter-app communication that will recompile in OpenSCAD
     whenever requested via your Python code
 -- Debugging info?  This isn't really present for SCAD, so it's hard from Python.
@@ -55,9 +52,15 @@
     than necessary and harder to read.  It would be nice if Python functions
     were compiled to SCAD functions somehow.  Haven't figured out how to make
     this work yet. -ETJ 29 Aug 2012
+-- Bounding Box class added to all objects, so they have some sense for how
+    large they are and can be queried (This probably can't be done, so put it
+    on hold)
+    
 
 
-Completed:    
+Completed:
+-- Include support for OpenSCAD animation. (Hacky, but I'm not sure there's
+    another way to do it than I did)
 -- README needs a table of contents with #hash links
 -- More robust screw threads -- lead-in, lead-out, and cross-sectional support
 -- Add handling for the #*!% SCAD characters (debug, disable, root, background) -ETJ 15 Feb 2011
@@ -71,4 +74,5 @@ Completed:
 -- setup.py should include PyPi-required metadata.
 -- Add to PyPI so SolidPython can be installed with pip install solidpython
 -- Update README with PyEuclid information and PyPI-aware install info
+-- Comprehensive docs
     
