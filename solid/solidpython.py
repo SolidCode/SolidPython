@@ -167,44 +167,46 @@ def scad_render( scad_object, file_header=''):
     scad_body = root._render()
     return file_header + includes + scad_body
 
-def scad_render_animated_file( func_to_animate, steps=20, filepath=None, file_header='', include_orig_code=True):
-    # func_to_animate must take a single float argument, _time, in [0, 1], and 
-    # return an openscad_object instance.
+def scad_render_animated_file( func_to_animate, steps=20, back_and_forth=True, filepath=None, file_header='', include_orig_code=True):
+    # func_to_animate takes a single float argument, _time in [0, 1], and 
+    # returns an openscad_object instance.
     #
-    # This method outputs an OpenSCAD string (not an openscad_object) with 
-    # func_to_animate() evaluated at "steps" points between 0 & 1, with 
-    # time never evaluated at exactly 1
+    # returns an OpenSCAD string (not an openscad_object) with func_to_animate()
+    # evaluated at "steps" points between 0 & 1, with time never evaluated at
+    # exactly 1
     
     # Write out a scad string, an if/else tree with one clause for each time value, with 
     # _time in [0, 1], with steps of 1/(steps)
     
-    # NOTE: This is a hacky way to solve a simple problem.  To use OpenSCAD's
-    # animation feature, our code needs to respond to changes in the value
-    # of the OpenSCAD variable $t, but I can't think of a way to get a 
-    # float variable from our code and put it into the actual SCAD code. 
-    # Instead, we just evaluate our code at each desired step, and write it
-    # all out in the SCAD code for each case, with an if/else tree.  Depending
-    # on the number of steps, this could create hundreds of times more SCAD
-    # code than is needed.  But... it does work, with minimal Python code, so
-    # here it is. Better solutions welcome. -ETJ 28 Mar 2013
-        
     rendered_string = ""
     
     # NOTE: information on the OpenSCAD manual wiki as of November 2012 implies
     # that the OpenSCAD app does its animation irregularly; sometimes it animates
-    # one loop in (steps) iterations, and sometimes in (steps + 1).  Do it here
-    # in steps iterations, meaning that we won't ever reach $t ==1.
+    # one loop in steps iterations, and sometimes in (steps + 1).  Do it here
+    # in steps iterations, meaning that we won't officially reach $t =1.
     
     # Note also that we check for ranges of time rather than equality; this
     # should avoid any rounding error problems, and doesn't require the file
     # to be animated with an identical number of steps to the way it was 
     # created. -ETJ 28 Mar 2013
-    for i in range(steps):
+
+    if back_and_forth: 
+        steps *= 2
+
+    for i in range( steps):
         time = i *1.0/steps
-        next_time = (i+1)*1.0/steps
-        scad_obj = func_to_animate( _time=time) 
-        scad_str = indent(scad_render( scad_obj))
-        rendered_string += (  "if ($t >= %(time)s && $t < %(next_time)s){"
+        end_time = (i+1)*1.0/steps
+        eval_time = time
+        # Looping back and forth means there's no jump between the start and 
+        # end position
+        if back_and_forth:
+            if time < 0.5:
+                eval_time = time * 2
+            else:
+                eval_time = 2 - 2*time
+        scad_obj = func_to_animate( _time=eval_time)   
+        scad_str = indent( scad_render( scad_obj))         
+        rendered_string += (  "if ($t >= %(time)s && $t < %(end_time)s){"
                         "   %(scad_str)s\n"     
                         "}\n"%vars())
     
@@ -239,6 +241,8 @@ def scad_render_animated_file( func_to_animate, steps=20, filepath=None, file_he
     f = open( filepath,"w")
     f.write( rendered_string)
     f.close
+
+
 
 
 def scad_render_to_file( scad_object, filepath=None, file_header='', include_orig_code=True):
