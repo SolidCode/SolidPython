@@ -126,7 +126,7 @@ def include( scad_file_path):
 # = Rendering Python code to OpenSCAD code=
 # =========================================
 def scad_render( scad_object, file_header=''):
-    # Find the root of the tree, calling x.parent until there is none
+    # Make this object the root of the tree
     root = scad_object
     
     # Scan the tree for all instances of 
