@@ -171,14 +171,22 @@ def scad_render_animated_file( func_to_animate, steps=20, back_and_forth=True, f
     # func_to_animate takes a single float argument, _time in [0, 1], and 
     # returns an openscad_object instance.
     #
-    # returns an OpenSCAD string (not an openscad_object) with func_to_animate()
-    # evaluated at "steps" points between 0 & 1, with time never evaluated at
-    # exactly 1
+    # Outputs an OpenSCAD file with func_to_animate() evaluated at "steps" 
+    # points between 0 & 1, with time never evaluated at exactly 1
     
-    # Write out a scad string, an if/else tree with one clause for each time value, with 
-    # _time in [0, 1], with steps of 1/(steps)
+    # If back_and_forth is True, smoothly animate the full extent of the motion
+    # and then reverse it to the beginning; this avoids skipping between beginning
+    # and end of the animated motion
     
-    rendered_string = ""
+    # NOTE: This is a hacky way to solve a simple problem.  To use OpenSCAD's
+    # animation feature, our code needs to respond to changes in the value
+    # of the OpenSCAD variable $t, but I can't think of a way to get a 
+    # float variable from our code and put it into the actual SCAD code. 
+    # Instead, we just evaluate our code at each desired step, and write it
+    # all out in the SCAD code for each case, with an if/else tree.  Depending
+    # on the number of steps, this could create hundreds of times more SCAD
+    # code than is needed.  But... it does work, with minimal Python code, so
+    # here it is. Better solutions welcome. -ETJ 28 Mar 2013    
     
     # NOTE: information on the OpenSCAD manual wiki as of November 2012 implies
     # that the OpenSCAD app does its animation irregularly; sometimes it animates
@@ -189,6 +197,7 @@ def scad_render_animated_file( func_to_animate, steps=20, back_and_forth=True, f
     # should avoid any rounding error problems, and doesn't require the file
     # to be animated with an identical number of steps to the way it was 
     # created. -ETJ 28 Mar 2013
+    rendered_string = ""
 
     if back_and_forth: 
         steps *= 2
