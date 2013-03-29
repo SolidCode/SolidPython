@@ -204,7 +204,6 @@ def scad_render_animated_file( func_to_animate, steps=20, back_and_forth=True, f
 
     rendered_string = file_header + includes
     
-
     if back_and_forth: 
         steps *= 2
 
@@ -231,57 +230,7 @@ def scad_render_animated_file( func_to_animate, steps=20, back_and_forth=True, f
     calling_file = os.path.abspath( calling_module().__file__) 
     
     if include_orig_code:
-        # Once a SCAD file has been created, it's difficult to reconstruct
-        # how it got there, since it has no variables, modules, etc.  So, include
-        # the Python code that generated the scad code as comments at the end of 
-        # the SCAD code
-        pyopenscad_str = open(calling_file, 'r').read()
-    
-        pyopenscad_str = (""
-            "/***********************************************\n"
-            "******      SolidPython code:      *************\n"
-            "************************************************\n"
-            " \n"
-            "%(pyopenscad_str)s \n"
-            " \n"
-            "***********************************************/\n")%vars()        
-        rendered_string += pyopenscad_str
-    
-    # This write is destructive, and ought to do some checks that the write
-    # was successful.
-    # If filepath isn't supplied, place a .scad file with the same name
-    # as the calling module next to it
-    if not filepath:
-        filepath = os.path.splitext( calling_file)[0] + '.scad'
-    
-    f = open( filepath,"w")
-    f.write( rendered_string)
-    f.close
-
-
-
-
-def scad_render_to_file( scad_object, filepath=None, file_header='', include_orig_code=True):
-    rendered_string = scad_render( scad_object, file_header)
-    
-    calling_file = os.path.abspath( calling_module().__file__) 
-    
-    if include_orig_code:
-        # Once a SCAD file has been created, it's difficult to reconstruct
-        # how it got there, since it has no variables, modules, etc.  So, include
-        # the Python code that generated the scad code as comments at the end of 
-        # the SCAD code
-        pyopenscad_str = open(calling_file, 'r').read()
-    
-        pyopenscad_str = (""
-            "/***********************************************\n"
-            "******      SolidPython code:      *************\n"
-            "************************************************\n"
-            " \n"
-            "%(pyopenscad_str)s \n"
-            " \n"
-            "***********************************************/\n")%vars()       
-        rendered_string += pyopenscad_str
+        rendered_string += sp_code_in_scad_comment( calling_file)
     
     # This write is destructive, and ought to do some checks that the write
     # was successful.
@@ -293,6 +242,48 @@ def scad_render_to_file( scad_object, filepath=None, file_header='', include_ori
     f = open( filepath,"w")
     f.write( rendered_string)
     f.close()
+
+def scad_render_to_file( scad_object, filepath=None, file_header='', include_orig_code=True):
+    rendered_string = scad_render( scad_object, file_header)
+    
+    calling_file = os.path.abspath( calling_module().__file__) 
+    
+    if include_orig_code:
+        rendered_string += sp_code_in_scad_comment( calling_file)
+    
+    # This write is destructive, and ought to do some checks that the write
+    # was successful.
+    # If filepath isn't supplied, place a .scad file with the same name
+    # as the calling module next to it
+    if not filepath:
+        filepath = os.path.splitext( calling_file)[0] + '.scad'
+    
+    f = open( filepath,"w")
+    f.write( rendered_string)
+    f.close()
+
+def sp_code_in_scad_comment( calling_file):
+    # Once a SCAD file has been created, it's difficult to reconstruct
+    # how it got there, since it has no variables, modules, etc.  So, include
+    # the Python code that generated the scad code as comments at the end of 
+    # the SCAD code    
+    pyopenscad_str = open(calling_file, 'r').read()
+
+    # TODO: optimally, this would also include a version number and
+    # git hash (& date & github URL?) for the version of solidpython used 
+    # to create a given file; That would future-proof any given SP-created
+    # code because it would point to the relevant dependencies as well as 
+    # the actual code
+    pyopenscad_str = (""
+        "/***********************************************\n"
+        "******      SolidPython code:      *************\n"
+        "************************************************\n"
+        " \n"
+        "%(pyopenscad_str)s \n"
+        " \n"
+        "***********************************************/\n")%vars()     
+    return pyopenscad_str
+
 
 
 # =========================
@@ -568,15 +559,20 @@ class included_openscad_object( openscad_object):
                             "%(include_file_path)s in sys.path"%vars())
     
 
-def calling_module():
+def calling_module( stack_depth=2):
     '''
     Returns the module *2* back in the frame stack.  That means:
     code in module A calls code in module B, which asks calling_module()
     for module A.
     
+    This means that we have to know exactly how far back in the stack
+    our desired module is; if code in module B calls another function in 
+    module B, we have to increase the stack_depth argument to account for
+    this.
+    
     Got that?
     '''
-    frm = inspect.stack()[2]
+    frm = inspect.stack()[stack_depth]
     calling_mod = inspect.getmodule( frm[0])
     return calling_mod
 
@@ -607,7 +603,7 @@ def new_openscad_class_str( class_name, args=[], kwargs=[], include_file_path=No
         "       openscad_object.__init__(self, '%(class_name)s', {%(args_pairs)s })\n"
         "   \n"
         "\n"%vars())
-    
+        
     return result
 
 def py2openscad(o):
