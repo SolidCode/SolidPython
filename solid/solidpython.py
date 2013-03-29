@@ -483,17 +483,17 @@ def new_openscad_class_str( class_name, args=[], kwargs=[], include_file_path=No
         args_pairs += "'%(kwarg)s':%(kwarg)s, "%vars()
         
     if include_file_path:
-        result = '''class %(class_name)s( included_openscad_object):
-        def __init__(self%(args_str)s):
-            included_openscad_object.__init__(self, '%(class_name)s', {%(args_pairs)s }, include_file_path='%(include_file_path)s', use_not_include=%(use_not_include)s )
-        
-'''%vars()
+        result = ("class %(class_name)s( included_openscad_object):\n"
+        "   def __init__(self%(args_str)s):\n"
+        "       included_openscad_object.__init__(self, '%(class_name)s', {%(args_pairs)s }, include_file_path='%(include_file_path)s', use_not_include=%(use_not_include)s )\n"
+        "   \n"
+        "\n"%vars())
     else:
-        result = '''class %(class_name)s( openscad_object):
-        def __init__(self%(args_str)s):
-            openscad_object.__init__(self, '%(class_name)s', {%(args_pairs)s })
-        
-'''%vars()
+        result = ('class %(class_name)s( openscad_object):\n'
+        "   def __init__(self%(args_str)s):\n"
+        "       openscad_object.__init__(self, '%(class_name)s', {%(args_pairs)s })\n"
+        "   \n"
+        "\n"%vars())
     
     return result
 
@@ -528,21 +528,6 @@ def extract_callable_signatures( scad_file_path):
     return parse_scad_callables( scad_code_str)
 
 def parse_scad_callables( scad_code_str): 
-    """>>> test_str = '''module hex (width=10, height=10,    
-...     flats= true, center=false){}
-...     function righty (angle=90) = 1;
-...     function lefty( avar) = 2;
-...     module more( a=[something, other]) {}
-...     module pyramid(side=10, height=-1, square=false, centerHorizontal=true, centerVertical=false){}
-...     module no_comments( arg=10,   //test comment
-...                         other_arg=2, /* some extra comments
-...                         on empty lines */
-...                         last_arg=4){}
-...    module float_arg( arg=1.0){}
-... '''
->>> parse_scad_callables( test_str)
-[{'args': [], 'name': 'hex', 'kwargs': ['width', 'height', 'flats', 'center']}, {'args': [], 'name': 'righty', 'kwargs': ['angle']}, {'args': ['avar'], 'name': 'lefty', 'kwargs': []}, {'args': [], 'name': 'more', 'kwargs': ['a']}, {'args': [], 'name': 'pyramid', 'kwargs': ['side', 'height', 'square', 'centerHorizontal', 'centerVertical']}, {'args': [], 'name': 'no_comments', 'kwargs': ['arg', 'other_arg', 'last_arg']}, {'args': [], 'name': 'float_arg', 'kwargs': ['arg']}]
->>> """         
     callables = []
     
     # Note that this isn't comprehensive; tuples or nested data structures in 

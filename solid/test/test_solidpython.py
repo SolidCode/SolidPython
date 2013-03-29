@@ -58,13 +58,29 @@ class TestSolidPython( unittest.TestCase):
         actual = scad_render( a*b)
         self.assertEqual( expected, actual)
     
+    def test_parse_scad_callables( self):
+        test_str = (""
+        "module hex (width=10, height=10,    \n"
+        "            flats= true, center=false){}\n"
+        "function righty (angle=90) = 1;\n"
+        "function lefty( avar) = 2;\n"
+        "module more( a=[something, other]) {}\n"
+        "module pyramid(side=10, height=-1, square=false, centerHorizontal=true, centerVertical=false){}\n"
+        "module no_comments( arg=10,   //test comment\n"
+        "other_arg=2, /* some extra comments\n"
+        "on empty lines */\n"
+        "last_arg=4){}\n"
+        "module float_arg( arg=1.0){}\n")
+        expected = [{'args': [], 'name': 'hex', 'kwargs': ['width', 'height', 'flats', 'center']}, {'args': [], 'name': 'righty', 'kwargs': ['angle']}, {'args': ['avar'], 'name': 'lefty', 'kwargs': []}, {'args': [], 'name': 'more', 'kwargs': ['a']}, {'args': [], 'name': 'pyramid', 'kwargs': ['side', 'height', 'square', 'centerHorizontal', 'centerVertical']}, {'args': [], 'name': 'no_comments', 'kwargs': ['arg', 'other_arg', 'last_arg']}, {'args': [], 'name': 'float_arg', 'kwargs': ['arg']}]
+        actual = parse_scad_callables( test_str)
+        self.assertEqual( expected, actual)
+    
     def test_explicit_hole( self):
         a = cube( 10, center=True) + hole()( cylinder(2, 20, center=True))        
         expected = '\ndifference() {\n\tunion() {\n\t\tcube(center = true, size = 10);\n\t}\n\t/* All Holes Below*/\n\tunion(){\n\t\tunion() {\n\t\t\tcylinder(h = 20, r = 2, center = true);\n\t\t}\n\t}\n}'
         actual = scad_render( a)
         self.assertEqual( expected, actual)
-
-        
+    
     def test_hole_transform_propagation( self):
         # earlier versions of holes had problems where a hole
         # that was used a couple places wouldn't propagate correctly.
