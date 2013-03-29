@@ -146,21 +146,21 @@ def include( scad_file_path):
 # =========================================
 # = Rendering Python code to OpenSCAD code=
 # =========================================
+def _find_include_strings( obj):
+    include_strings = set()
+    if isinstance( obj, included_openscad_object):
+        include_strings.add( obj.include_string )
+    for child in obj.children:
+        include_strings.update( _find_include_strings( child))
+    return include_strings
+
 def scad_render( scad_object, file_header=''):
     # Make this object the root of the tree
     root = scad_object
     
     # Scan the tree for all instances of 
     # included_openscad_object, storing their strings
-    def find_include_strings( obj):
-        include_strings = set()
-        if isinstance( obj, included_openscad_object):
-            include_strings.add( obj.include_string )
-        for child in obj.children:
-            include_strings.update( find_include_strings( child))
-        return include_strings
-    
-    include_strings = find_include_strings( root)
+    include_strings = _find_include_strings( root)
     
     # and render the string
     includes = ''.join(include_strings) + "\n"
@@ -197,7 +197,13 @@ def scad_render_animated_file( func_to_animate, steps=20, back_and_forth=True, f
     # should avoid any rounding error problems, and doesn't require the file
     # to be animated with an identical number of steps to the way it was 
     # created. -ETJ 28 Mar 2013
-    rendered_string = ""
+    scad_obj = func_to_animate()
+    include_strings = _find_include_strings( scad_obj)    
+    # and render the string
+    includes = ''.join(include_strings) + "\n"    
+
+    rendered_string = file_header + includes
+    
 
     if back_and_forth: 
         steps *= 2
@@ -214,7 +220,8 @@ def scad_render_animated_file( func_to_animate, steps=20, back_and_forth=True, f
             else:
                 eval_time = 2 - 2*time
         scad_obj = func_to_animate( _time=eval_time)   
-        scad_str = indent( scad_render( scad_obj))         
+        
+        scad_str = indent( scad_obj._render())         
         rendered_string += (  "if ($t >= %(time)s && $t < %(end_time)s){"
                         "   %(scad_str)s\n"     
                         "}\n"%vars())
