@@ -179,7 +179,7 @@ def scad_render_to_file( scad_object, filepath=None, file_header='', include_ori
     
     f = open( filepath,"w")
     f.write( rendered_string)
-    f.close
+    f.close()
 
 
 # =========================
