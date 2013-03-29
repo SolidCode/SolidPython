@@ -54,6 +54,7 @@ openscad_builtins = [
     # Modifiers; These are implemented by calling e.g. 
     #   obj.set_modifier( '*') or 
     #   obj.set_modifier('disable') 
+    #   disable( obj)
     # on  an existing object.
     # {'name': 'background',      'args': [],         'kwargs': []},     #   %{}
     # {'name': 'debug',           'args': [],         'kwargs': []} ,    #   #{}
@@ -83,6 +84,26 @@ builtin_literals = {
     '''
 
 }
+# ================================
+# = Modifier Convenience Methods =
+# ================================
+def debug( openscad_obj):
+    openscad_obj.set_modifier("#")
+    return openscad_obj
+
+def background( openscad_obj):
+    openscad_obj.set_modifier("%")
+    return openscad_obj
+
+def root( openscad_obj):
+    openscad_obj.set_modifier("!")
+    return openscad_obj
+    
+def disable( openscad_obj):
+    openscad_obj.set_modifier("*")
+    return openscad_obj
+
+
 
 # ===============
 # = Including OpenSCAD code =
