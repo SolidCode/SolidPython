@@ -35,6 +35,8 @@ scad_test_case_templates = [
 ]
 
 
+
+
 class TestSolidPython( unittest.TestCase):
     # test cases will be dynamically added to this instance
     def test_infix_union( self):
@@ -73,6 +75,30 @@ class TestSolidPython( unittest.TestCase):
         "module float_arg( arg=1.0){}\n")
         expected = [{'args': [], 'name': 'hex', 'kwargs': ['width', 'height', 'flats', 'center']}, {'args': [], 'name': 'righty', 'kwargs': ['angle']}, {'args': ['avar'], 'name': 'lefty', 'kwargs': []}, {'args': [], 'name': 'more', 'kwargs': ['a']}, {'args': [], 'name': 'pyramid', 'kwargs': ['side', 'height', 'square', 'centerHorizontal', 'centerVertical']}, {'args': [], 'name': 'no_comments', 'kwargs': ['arg', 'other_arg', 'last_arg']}, {'args': [], 'name': 'float_arg', 'kwargs': ['arg']}]
         actual = parse_scad_callables( test_str)
+        self.assertEqual( expected, actual)
+    
+    def test_background( self):
+        a = cube(10)
+        expected = '\n\n%cube(size = 10);'
+        actual = scad_render( background( a))
+        self.assertEqual( expected, actual)
+    
+    def test_debug( self):
+        a = cube(10)
+        expected =  '\n\n#cube(size = 10);'
+        actual = scad_render( debug( a))
+        self.assertEqual( expected, actual)
+    
+    def test_disable( self):
+        a = cube(10)
+        expected =  '\n\n*cube(size = 10);'
+        actual = scad_render( disable( a))
+        self.assertEqual( expected, actual)
+    
+    def test_root( self):
+        a = cube(10)
+        expected = '\n\n!cube(size = 10);'
+        actual = scad_render( root( a))
         self.assertEqual( expected, actual)
     
     def test_explicit_hole( self):
