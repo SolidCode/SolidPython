@@ -3,6 +3,7 @@
 import os, sys, re
 
 import unittest
+import tempfile
 from solid import *
 
 scad_test_case_templates = [
@@ -132,7 +133,6 @@ class TestSolidPython( unittest.TestCase):
             rad = 15
             c = translate( [rad*math.cos(rads), rad*math.sin(rads)])( square( 10))
             return c
-        import tempfile
         tmp = tempfile.NamedTemporaryFile()
         
         scad_render_animated_file( my_animate, steps=2, back_and_forth=False, 
@@ -142,6 +142,32 @@ class TestSolidPython( unittest.TestCase):
         expected = '\nif ($t >= 0.0 && $t < 0.5){   \n\ttranslate(v = [15.0000000000, 0.0000000000]) {\n\t\tsquare(size = 10);\n\t}\n}\nif ($t >= 0.5 && $t < 1.0){   \n\ttranslate(v = [-15.0000000000, 0.0000000000]) {\n\t\tsquare(size = 10);\n\t}\n}\n'
         tmp.close()
         self.assertEqual( expected, actual)
+        
+    def test_scad_render_to_file( self):
+        a = circle(10)
+        
+        # No header, no included original code
+        tmp = tempfile.NamedTemporaryFile()
+        scad_render_to_file( a, filepath=tmp.name, include_orig_code=False)
+        tmp.seek(0)
+        actual = tmp.read()
+        expected = '\n\ncircle(r = 10);'
+        tmp.close()
+        self.assertEqual( expected, actual)
+        
+        # Header
+        tmp = tempfile.NamedTemporaryFile()
+        scad_render_to_file( a, filepath=tmp.name, include_orig_code=False,
+                     file_header='$fn = 24;')
+        tmp.seek(0)
+        actual = tmp.read()
+        expected = '$fn = 24;\n\ncircle(r = 10);'
+        tmp.close()
+        self.assertEqual( expected, actual)
+        
+        # TODO: test include_orig_code=True, but that would have to
+        # be done from a separate file, or include everything in this one
+    
         
 def single_test( test_dict):
     name, args, kwargs, expected = test_dict['name'], test_dict['args'], test_dict['kwargs'], test_dict['expected']
