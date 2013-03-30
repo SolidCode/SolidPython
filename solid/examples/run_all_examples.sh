@@ -7,10 +7,12 @@ if [ ! -e $COMPILED_EXAMPLES ];
 fi    
  
 for py in *.py;
-do echo "===================================================";
-echo "python $py $COMPILED_EXAMPLES";
-python $py $COMPILED_EXAMPLES;  
-echo "===================================================";
+do 
+    echo "===================================================";
+    echo "python $py $COMPILED_EXAMPLES";
+    python $py $COMPILED_EXAMPLES;  
+    echo "===================================================";
+echo
 done 
 
 # Note: mazebox example isn't included because it requires a 

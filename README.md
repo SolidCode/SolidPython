@@ -8,6 +8,7 @@ SolidPython
 - [Extra syntactic sugar](#extra-syntactic-sugar)
 	- [Basic operators](#basic-operators)
     - [First-class Negative Space (Holes)](#first-class-negative-space-holes)
+    - [Animation](#animation)
 - [solid.utils](#solidutils)
 	- [Directions: (up, down, left, right, forward, back) for arranging things:](#directions-up-down-left-right-forward-back-for-arranging-things)
 	- [Arcs](#arcs)
@@ -180,6 +181,12 @@ Example:
     pipe_a = outer - hole()(inner)
 
 See `solid/examples/hole_example.py` for the complete picture.
+
+### Animation<a id="animation"></a>
+OpenSCAD has a special variable, `$t`, that can be used to animate motion.
+SolidPython can do this, too, using the special function `scad_render_animated_file()`.  
+
+See `solid/examples/animation_example.py` for more details.
 
 # solid.utils<a id="solidutils"></a>
 SolidPython includes a number of useful functions in solid/utils.py.  Currently these include:

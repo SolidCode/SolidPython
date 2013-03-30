@@ -52,6 +52,6 @@ if __name__ == '__main__':
     
     a = pipe_intersection_no_hole() + right( 45)(pipe_intersection_hole())
     
-    print "%(__file__)s: SCAD file written to: \n%(file_out)s \n"%vars()
+    print "%(__file__)s: SCAD file written to: \n%(file_out)s"%vars()
     scad_render_to_file( a, file_out, file_header='$fn = %s;'%SEGMENTS, include_orig_code=True)
 

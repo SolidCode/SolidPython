@@ -43,7 +43,7 @@ if __name__ == '__main__':
     
     a = basic_geometry()
     
-    print "%(__file__)s: SCAD file written to: \n%(file_out)s \n"%vars()
+    print "%(__file__)s: SCAD file written to: \n%(file_out)s"%vars()
     
     # Adding the file_header argument as shown allows you to change
     # the detail of arcs by changing the SEGMENTS variable.  This can 
