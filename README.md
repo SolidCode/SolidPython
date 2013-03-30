@@ -97,7 +97,8 @@ impossible in pure OpenSCAD.  Among these are:
 
         from solid import *
         from solid.utils import *  # Not required, but the utils module is useful
-*   To include other scad code, call ```use("/path/to/scadfile.scad")``` or ```include("/path/to/scadfile.scad")```
+*   To include other scad code, call ```use("/path/to/scadfile.scad")``` or ```include("/path/to/scadfile.scad")```. This is identical to what you would
+    do in OpenSCAD. 
 *   OpenSCAD uses curly-brace blocks ({}) to create its tree.  SolidPython uses
     parentheses with comma-delimited lists.
     __OpenSCAD:__
@@ -114,10 +115,9 @@ impossible in pure OpenSCAD.  Among these are:
             sphere(15)
         )
            
-*   Call ```scad_render( py_scad_obj)``` to generate SCAD code. This returns a string 
-    of valid OpenSCAD code.
+*   Call ```scad_render( py_scad_obj)``` to generate SCAD code. This returns a string of valid OpenSCAD code.
 *   *or*: call ```scad_render_to_file( py_scad_obj, filepath)``` to
-    store that code in a file. 
+    store that code in a file.  
 *   If 'filepath' is open in the OpenSCAD IDE and Design =>
     'Automatic Reload and Compile' is checked (in the OpenSCAD IDE), calling
     ```scad_render_to_file()``` from Python will load the object in
@@ -262,8 +262,6 @@ call ```bill_of_materials()``` after the program is run, and all parts will be
 counted, priced and reported. 
 
 The example file `solid/examples/bom_scad.py` illustrates this. Check it out.
-
-
 
 ## solid.screw_thread<a id="solidscrew_thread"></a>
 solid.screw_thread includes a method, thread() that makes internal and external 
