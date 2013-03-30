@@ -34,9 +34,6 @@ scad_test_case_templates = [
 {'name': 'intersection_for',    'kwargs': {}, 'expected': '\n\nintersection_for(n = [0, 1, 2]);', 'args': {'n': [0, 1, 2]}, },
 ]
 
-
-
-
 class TestSolidPython( unittest.TestCase):
     # test cases will be dynamically added to this instance
     def test_infix_union( self):
@@ -127,6 +124,25 @@ class TestSolidPython( unittest.TestCase):
         self.assertEqual( expected, actual)
 
 
+    def test_scad_render_animated_file( self):
+        def my_animate( _time=0):
+            import math
+            # _time will range from 0 to 1, not including 1
+            rads = _time * 2 * math.pi
+            rad = 15
+            c = translate( [rad*math.cos(rads), rad*math.sin(rads)])( square( 10))
+            return c
+        import tempfile
+        tmp = tempfile.NamedTemporaryFile()
+        
+        scad_render_animated_file( my_animate, steps=2, back_and_forth=False, 
+                filepath=tmp.name, include_orig_code=False)
+        tmp.seek(0)
+        actual = tmp.read()
+        expected = '\nif ($t >= 0.0 && $t < 0.5){   \n\ttranslate(v = [15.0000000000, 0.0000000000]) {\n\t\tsquare(size = 10);\n\t}\n}\nif ($t >= 0.5 && $t < 1.0){   \n\ttranslate(v = [-15.0000000000, 0.0000000000]) {\n\t\tsquare(size = 10);\n\t}\n}\n'
+        tmp.close()
+        self.assertEqual( expected, actual)
+        
 def single_test( test_dict):
     name, args, kwargs, expected = test_dict['name'], test_dict['args'], test_dict['kwargs'], test_dict['expected']
     
