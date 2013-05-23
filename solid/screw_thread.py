@@ -8,13 +8,8 @@ from euclid import *
 # NOTE: The PyEuclid on PyPi doesn't include several elements added to 
 # the module as of 13 Feb 2013.  Add them here until euclid supports them
 # TODO: when euclid updates, remove this cruft. -ETJ 13 Feb 2013
-def patch_euclid():
-    def as_arr_local( self):
-        return [ self.x, self.y, self.z]
-    
-    if 'as_arr' not in dir( Vector3):
-        Vector3.as_arr = as_arr_local
-patch_euclid()
+import patch_euclid
+patch_euclid.run_patch()
 
 def thread( outline_pts, inner_rad, pitch, length, external=True, segments_per_rot=32,neck_in_degrees=0, neck_out_degrees=0):
     '''

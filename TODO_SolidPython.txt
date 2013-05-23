@@ -1,3 +1,4 @@
+-- Add bezier support
 -- Add fillet_2d() section to README
 -- unit tests for box_align & other rotation methods in utils.py
 -- Parent transforms of hole() objects still get put in the positive section

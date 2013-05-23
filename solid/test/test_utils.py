@@ -50,7 +50,8 @@ other_test_cases = [
 
 
 class TestSPUtils( unittest.TestCase):
-    # test cases will be dynamically added to this instance
+    # Test cases will be dynamically added to this instance
+    # using the test case arrays above
     def test_split_body_horizontal( self):
         body = sphere( 20)
         actual_tuple = split_body_horizontal( body, plane_z=10, dowel_holes=True)
