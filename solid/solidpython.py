@@ -43,7 +43,7 @@ openscad_builtins = [
         
     # 2D to 3D transitions
     {'name': 'linear_extrude',  'args': [],         'kwargs': ['height', 'center', 'convexity', 'twist','slices']} ,
-    {'name': 'rotate_extrude',  'args': [],         'kwargs': ['convexity']} ,
+    {'name': 'rotate_extrude',  'args': [],         'kwargs': ['convexity', 'segments']} ,
     {'name': 'dxf_linear_extrude', 'args': ['file'], 'kwargs': ['layer', 'height', 'center', 'convexity', 'twist', 'slices']} ,
     {'name': 'projection',      'args': [],         'kwargs': ['cut']} ,
     {'name': 'surface',         'args': ['file'],   'kwargs': ['center','convexity']} ,
