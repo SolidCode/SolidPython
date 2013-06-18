@@ -502,7 +502,7 @@ def py2openscad(o):
         return str(o).lower()
     if type(o) == float:
         return "%.10f" % o
-    if type(o) == list:
+    if type(o) == list or type(o) == tuple:
         s = "["
         first = True
         for i in o:
