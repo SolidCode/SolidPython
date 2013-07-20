@@ -101,7 +101,7 @@ class TestSolidPython( unittest.TestCase):
     
     def test_explicit_hole( self):
         a = cube( 10, center=True) + hole()( cylinder(2, 20, center=True))        
-        expected = '\ndifference() {\n\tunion() {\n\t\tcube(center = true, size = 10);\n\t}\n\t/* All Holes Below*/\n\tunion(){\n\t\tunion() {\n\t\t\tcylinder(h = 20, r = 2, center = true);\n\t\t}\n\t}\n}'
+        expected = '\n\ndifference() {\n\tunion() {\n\t\tcube(center = true, size = 10);\n\t}\n\t/* Holes Below*/\n\tunion(){\n\t\tunion() {\n\t\t\tcylinder(h = 20, r = 2, center = true);\n\t\t}\n\t}\n}'
         actual = scad_render( a)
         self.assertEqual( expected, actual)
     
@@ -120,7 +120,7 @@ class TestSolidPython( unittest.TestCase):
                 )
     
         a = cube( 10, center=True) + h + h_vert
-        expected = '\ndifference() {\n\tunion() {\n\t\tunion() {\n\t\t\tcube(center = true, size = 10);\n\t\t}\n\t\trotate(a = -90, v = [0, 1, 0]) {\n\t\t}\n\t}\n\t/* All Holes Below*/\n\tunion(){\n\t\tunion(){\n\t\t\tunion() {\n\t\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\t\tcylinder(h = 20, r = 2, center = true);\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t\trotate(a = -90, v = [0, 1, 0]){\n\t\t\tunion() {\n\t\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\t\tcylinder(h = 20, r = 2, center = true);\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n}'
+        expected = '\n\ndifference() {\n\tunion() {\n\t\tunion() {\n\t\t\tcube(center = true, size = 10);\n\t\t}\n\t\trotate(a = -90, v = [0, 1, 0]) {\n\t\t}\n\t}\n\t/* Holes Below*/\n\tunion(){\n\t\tunion(){\n\t\t\tunion() {\n\t\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\t\tcylinder(h = 20, r = 2, center = true);\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t\trotate(a = -90, v = [0, 1, 0]){\n\t\t\tunion() {\n\t\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\t\tcylinder(h = 20, r = 2, center = true);\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n}'
         actual = scad_render( a)
         self.assertEqual( expected, actual)
 
@@ -134,41 +134,21 @@ class TestSolidPython( unittest.TestCase):
         # the parts intended to fit in them.
         b = cube( 10, center=True)
         c = cylinder( r=2, h=12, center=True)
-        p1 = b - hole()(c)
+        # p1 = b - hole()(c)
+        p1 = b - c.set_hole( True)
+        
         # Mark this cube-with-hole as a separate part from the cylinder
-        p1 = part() (p1)
+        # p1 = part() (p1)
+        p1.set_part_root( True) 
         
-        
-        # This fits in the hole.  If we're correct, it will all appear.
-        # If we fail, the portion of the cylinder inside the cube will
-        # not appear
+        # This fits in the hole.  If p1 is set as a part_root, it will all appear.
+        # If not, the portion of the cylinder inside the cube will not appear,
+        # since it would have been removed by the holein p1
         p2 = cylinder( r=1.5, h=14, center=True)
         
         a = p1 + p2
         
-        #NOTE: This is what we want: 
-        '''
-        union(){
-        	difference(){
-        		cube( 10, center=true);
-        		cylinder( r=2, h=12, center=true);
-        	}
-        	cylinder( r=1.5, h=14, center=true);
-        }        
-        '''
-        # And this is what we used to get:
-        '''        
-        difference(){
-            union(){
-            	union(){
-            		cube( 10, center=true);
-            	}
-            	cylinder( r=1.5, h=14, center=true);
-            }    
-            cylinder( r=2, h=12, center=true);
-        }
-        '''
-        expected = "dummy text"
+        expected = "\n\nunion() {\n	difference() {\n		difference() {\n			cube(center = true, size = 10);\n		}\n		/* Holes Below*/\n		difference(){\n			cylinder(h = 12, r = 2, center = true);\n		}\n	}\n	cylinder(h = 14, r = 1.5000000000, center = true);\n}"
         actual = scad_render( a)
         self.assertEqual( expected, actual)
     

@@ -58,11 +58,11 @@ def multipart_hole():
     
     # TODO: fix hole() and part() syntax
     # p1 = b - hole()(c)
-    p1 = b + c.set_hole(True)
+    p1 = b - c.set_hole(True)
     
     # Mark this cube-with-hole as a separate part from the cylinder
-    p1 = part()(p1)
-    # p1 = p1.set_part_root( True)
+    # p1 = part()(p1)
+    p1 = p1.set_part_root( True)
     
     # This fits in the hole.  If p1 is set as a part_root, it will all appear.
     # If not, the portion of the cylinder inside the cube will not appear,
