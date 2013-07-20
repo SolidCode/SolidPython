@@ -27,6 +27,9 @@ def pipe_intersection_hole():
     # Note that "pipe_a = outer - hole()( inner)" would work identically;
     # inner will always be subtracted now that it's a hole
     
+    # FIXME: changes to how holes work seem to have made pipe_b not
+    # hold on to pipe_a's is_hole property.  Fix this.
+    
     pipe_b =  rotate( a=90, v=FORWARD_VEC)( pipe_a)
     return pipe_a + pipe_b
 
@@ -47,29 +50,34 @@ def pipe_intersection_no_hole():
     return pipe_a + pipe_b
 
 def multipart_hole():
-    # Make two parts, a block with hole, and a cylinder that 
-    # fits inside it.  Make them separate parts, meaning
-    # holes will be defined at the level of the part_root node,
-    # not the overall node.  This allows us to preserve holes as
-    # first class space, but then to actually fill them in with 
-    # the parts intended to fit in them.
+    # It's good to be able to keep holes empty, but often we want to put
+    # things (bolts, etc.) in them.  The way to do this is to declare the 
+    # object containing the hole a "part".  Then, the hole will remain
+    # empty no matter what you add to the 'part'.  But if you put an object
+    # that is NOT part of the 'part' into the hole, it will still appear.
+    
+    # On the left (not_part), here's what happens if we try to put an object 
+    # into an explicit hole:  the object gets erased by the hole.
+    
+    # On the right (is_part), we mark the cube-with-hole as a "part",
+    # and then insert the same 'bolt' cylinder into it.  The entire
+    # bolt rematins.
+    
     b = cube( 10, center=True)
     c = cylinder( r=2, h=12, center=True)
     
-    # TODO: fix hole() and part() syntax
-    # p1 = b - hole()(c)
-    p1 = b - c.set_hole(True)
+    # A cube with an explicit hole
+    not_part = b - hole()(c) 
     
     # Mark this cube-with-hole as a separate part from the cylinder
-    # p1 = part()(p1)
-    p1 = p1.set_part_root( True)
+    is_part = part()(not_part.copy())
     
-    # This fits in the hole.  If p1 is set as a part_root, it will all appear.
-    # If not, the portion of the cylinder inside the cube will not appear,
-    # since it would have been removed by the holein p1
-    p2 = cylinder( r=1.5, h=14, center=True)
+    # This fits in the holes
+    bolt = cylinder( r=1.5, h=14, center=True) + up(8)( cylinder( r=2.5, h=2.5, center=True))
     
-    a = p1 + p2 
+    # The section of the bolt inside not_part disappears.  The section
+    # of the bolt inside is_part is still there. 
+    a = not_part + bolt + right( 45)( is_part + bolt)
     
     return a   
 
@@ -77,11 +85,16 @@ if __name__ == '__main__':
     out_dir = sys.argv[1] if len(sys.argv) > 1 else os.curdir
     file_out = os.path.join( out_dir, 'hole_example.scad')
     
-    # a = pipe_intersection_no_hole() + right( 45)(pipe_intersection_hole())
+    # On the left, pipes with no explicit holes, which can give 
+    # unexpected walls where we don't want them.
+    # On the right, we use the hole() function to fix the problem
+    a = pipe_intersection_no_hole() + right( 45)(pipe_intersection_hole())
     
-    # ETJ DEBUG
-    a = multipart_hole()
-    # END DEBUG
+    # Below is an example of how to put objects into holes and have them
+    # still appear
+    # b = up( 40)( multipart_hole())
+    # 
+    # a += b
     
     print "%(__file__)s: SCAD file written to: \n%(file_out)s"%vars()
     scad_render_to_file( a, file_out, file_header='$fn = %s;'%SEGMENTS, include_orig_code=True)

@@ -79,17 +79,21 @@ builtin_literals = {
 ''',
     'hole':'''class hole( openscad_object):
     def __init__( self):
-        openscad_object.__init__( self, 'union', {})
+        openscad_object.__init__( self, 'hole', {})
         self.set_hole( True)
     
     ''', 
     'part':'''class part( openscad_object):
     def __init__( self):
-        openscad_object.__init__(self, 'union', {})
+        openscad_object.__init__(self, 'part', {})
         self.set_part_root( True)
     '''
 
 }
+# These are features added to SolidPython but NOT in OpenSCAD. 
+# Mark them for special treatment
+non_rendered_classes = ['hole', 'part']
+
 # ================================
 # = Modifier Convenience Methods =
 # ================================
@@ -354,22 +358,27 @@ class openscad_object( object):
         you really want scad_render(), 
         Calling obj._render won't include necessary 'use' or 'include' statements
         '''      
-        s = self._render_str_no_children()
-        
-        if self.children != None and len(self.children) > 0:
-            s += " {"
-            for child in self.children:
-                # Don't immediately render hole children.
-                # Add them to the parent's hole list,
-                # And render after everything else
-                if not render_holes and child.is_hole:
-                    continue
-                s += indent(child._render( render_holes))
-            s += "\n}"
+        # First, render all children
+        s = ""
+        for child in self.children:
+            # Don't immediately render hole children.
+            # Add them to the parent's hole list,
+            # And render after everything else
+            if not render_holes and child.is_hole:
+                continue
+            s += child._render( render_holes)
+                
+        # Then render self and prepend/wrap it around the children
+        # I've added designated parts and explicit holes to SolidPython
+        # OpenSCAD has neither, so don't render anything from these objects                
+        if self.name in non_rendered_classes:
+            pass
+        elif not self.children:
+            s = self._render_str_no_children() + ";"
         else:
-            s += ";"
+            s = self._render_str_no_children() + " {" + indent( s) + "\n}"
             
-        # If this is the root object *or the top of a separate part*, 
+        # If this is the root object or the top of a separate part,
         # find all holes and subtract them after all positive geometry
         # is rendered
         if (not self.parent) or self.is_part_root:
@@ -380,12 +389,11 @@ class openscad_object( object):
                 s += self._render_hole_children()
                 
                 # wrap everything in the difference
-                s = "\ndifference() {" + indent(s) + "\n}"
+                s = "\ndifference(){" + indent(s) + " /* End Holes */ \n}"
         return s
     
     def _render_str_no_children( self):
-        s = ""
-        s += "\n" + self.modifier + self.name + "("
+        s = "\n" + self.modifier + self.name + "("
         first = True
             
         # OpenSCAD doesn't have a 'segments' argument, but it does 
@@ -424,10 +432,10 @@ class openscad_object( object):
         # that are holes or have holes beneath them
         if not self.has_hole_children:
             return ""
-        s = self._render_str_no_children() + "{"
+        s = ""    
         for child in self.children:
             if child.is_hole:
-                s += indent( child._render( render_holes=True)) 
+                s += child._render( render_holes=True)
             elif child.has_hole_children:
                 # Holes exist in the compiled tree in two pieces:
                 # The shapes of the holes themselves, ( an object for which
@@ -448,8 +456,11 @@ class openscad_object( object):
                 # also think my rationale is shaky and imprecise. -ETJ 19 Feb 2013
                 s = s.replace( "intersection", "union")
                 s = s.replace( "difference", "union")
-                s += indent( child._render_hole_children()) 
-        s += "\n}"
+                s += child._render_hole_children()
+        if self.name in non_rendered_classes:
+            pass
+        else:
+            s = self._render_str_no_children() + "{" + indent( s) + "\n}"
         return s
     
     def add(self, child):
