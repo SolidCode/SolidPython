@@ -1,3 +1,4 @@
+-- Add github hash or version number to SolidPython code appended to SCAD code.
 -- Add bezier support
 -- Add fillet_2d() section to README
 -- unit tests for box_align & other rotation methods in utils.py
