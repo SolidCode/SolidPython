@@ -302,21 +302,29 @@ class openscad_object( object):
     def set_hole( self, is_hole=True):
         self.is_hole = is_hole
     
-    def find_hole_children( self):
+    def find_hole_children( self, path=None):
+        # Because we don't force a copy every time we re-use a node
+        # (e.g a = cylinder(2, 6);  b = right( 10) (a)          
+        #  the identical 'a' object appears in the tree twice),
+        # we can't count on an object's 'parent' field to trace its
+        # path to the root.  Instead, keep track explicitly
+        path = path if path else [self]
         hole_kids = []
+
         for child in self.children:
+            path.append( child)
             if child.is_hole:
                 hole_kids.append( child)
-                # Mark that there are holes below all upper nodes,
-                # so the necessary transforms can be written later
-                p = child
-                while p.parent:
-                    p = p.parent
+                # Mark all parents as having a hole child
+                for p in path:
                     p.has_hole_children = True
             else:
-                hole_kids += child.find_hole_children()
+                hole_kids += child.find_hole_children( path)
+            path.pop( )
+        
         return hole_kids
-    
+        
+        
     def set_modifier(self, m):
         # Used to add one of the 4 single-character modifiers: #(debug)  !(root) %(background) or *(disable)
         string_vals = { 'disable':      '*',
@@ -381,7 +389,7 @@ class openscad_object( object):
                 # Don't immediately render hole children.
                 # Add them to the parent's hole list,
                 # And render after everything else
-                if not render_holes and child.is_hole:
+                if child.is_hole and not render_holes:
                     continue
                 s += indent(child._render( render_holes))
             s += "\n}"
@@ -449,19 +457,8 @@ class openscad_object( object):
                 child = child[0]
             [self.add( c ) for c in child]
         else:
-            # NOTE: originally, we simply appended child itself, and this 
-            # didn't normally cause problems.  It does create some issues
-            # with designated holes (one object could be a child of several parents 
-            # but only use a single parent's transforms), and this corrects them.
-            # So, in this case, go ahead and make a copy of the object.
-            # Beware doing this in the general; it causes crippling recursive
-            # slowdowns when adding large trees together. -ETJ 04 Mar 2013
-            if child.is_hole:
-                c = child.copy()
-            else:
-                c = child
-            self.children.append( c)
-            c.set_parent( self)
+            self.children.append( child)
+            child.set_parent( self)
         return self
     
     def set_parent( self, parent):
