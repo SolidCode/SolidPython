@@ -372,7 +372,7 @@ def section_cut_xz( body, y_cut_point=0):
 # bill_of_materials()
 # to generate a report.  Se examples/bom_scad.py for usage
 g_parts_dict = {}
-def part( description='', per_unit_price=None, currency='US$'):
+def bom_part( description='', per_unit_price=None, currency='US$'):
     def wrap(f):
         name = description if description else f.__name__
         g_parts_dict[name] = [0, currency, per_unit_price]

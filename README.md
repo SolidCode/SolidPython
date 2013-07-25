@@ -180,6 +180,11 @@ Example:
     inner = cylinder(r=pipe_id, h=seg_length)
     pipe_a = outer - hole()(inner)
 
+Once you've made something a hole, eventually you'll want to put something, 
+like a bolt, into it.  To do this, we need to specify that there's a given 
+'part' with a hole and that other parts may occupy the space in that hole.
+This is done with the `part()` function.  
+
 See `solid/examples/hole_example.py` for the complete picture.
 
 ### Animation<a id="animation"></a>
@@ -257,7 +262,7 @@ I took this from someone on Thingiverse and I'm ashamed that I can't find the
 original source.  I owe someone some attribution.
     
 ### Bill Of Materials<a id="bill-of-materials"></a>
-Put ```@part()``` before any method that defines a part, then 
+Put ```@bom_part()``` before any method that defines a part, then 
 call ```bill_of_materials()``` after the program is run, and all parts will be 
 counted, priced and reported. 
 

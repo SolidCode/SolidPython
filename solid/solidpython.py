@@ -29,6 +29,7 @@ openscad_builtins = [
     {'name': 'intersection',    'args': [],         'kwargs': []} ,
     {'name': 'difference',      'args': [],         'kwargs': []} ,
     {'name': 'hole',           'args': [],         'kwargs': []} ,
+    {'name': 'part',           'args': [],         'kwargs': []} ,
     
     # Transforms
     {'name': 'translate',       'args': [],         'kwargs': ['v']} ,
@@ -75,15 +76,24 @@ builtin_literals = {
                 paths = [ range( len( points))]
             openscad_object.__init__( self, 'polygon', {'points':points, 'paths': paths})
         
-''',
+            ''',
     'hole':'''class hole( openscad_object):
     def __init__( self):
-        openscad_object.__init__( self, 'union', {})
+        openscad_object.__init__( self, 'hole', {})
         self.set_hole( True)
     
+    ''', 
+    'part':'''class part( openscad_object):
+    def __init__( self):
+        openscad_object.__init__(self, 'part', {})
+        self.set_part_root( True)
     '''
 
 }
+# These are features added to SolidPython but NOT in OpenSCAD. 
+# Mark them for special treatment
+non_rendered_classes = ['hole', 'part']
+
 # ================================
 # = Modifier Convenience Methods =
 # ================================
@@ -274,7 +284,7 @@ def sp_code_in_scad_comment( calling_file):
     # to create a given file; That would future-proof any given SP-created
     # code because it would point to the relevant dependencies as well as 
     # the actual code
-    pyopenscad_str = (""
+    pyopenscad_str = ("\n"
         "/***********************************************\n"
         "******      SolidPython code:      *************\n"
         "************************************************\n"
@@ -298,9 +308,15 @@ class openscad_object( object):
         self.parent= None
         self.is_hole = False
         self.has_hole_children = False
+        self.is_part_root = False
     
     def set_hole( self, is_hole=True):
         self.is_hole = is_hole
+        return self
+    
+    def set_part_root( self, is_root=True):
+        self.is_part_root = is_root
+        return self
     
     def find_hole_children( self, path=None):
         # Because we don't force a copy every time we re-use a node
@@ -318,6 +334,10 @@ class openscad_object( object):
                 # Mark all parents as having a hole child
                 for p in path:
                     p.has_hole_children = True
+            # Don't append holes from separate parts below us                   
+            elif child.is_part_root:
+                continue
+            # Otherwise, look below us for children
             else:
                 hole_kids += child.find_hole_children( path)
             path.pop( )
@@ -339,9 +359,48 @@ class openscad_object( object):
         self.modifier = string_vals.get(m.lower(), '')
         return self
     
-    def _render_str_no_children( self):
+    def _render(self, render_holes=False):
+        '''
+        NOTE: In general, you won't want to call this method. For most purposes,
+        you really want scad_render(), 
+        Calling obj._render won't include necessary 'use' or 'include' statements
+        '''      
+        # First, render all children
         s = ""
-        s += "\n" + self.modifier + self.name + "("
+        for child in self.children:
+            # Don't immediately render hole children.
+            # Add them to the parent's hole list,
+            # And render after everything else
+            if not render_holes and child.is_hole:
+                continue
+            s += child._render( render_holes)
+                
+        # Then render self and prepend/wrap it around the children
+        # I've added designated parts and explicit holes to SolidPython.
+        # OpenSCAD has neither, so don't render anything from these objects                
+        if self.name in non_rendered_classes:
+            pass
+        elif not self.children:
+            s = self._render_str_no_children() + ";"
+        else:
+            s = self._render_str_no_children() + " {" + indent( s) + "\n}"
+            
+        # If this is the root object or the top of a separate part,
+        # find all holes and subtract them after all positive geometry
+        # is rendered
+        if (not self.parent) or self.is_part_root:
+            hole_children = self.find_hole_children()
+            
+            if len(hole_children) > 0:
+                s += "\n/* Holes Below*/"
+                s += self._render_hole_children()
+                
+                # wrap everything in the difference
+                s = "\ndifference(){" + indent(s) + " /* End Holes */ \n}"
+        return s
+    
+    def _render_str_no_children( self):
+        s = "\n" + self.modifier + self.name + "("
         first = True
             
         # OpenSCAD doesn't have a 'segments' argument, but it does 
@@ -374,50 +433,15 @@ class openscad_object( object):
                 
         s += ")"
         return s
-        
-    def _render(self, render_holes=False):
-        '''
-        NOTE: In general, you won't want to call this method. For most purposes,
-        you really want scad_render(), 
-        Calling obj._render won't include necessary 'use' or 'include' statements
-        '''      
-        s = self._render_str_no_children()
-        
-        if self.children != None and len(self.children) > 0:
-            s += " {"
-            for child in self.children:
-                # Don't immediately render hole children.
-                # Add them to the parent's hole list,
-                # And render after everything else
-                if child.is_hole and not render_holes:
-                    continue
-                s += indent(child._render( render_holes))
-            s += "\n}"
-        else:
-            s += ";"
-            
-        # If this is the root object, find all holes
-        # and subtract them after all positive geometry is rendered
-        if not self.parent:
-            hole_children = self.find_hole_children()
-            
-            if len(hole_children) > 0:
-                s += "\n/* All Holes Below*/"
-                s += self._render_hole_children()
-                
-                # wrap everything in the difference
-                s = "difference() {" + indent(s) + "\n}"
-        return s
-    
     def _render_hole_children( self):
         # Run down the tree, rendering only those nodes
         # that are holes or have holes beneath them
         if not self.has_hole_children:
             return ""
-        s = self._render_str_no_children() + "{"
+        s = ""    
         for child in self.children:
             if child.is_hole:
-                s += indent( child._render( render_holes=True)) 
+                s += child._render( render_holes=True)
             elif child.has_hole_children:
                 # Holes exist in the compiled tree in two pieces:
                 # The shapes of the holes themselves, ( an object for which
@@ -438,8 +462,11 @@ class openscad_object( object):
                 # also think my rationale is shaky and imprecise. -ETJ 19 Feb 2013
                 s = s.replace( "intersection", "union")
                 s = s.replace( "difference", "union")
-                s += indent( child._render_hole_children()) 
-        s += "\n}"
+                s += child._render_hole_children()
+        if self.name in non_rendered_classes:
+            pass
+        else:
+            s = self._render_str_no_children() + "{" + indent( s) + "\n}"
         return s
     
     def add(self, child):
@@ -486,6 +513,7 @@ class openscad_object( object):
         other = globals()[ self.name]( **self.params)
         other.set_modifier( self.modifier)
         other.set_hole( self.is_hole)
+        other.set_part_root( self.is_part_root)
         other.has_hole_children = self.has_hole_children
         for c in self.children:
             other.add( c.copy())

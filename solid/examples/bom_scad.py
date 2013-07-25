@@ -6,9 +6,9 @@
 #
 # Basically:  
 #   -- Define every part you want in the Bill of Materials in a function
-#   -- Use the 'part' decorator ahead of the definition of each part's function
+#   -- Use the 'bom_part' decorator ahead of the definition of each part's function
 #           e.g.:  
-                # @part()
+                # @bom_part()
                 # def my_part():
                 #     pass
 #   -- Optionally, you can add a description and a per-unit cost to the 
@@ -37,7 +37,7 @@ def head():
     return cylinder( h=head_height, r =head_rad)
 
 
-@part("M3x16 Bolt", 0.12, currency="€")
+@bom_part("M3x16 Bolt", 0.12, currency="€")
 def m3_16( a=3):
     bolt_height = 16
     m = union()(
@@ -49,7 +49,7 @@ def m3_16( a=3):
     return m
 
 
-@part("M3x12 Bolt", 0.09)
+@bom_part("M3x12 Bolt", 0.09)
 def m3_12():
     bolt_height = 12
     m = union()(
@@ -61,7 +61,7 @@ def m3_12():
     return m
 
 
-@part("M3 Nut", 0.04, currency="R$")
+@bom_part("M3 Nut", 0.04, currency="R$")
 def m3_nut():
     hx = cylinder( r=nut_rad, h=nut_height)
     hx.add_param('$fn', 6) # make the nut hexagonal
@@ -74,7 +74,7 @@ def m3_nut():
     return n
 
 
-@part()
+@bom_part()
 def doohickey():
     hole_cyl = translate([0,0,-EPSILON])(
                     cylinder(r=m3_rad, h=doohickey_h+2*EPSILON )
