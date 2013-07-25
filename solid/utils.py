@@ -998,3 +998,31 @@ def frange(*args):
         x = start + i*step
 
 ## end of http://code.activestate.com/recipes/577068/ }}}
+
+# =====================
+# = D e b u g g i n g =
+# =====================
+def obj_tree_str( sp_obj, vars_to_print=None):
+    # For debugging.  This prints a string of all of an object's
+    # children, with whatever attributes are specified in vars_to_print
+    
+    # Takes an optional list (vars_to_print) of variable names to include in each
+    # element (e.g. ['is_part_root', 'is_hole', 'name'])
+    if not vars_to_print: vars_to_print = []
+    
+    # Signify if object has parent or not
+    parent_sign = "\nL " if sp_obj.parent else "\n* "
+    
+    # Print object 
+    s = parent_sign + str( sp_obj) + "\t"
+    
+    # Extra desired fields
+    for v in vars_to_print:
+        if hasattr( sp_obj, v):
+            s += "%s: %s\t"%( v, getattr(sp_obj, v))
+   
+    # Add all children
+    for c in sp_obj.children:
+        s += indent( obj_tree_str(c, vars_to_print))
+    
+    return s

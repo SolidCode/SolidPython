@@ -199,7 +199,7 @@ SolidPython includes a number of useful functions in solid/utils.py.  Currently 
 
 seems a lot clearer to me than:
 
-    transform( [0,0,10])(
+    translate( [0,0,10])(
         cylinder()
     )
     
