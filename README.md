@@ -180,6 +180,11 @@ Example:
     inner = cylinder(r=pipe_id, h=seg_length)
     pipe_a = outer - hole()(inner)
 
+Once you've made something a hole, eventually you'll want to put something, 
+like a bolt, into it.  To do this, we need to specify that there's a given 
+'part' with a hole and that other parts may occupy the space in that hole.
+This is done with the `part()` function.  
+
 See `solid/examples/hole_example.py` for the complete picture.
 
 ### Animation<a id="animation"></a>
