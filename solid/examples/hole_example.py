@@ -27,9 +27,6 @@ def pipe_intersection_hole():
     # Note that "pipe_a = outer - hole()( inner)" would work identically;
     # inner will always be subtracted now that it's a hole
     
-    # FIXME: changes to how holes work seem to have made pipe_b not
-    # hold on to pipe_a's is_hole property.  Fix this.
-    
     pipe_b =  rotate( a=90, v=FORWARD_VEC)( pipe_a)
     return pipe_a + pipe_b
 
@@ -92,9 +89,8 @@ if __name__ == '__main__':
     
     # Below is an example of how to put objects into holes and have them
     # still appear
-    # b = up( 40)( multipart_hole())
-    # 
-    # a += b
+    b = up( 40)( multipart_hole())
+    a += b
     
     print "%(__file__)s: SCAD file written to: \n%(file_out)s"%vars()
     scad_render_to_file( a, file_out, file_header='$fn = %s;'%SEGMENTS, include_orig_code=True)

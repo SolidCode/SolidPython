@@ -257,7 +257,7 @@ I took this from someone on Thingiverse and I'm ashamed that I can't find the
 original source.  I owe someone some attribution.
     
 ### Bill Of Materials<a id="bill-of-materials"></a>
-Put ```@part()``` before any method that defines a part, then 
+Put ```@bom_part()``` before any method that defines a part, then 
 call ```bill_of_materials()``` after the program is run, and all parts will be 
 counted, priced and reported. 
 
