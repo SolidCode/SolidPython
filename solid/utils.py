@@ -1,13 +1,15 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
+from __future__ import division
 import os, sys, re
-
 from solid import *
 from math import *
 
 RIGHT, TOP, LEFT, BOTTOM = range(4)
 EPSILON = 0.01
 TAU = 2*pi
+
+X, Y, Z = range(3)
 
 ORIGIN      = ( 0, 0, 0)
 UP_VEC      = ( 0, 0, 1)
@@ -16,7 +18,6 @@ FORWARD_VEC = ( 0, 1, 0)
 DOWN_VEC    = ( 0, 0,-1)
 LEFT_VEC    = (-1, 0, 0)
 BACK_VEC    = ( 0,-1, 0)
-
 
 # ==========
 # = Colors =
@@ -302,9 +303,9 @@ def arc_inverted( rad, start_degrees, end_degrees, segments=None):
 # This is useful for making paths.  See the SVG path command:
 # See: http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
 
-# ===================
-# = Model Splitting =
-# ===================
+# ======================
+# = Bounding Box Class =
+# ======================
 class BoundingBox(object):
     # A basic Bounding Box representation to enable some more introspection about
     # objects.  For instance, a BB will let us say "put this new object on top of
@@ -315,9 +316,12 @@ class BoundingBox(object):
     # Basically you can use a BoundingBox to describe the extents of an object
     # the moment it's created, but once you perform any CSG operation on it, it's 
     # more or less useless.
-    def __init__( self, size, loc):
-         self.w, self.h, self.d = size
-         self.x, self.y, self.z = loc 
+    def __init__( self, size, loc=None):
+        loc = loc if loc else [0,0,0]
+        # self.w, self.h, self.d = size
+        # self.x, self.y, self.z = loc
+        self.set_size( size) 
+        self.set_position( loc)
     
     def size( self):
         return [ self.w, self.h, self.d]
@@ -325,7 +329,13 @@ class BoundingBox(object):
     def position( self):
         return [ self.x, self.y, self.z]
     
-    def split_planar( self, cutting_plane_normal= RIGHT_VEC, cut_proportion=0.5):
+    def set_position( self, position):
+        self.x, self.y, self.z = position
+        
+    def set_size(self, size):
+         self.w, self.h, self.d = size
+    
+    def split_planar( self, cutting_plane_normal= RIGHT_VEC, cut_proportion=0.5, add_wall_thickness=0):
         cpd = {RIGHT_VEC: 0, LEFT_VEC:0, FORWARD_VEC:1, BACK_VEC:1, UP_VEC:2, DOWN_VEC:2}
         cutting_plane = cpd.get( cutting_plane_normal, 2)
         
@@ -339,13 +349,28 @@ class BoundingBox(object):
         # Now create bounding boxes with the appropriate sizes
         part_bbs = []
         a_sum = 0
-        for part in [ cut_proportion, (1-cut_proportion)]:
+        for i, part in enumerate([ cut_proportion, (1-cut_proportion)]):
             part_size = self.size()
             part_size[cutting_plane] = part_size[ cutting_plane] * part
             
             part_loc = self.position()
             part_loc[ cutting_plane] = dim_min + a_sum + dim * (part/2)
+            
+            # If extra walls are requested around the slices, add them here
+            if add_wall_thickness != 0:
+                # Expand the walls as requested
+                for j in [X, Y, Z]:
+                    part_size[j] += 2*add_wall_thickness
+                # Don't expand in the direction of the cutting_plane, only away from it
+                part_size[cutting_plane] -= add_wall_thickness 
+                
+                # add +/- add_wall_thickness/2 to the location in the
+                # slicing dimension so we stay at the center of the piece
+                loc_offset = -add_wall_thickness/2 + i*add_wall_thickness
+                part_loc[ cutting_plane] += loc_offset
+                           
             part_bbs.append( BoundingBox( part_size, part_loc))
+            
             a_sum += part * dim      
             
         return part_bbs  
@@ -360,7 +385,25 @@ class BoundingBox(object):
 
 
 
-def split_body_planar( obj, obj_bb, cutting_plane_normal=UP_VEC, cut_proportion=0.5, dowel_holes=False, dowel_rad=4.5, hole_depth=15):
+    def min( self, which_dim=None):
+        min_pt = [p-s/2 for p, s in zip( self.position(), self.size())]
+        if which_dim:
+            return min_pt[ which_dim]
+        else:
+            return min_pt
+    
+    def max( self, which_dim=None):
+        max_pt = [p+s/2 for p, s in zip( self.position(), self.size())]
+        if which_dim:
+            return max_pt[ which_dim]
+        else:
+            return max_pt
+    
+
+# ===================
+# = Model Splitting =
+# ===================
+def split_body_planar( obj, obj_bb, cutting_plane_normal=UP_VEC, cut_proportion=0.5, dowel_holes=False, dowel_rad=4.5, hole_depth=15, add_wall_thickness=0):
     # Split obj along the specified plane, returning two pieces and 
     # general bounding boxes for each.  
     # Note that the bounding boxes are NOT accurate to the sections,
@@ -371,7 +414,7 @@ def split_body_planar( obj, obj_bb, cutting_plane_normal=UP_VEC, cut_proportion=
     # back together with short dowels.
     
     # Find the splitting bounding boxes
-    part_bbs = obj_bb.split_planar( cutting_plane_normal, cut_proportion)
+    part_bbs = obj_bb.split_planar( cutting_plane_normal, cut_proportion, add_wall_thickness=add_wall_thickness)
     
     # And intersect the bounding boxes with the object itself
     slices = [obj*part_bb.cube() for part_bb in part_bbs]
@@ -420,7 +463,7 @@ def section_cut_xz( body, y_cut_point=0):
 # = Bill of Materials =
 # =====================
 #   Any part defined in a method can be automatically counted using the 
-# @part() decorator. After all parts have been created, call 
+# @bom_part() decorator. After all parts have been created, call 
 # bill_of_materials()
 # to generate a report.  Se examples/bom_scad.py for usage
 g_parts_dict = {}
