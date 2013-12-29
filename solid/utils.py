@@ -882,6 +882,9 @@ try:
         return start_degrees - epsilon_degrees, end_degrees + epsilon_degrees
     
     def fillet_2d( three_point_sets, orig_poly, fillet_rad, remove_material=True):
+        # NOTE: three_point_sets must be a list of sets of three points
+        # (i.e., a list of 3-tuples of points), even if only one fillet is being done:
+        # e.g.  [[a, b, c]]
         # a, b, and c are three points that form a corner at b.  
         # Return a negative arc (the area NOT covered by a circle) of radius rad
         # in the direction of the more acute angle between 
@@ -907,9 +910,8 @@ try:
         arc_objs = []
         for three_points in three_point_sets:
     
-            assert len(three_points) == 3
+            assert len(three_points) in (2,3)
             # make two vectors out of the three points passed in
-        
             a, b, c = euclidify( three_points, Point3)
 
             # Find the center of the arc we'll have to make
