@@ -18,6 +18,7 @@ SolidPython
 	- [Bill Of Materials](#bill-of-materials)
 - [solid.screw_thread](#solidscrew_thread)
 - [Contact](#contact)
+- [License](#license)
 
 **Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
 
@@ -209,8 +210,8 @@ seems a lot clearer to me than:
     )
     
 
-Again, I took this from someone's SCAD work and have lost track of the 
-original author.  My apologies.
+I took this from someone's SCAD work and have lost track of the original author.  
+My apologies.
     
 ### Arcs<a id="arcs"></a>
 I've found this useful for fillets and rounds.
@@ -278,6 +279,7 @@ See `solid/examples/screw_thread_example.py` for more details.
 Enjoy, and please send any questions or bug reports to me at ```evan_t_jones@mac.com```. Cheers!
 Evan
 
+# License<a id="license"></a>
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
