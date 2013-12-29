@@ -277,3 +277,15 @@ See `solid/examples/screw_thread_example.py` for more details.
 # Contact<a id="contact"></a>
 Enjoy, and please send any questions or bug reports to me at ```evan_t_jones@mac.com```. Cheers!
 Evan
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+[Full text of the license](http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt).
