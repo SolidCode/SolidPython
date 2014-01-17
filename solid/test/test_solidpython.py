@@ -74,6 +74,36 @@ class TestSolidPython( unittest.TestCase):
         expected = [{'args': [], 'name': 'hex', 'kwargs': ['width', 'height', 'flats', 'center']}, {'args': [], 'name': 'righty', 'kwargs': ['angle']}, {'args': ['avar'], 'name': 'lefty', 'kwargs': []}, {'args': [], 'name': 'more', 'kwargs': ['a']}, {'args': [], 'name': 'pyramid', 'kwargs': ['side', 'height', 'square', 'centerHorizontal', 'centerVertical']}, {'args': [], 'name': 'no_comments', 'kwargs': ['arg', 'other_arg', 'last_arg']}, {'args': [], 'name': 'float_arg', 'kwargs': ['arg']}]
         actual = parse_scad_callables( test_str)
         self.assertEqual( expected, actual)
+        
+    def test_use( self):
+        include_file = "../examples/scad_to_include.scad"
+        use( include_file)
+        a = steps(3)
+        actual = scad_render( a)
+        
+        abs_path = a._get_include_path( include_file)        
+        expected = "use <%s>\n\n\nsteps(howmany = 3);"%abs_path
+        self.assertEqual( expected, actual)     
+        
+    def test_include( self):
+        include_file = "../examples/scad_to_include.scad"
+        include( include_file)
+        a = steps(3)
+        
+        actual = scad_render( a)
+        abs_path = a._get_include_path( include_file)        
+        expected = "include <%s>\n\n\nsteps(howmany = 3);"%abs_path
+        self.assertEqual( expected, actual)        
+    
+    def test_extra_args_to_included_scad( self):
+        include_file = "../examples/scad_to_include.scad"
+        use( include_file)
+        a = steps( 3, external_var=True)
+        actual = scad_render( a)
+        
+        abs_path = a._get_include_path( include_file)        
+        expected = "use <%s>\n\n\nsteps(howmany = 3, external_var = true);"%abs_path
+        self.assertEqual( expected, actual)         
     
     def test_background( self):
         a = cube(10)

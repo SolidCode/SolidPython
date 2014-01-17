@@ -1,7 +1,7 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
+from __future__ import division
 import os, sys, re
-
 from solid import *
 from math import *
 
@@ -9,37 +9,38 @@ RIGHT, TOP, LEFT, BOTTOM = range(4)
 EPSILON = 0.01
 TAU = 2*pi
 
-ORIGIN      = [ 0, 0, 0]
-UP_VEC      = [ 0, 0, 1]
-RIGHT_VEC   = [ 1, 0, 0]
-FORWARD_VEC = [ 0, 1, 0]
-DOWN_VEC    = [ 0, 0,-1]
-LEFT_VEC    = [-1, 0, 0]
-BACK_VEC    = [ 0,-1, 0]
+X, Y, Z = range(3)
 
+ORIGIN      = ( 0, 0, 0)
+UP_VEC      = ( 0, 0, 1)
+RIGHT_VEC   = ( 1, 0, 0)
+FORWARD_VEC = ( 0, 1, 0)
+DOWN_VEC    = ( 0, 0,-1)
+LEFT_VEC    = (-1, 0, 0)
+BACK_VEC    = ( 0,-1, 0)
 
 # ==========
 # = Colors =
 # ========== 
-Red         = [ 1, 0, 0]
-Green       = [ 0, 1, 0]
-Blue        = [ 0, 0, 1]
-Cyan        = [ 0, 1, 1]
-Magenta     = [ 1, 0, 1]
-Yellow      = [ 1, 1, 0]
-Black       = [ 0, 0, 0]
-White       = [ 1, 1, 1]
-Oak         = [0.65, 0.50, 0.40]
-Pine        = [0.85, 0.70, 0.45]
-Birch       = [0.90, 0.80, 0.60]
-FiberBoard  = [0.70, 0.67, 0.60]
-BlackPaint  = [0.20, 0.20, 0.20]
-Iron        = [0.36, 0.33, 0.33]
-Steel       = [0.65, 0.67, 0.72]
-Stainless   = [0.45, 0.43, 0.50]
-Aluminum    = [0.77, 0.77, 0.80]
-Brass       = [0.88, 0.78, 0.50]
-Transparent = [1,    1,    1,   0.2]
+Red         = ( 1, 0, 0)
+Green       = ( 0, 1, 0)
+Blue        = ( 0, 0, 1)
+Cyan        = ( 0, 1, 1)
+Magenta     = ( 1, 0, 1)
+Yellow      = ( 1, 1, 0)
+Black       = ( 0, 0, 0)
+White       = ( 1, 1, 1)
+Oak         = (0.65, 0.50, 0.40)
+Pine        = (0.85, 0.70, 0.45)
+Birch       = (0.90, 0.80, 0.60)
+FiberBoard  = (0.70, 0.67, 0.60)
+BlackPaint  = (0.20, 0.20, 0.20)
+Iron        = (0.36, 0.33, 0.33)
+Steel       = (0.65, 0.67, 0.72)
+Stainless   = (0.45, 0.43, 0.50)
+Aluminum    = (0.77, 0.77, 0.80)
+Brass       = (0.88, 0.78, 0.50)
+Transparent = (1,    1,    1,   0.2)
 
 # ========================
 # = Degrees <==> Radians =
@@ -302,61 +303,155 @@ def arc_inverted( rad, start_degrees, end_degrees, segments=None):
 # This is useful for making paths.  See the SVG path command:
 # See: http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
 
+# ======================
+# = Bounding Box Class =
+# ======================
+class BoundingBox(object):
+    # A basic Bounding Box representation to enable some more introspection about
+    # objects.  For instance, a BB will let us say "put this new object on top of
+    # that old one".  Bounding Boxes *can't* be relied on for boolean operations 
+    # without compiling in OpenSCAD, so they're limited, but good for some purposes.
+    # Be careful to understand what things this BB implementation can and can't do -ETJ 15 Oct 2013
+
+    # Basically you can use a BoundingBox to describe the extents of an object
+    # the moment it's created, but once you perform any CSG operation on it, it's 
+    # more or less useless.
+    def __init__( self, size, loc=None):
+        loc = loc if loc else [0,0,0]
+        # self.w, self.h, self.d = size
+        # self.x, self.y, self.z = loc
+        self.set_size( size) 
+        self.set_position( loc)
+    
+    def size( self):
+        return [ self.w, self.h, self.d]
+    
+    def position( self):
+        return [ self.x, self.y, self.z]
+    
+    def set_position( self, position):
+        self.x, self.y, self.z = position
+        
+    def set_size(self, size):
+         self.w, self.h, self.d = size
+    
+    def split_planar( self, cutting_plane_normal= RIGHT_VEC, cut_proportion=0.5, add_wall_thickness=0):
+        cpd = {RIGHT_VEC: 0, LEFT_VEC:0, FORWARD_VEC:1, BACK_VEC:1, UP_VEC:2, DOWN_VEC:2}
+        cutting_plane = cpd.get( cutting_plane_normal, 2)
+        
+        # Figure what  the cutting plane offset should be
+        dim_center = self.position()[cutting_plane]
+        dim = self.size()[cutting_plane]
+        dim_min = dim_center - dim/2
+        dim_max = dim_center + dim/2
+        cut_point = (cut_proportion) * dim_min + (1-cut_proportion)*dim_max
+        
+        # Now create bounding boxes with the appropriate sizes
+        part_bbs = []
+        a_sum = 0
+        for i, part in enumerate([ cut_proportion, (1-cut_proportion)]):
+            part_size = self.size()
+            part_size[cutting_plane] = part_size[ cutting_plane] * part
+            
+            part_loc = self.position()
+            part_loc[ cutting_plane] = dim_min + a_sum + dim * (part/2)
+            
+            # If extra walls are requested around the slices, add them here
+            if add_wall_thickness != 0:
+                # Expand the walls as requested
+                for j in [X, Y, Z]:
+                    part_size[j] += 2*add_wall_thickness
+                # Don't expand in the direction of the cutting_plane, only away from it
+                part_size[cutting_plane] -= add_wall_thickness 
+                
+                # add +/- add_wall_thickness/2 to the location in the
+                # slicing dimension so we stay at the center of the piece
+                loc_offset = -add_wall_thickness/2 + i*add_wall_thickness
+                part_loc[ cutting_plane] += loc_offset
+                           
+            part_bbs.append( BoundingBox( part_size, part_loc))
+            
+            a_sum += part * dim      
+            
+        return part_bbs  
+    
+    def cube( self, larger=False):
+        c_size = self.size() if not larger else [s + 2*EPSILON for s in self.size()]
+        c = translate( self.position())(
+            cube( c_size, center=True)
+        )
+        return c
+    
+
+
+
+    def min( self, which_dim=None):
+        min_pt = [p-s/2 for p, s in zip( self.position(), self.size())]
+        if which_dim:
+            return min_pt[ which_dim]
+        else:
+            return min_pt
+    
+    def max( self, which_dim=None):
+        max_pt = [p+s/2 for p, s in zip( self.position(), self.size())]
+        if which_dim:
+            return max_pt[ which_dim]
+        else:
+            return max_pt
+    
+
 # ===================
 # = Model Splitting =
 # ===================
-X_PLANE, Y_PLANE, Z_PLANE = range(3)
-def split_body_planar( body, cut_point=0, cutting_plane=Z_PLANE, dowel_holes=False, dowel_rad=4.5, hole_depth=15):
-    # split body along the specified plane, returning two pieces
-    
+def split_body_planar( obj, obj_bb, cutting_plane_normal=UP_VEC, cut_proportion=0.5, dowel_holes=False, dowel_rad=4.5, hole_depth=15, add_wall_thickness=0):
+    # Split obj along the specified plane, returning two pieces and 
+    # general bounding boxes for each.  
+    # Note that the bounding boxes are NOT accurate to the sections,
+    # they just indicate which portion of the original BB is in each 
+    # section.  Given the limits of OpenSCAD, this is the best we can do -ETJ 17 Oct 2013
+
     # Optionally, leave holes in both bodies to allow the pieces to be put
-    # back together with short dowels.  
+    # back together with short dowels.
     
-    big_num = 100000
-    plane_transform_a = [0,0,0]
-    plane_transform_b = [0,0,0]
-    plane_transform_a[ cutting_plane] = -big_num/2 + cut_point
-    plane_transform_b[ cutting_plane] =  big_num/2 + cut_point
+    # Find the splitting bounding boxes
+    part_bbs = obj_bb.split_planar( cutting_plane_normal, cut_proportion, add_wall_thickness=add_wall_thickness)
     
-    body_a = body * translate( plane_transform_a)( cube( big_num, center=True))
-    body_b = body * translate( plane_transform_b)( cube( big_num, center=True))
+    # And intersect the bounding boxes with the object itself
+    slices = [obj*part_bb.cube() for part_bb in part_bbs]
     
     # Make holes for dowels if requested. 
     # In case the bodies need to be aligned properly, make two holes, 
     # separated by one dowel-width
     if dowel_holes:
+        cpd = {RIGHT_VEC: 0, LEFT_VEC:0, FORWARD_VEC:1, BACK_VEC:1, UP_VEC:2, DOWN_VEC:2}
+        cutting_plane = cpd.get( cutting_plane_normal, 2)
+        
         dowel = cylinder( r=dowel_rad, h=hole_depth*2, center=True)
         # rotate dowels to correct axis
-        if cutting_plane != Z_PLANE:
-            rot_vec = RIGHT_VEC if cutting_plane == Y_PLANE else FORWARD_VEC
+        if cutting_plane != 2:
+            rot_vec = RIGHT_VEC if cutting_plane == 1 else FORWARD_VEC
             dowel = rotate( a=90, v=rot_vec)( dowel)
         
-        dowel_translate_a = [0,0,0]
-        dowel_translate_b = [0,0,0]
+        cut_point = part_bbs[0].position()[ cutting_plane] + part_bbs[0].size()[ cutting_plane]/2
         
-        dowel_translate_a[ cutting_plane] = cut_point
-        dowel_translate_b[ cutting_plane] = cut_point
-        
+        # Move dowels away from center of face by 2*dowel_rad in each
+        # appropriate direction
+        dowel_trans_a = part_bbs[0].position()
+        dowel_trans_a[ cutting_plane] = cut_point
         separation_index = {0:1, 1:2, 2:0}[cutting_plane]
-        dowel_translate_a[ separation_index] = 2*dowel_rad
-        dowel_translate_b[ separation_index] = -2*dowel_rad
+        dowel_trans_a[ separation_index] -= 2*dowel_rad
+        dowel_trans_b = dowel_trans_a[:]
+        dowel_trans_b[ separation_index] += 4*dowel_rad
         
-        dowel_a = translate( dowel_translate_a)(dowel)
-        dowel_b = translate( dowel_translate_b)(dowel)
+        dowel_a = translate( dowel_trans_a)(dowel)
+        dowel_b = translate( dowel_trans_b)(dowel)
         
         dowels = dowel_a + dowel_b
-        body_a -= dowels
-        body_b -= dowels
+        # subtract dowels from each slice
+        slices = [ s - dowels for s in slices]
     
-    return ( body_a, body_b)
-   
-def split_body_horizontal( body, plane_z=0, dowel_holes=False, dowel_rad=4.5, hole_depth=15):
-    # Returns a tuple of the portions of body below and above plane_z
-    return split_body_planar( body, cut_point=plane_z, cutting_plane=Z_PLANE, dowel_holes=dowel_holes, dowel_rad=dowel_rad, hole_depth=hole_depth)
-
-def split_body_vertical( body, plane_x=0, dowel_holes=False, dowel_rad=4.5, hole_depth=15):
-    # Returns a tuple of the portions of body left and right of plane_x
-    return split_body_planar( body, cut_point=plane_x, cutting_plane=X_PLANE, dowel_holes=dowel_holes, dowel_rad=dowel_rad, hole_depth=hole_depth)
+    slices_and_bbs = [slices[0], part_bbs[0], slices[1], part_bbs[1]]
+    return slices_and_bbs
     
 def section_cut_xz( body, y_cut_point=0):
     big_w = 10000
@@ -368,7 +463,7 @@ def section_cut_xz( body, y_cut_point=0):
 # = Bill of Materials =
 # =====================
 #   Any part defined in a method can be automatically counted using the 
-# @part() decorator. After all parts have been created, call 
+# @bom_part() decorator. After all parts have been created, call 
 # bill_of_materials()
 # to generate a report.  Se examples/bom_scad.py for usage
 g_parts_dict = {}
@@ -787,6 +882,9 @@ try:
         return start_degrees - epsilon_degrees, end_degrees + epsilon_degrees
     
     def fillet_2d( three_point_sets, orig_poly, fillet_rad, remove_material=True):
+        # NOTE: three_point_sets must be a list of sets of three points
+        # (i.e., a list of 3-tuples of points), even if only one fillet is being done:
+        # e.g.  [[a, b, c]]
         # a, b, and c are three points that form a corner at b.  
         # Return a negative arc (the area NOT covered by a circle) of radius rad
         # in the direction of the more acute angle between 
@@ -812,9 +910,8 @@ try:
         arc_objs = []
         for three_points in three_point_sets:
     
-            assert len(three_points) == 3
+            assert len(three_points) in (2,3)
             # make two vectors out of the three points passed in
-        
             a, b, c = euclidify( three_points, Point3)
 
             # Find the center of the arc we'll have to make
