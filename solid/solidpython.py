@@ -558,7 +558,7 @@ class included_openscad_object( openscad_object):
     represents imported scad code, so each instance needs to store the path
     to the scad file it's included from.
     '''
-    def __init__( self, name, params, include_file_path, use_not_include=False):
+    def __init__( self, name, params, include_file_path, use_not_include=False, **kwargs):
         self.include_file_path = self._get_include_path( include_file_path)
         
         if use_not_include:
@@ -566,6 +566,10 @@ class included_openscad_object( openscad_object):
         else:
             self.include_string = 'include <%s>\n'%self.include_file_path
         
+        # Just pass any extra arguments straight on to OpenSCAD; it'll accept them
+        if kwargs:
+            params.update( kwargs)
+
         openscad_object.__init__( self, name, params)
     
     def _get_include_path( self, include_file_path):
@@ -618,8 +622,8 @@ def new_openscad_class_str( class_name, args=[], kwargs=[], include_file_path=No
         
     if include_file_path:
         result = ("class %(class_name)s( included_openscad_object):\n"
-        "   def __init__(self%(args_str)s):\n"
-        "       included_openscad_object.__init__(self, '%(class_name)s', {%(args_pairs)s }, include_file_path='%(include_file_path)s', use_not_include=%(use_not_include)s )\n"
+        "   def __init__(self%(args_str)s, **kwargs):\n"
+        "       included_openscad_object.__init__(self, '%(class_name)s', {%(args_pairs)s }, include_file_path='%(include_file_path)s', use_not_include=%(use_not_include)s, **kwargs )\n"
         "   \n"
         "\n"%vars())
     else:
