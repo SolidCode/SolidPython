@@ -622,20 +622,29 @@ def new_openscad_class_str( class_name, args=[], kwargs=[], include_file_path=No
     for kwarg in kwargs:
         args_str += ', %(kwarg)s=None'%vars()
         args_pairs += "'%(kwarg)s':%(kwarg)s, "%vars()
-        
+    
     if include_file_path:
+<<<<<<< .merge_file_IIbKi0
         result = ("class %(class_name)s( included_openscad_object):\n"
         "   def __init__(self%(args_str)s, **kwargs):\n"
         "       included_openscad_object.__init__(self, '%(class_name)s', {%(args_pairs)s }, include_file_path='%(include_file_path)s', use_not_include=%(use_not_include)s, **kwargs )\n"
+=======
+        # NOTE the explicit import of 'solid' below. This is a fix for:
+        # https://github.com/SolidCode/SolidPython/issues/20 -ETJ 16 Jan 2014
+        result = ("import solid\n"
+        "class %(class_name)s( solid.included_openscad_object):\n"
+        "   def __init__(self%(args_str)s):\n"
+        "       solid.included_openscad_object.__init__(self, '%(class_name)s', {%(args_pairs)s }, include_file_path='%(include_file_path)s', use_not_include=%(use_not_include)s )\n"
+>>>>>>> .merge_file_wxmPLA
         "   \n"
         "\n"%vars())
     else:
-        result = ('class %(class_name)s( openscad_object):\n'
+        result = ("class %(class_name)s( openscad_object):\n"
         "   def __init__(self%(args_str)s):\n"
         "       openscad_object.__init__(self, '%(class_name)s', {%(args_pairs)s })\n"
         "   \n"
         "\n"%vars())
-        
+                
     return result
 
 def py2openscad(o):
