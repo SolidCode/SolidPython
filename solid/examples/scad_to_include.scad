@@ -1,3 +1,4 @@
+external_var = false;
 module steps( howmany=3){
     union(){
         for (i=[0:howmany-1]){
@@ -6,4 +7,10 @@ module steps( howmany=3){
             }
         }
     }
+    
+    if ( external_var){
+        echo( "external_var passed in as true");
+    }
 }
+
+echo("This text should appear only when called with include(), not use()");

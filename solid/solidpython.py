@@ -145,7 +145,10 @@ def use( scad_file_path, use_not_include=True):
     
     for sd in symbols_dicts:
         class_str = new_openscad_class_str( sd['name'], sd['args'], sd['kwargs'], scad_file_path, use_not_include)
-        exec class_str in calling_module().__dict__
+        # If this is called from 'include', we have to look deeper in the stack 
+        # to find the right module to add the new class to.
+        stack_depth = 2 if use_not_include else 3
+        exec class_str in calling_module( stack_depth).__dict__
     
     return True
 
@@ -560,7 +563,7 @@ class included_openscad_object( openscad_object):
     '''
     def __init__( self, name, params, include_file_path, use_not_include=False, **kwargs):
         self.include_file_path = self._get_include_path( include_file_path)
-        
+                    
         if use_not_include:
             self.include_string = 'use <%s>\n'%self.include_file_path
         else:
