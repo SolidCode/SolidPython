@@ -145,7 +145,10 @@ def use( scad_file_path, use_not_include=True):
     
     for sd in symbols_dicts:
         class_str = new_openscad_class_str( sd['name'], sd['args'], sd['kwargs'], scad_file_path, use_not_include)
-        exec class_str in calling_module().__dict__
+        # If this is called from 'include', we have to look deeper in the stack 
+        # to find the right module to add the new class to.
+        stack_depth = 2 if use_not_include else 3
+        exec class_str in calling_module( stack_depth).__dict__
     
     return True
 
@@ -558,14 +561,18 @@ class included_openscad_object( openscad_object):
     represents imported scad code, so each instance needs to store the path
     to the scad file it's included from.
     '''
-    def __init__( self, name, params, include_file_path, use_not_include=False):
+    def __init__( self, name, params, include_file_path, use_not_include=False, **kwargs):
         self.include_file_path = self._get_include_path( include_file_path)
-        
+                    
         if use_not_include:
             self.include_string = 'use <%s>\n'%self.include_file_path
         else:
             self.include_string = 'include <%s>\n'%self.include_file_path
         
+        # Just pass any extra arguments straight on to OpenSCAD; it'll accept them
+        if kwargs:
+            params.update( kwargs)
+
         openscad_object.__init__( self, name, params)
     
     def _get_include_path( self, include_file_path):
@@ -618,8 +625,8 @@ def new_openscad_class_str( class_name, args=[], kwargs=[], include_file_path=No
         
     if include_file_path:
         result = ("class %(class_name)s( included_openscad_object):\n"
-        "   def __init__(self%(args_str)s):\n"
-        "       included_openscad_object.__init__(self, '%(class_name)s', {%(args_pairs)s }, include_file_path='%(include_file_path)s', use_not_include=%(use_not_include)s )\n"
+        "   def __init__(self%(args_str)s, **kwargs):\n"
+        "       included_openscad_object.__init__(self, '%(class_name)s', {%(args_pairs)s }, include_file_path='%(include_file_path)s', use_not_include=%(use_not_include)s, **kwargs )\n"
         "   \n"
         "\n"%vars())
     else:
