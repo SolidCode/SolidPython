@@ -1,0 +1,3 @@
+include solid/examples/*.sh
+include solid/examples/*.scad
+include solid/test/*.sh

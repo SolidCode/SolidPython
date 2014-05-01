@@ -1,3 +1,5 @@
+.tox
+.idea
 *.scad
 *.pyc
 *.pyo
