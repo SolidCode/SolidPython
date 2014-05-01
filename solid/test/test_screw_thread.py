@@ -1,15 +1,18 @@
 #! /usr/bin/python
 # -*- coding: UTF-8 -*-
 from __future__ import division
-import os, sys, re
+import os
+import sys
+import re
 
 # Assumes SolidPython is in site-packages or elsewhwere in sys.path
 import unittest
+import ExpandedTestCase
 from solid import *
 from solid.screw_thread import thread, default_thread_section
 
 SEGMENTS = 8
-class TestScrewThread( unittest.TestCase):
+class TestScrewThread(ExpandedTestCase.DiffOutput):
     def test_thread( self):
         tooth_height = 10
         tooth_depth = 5

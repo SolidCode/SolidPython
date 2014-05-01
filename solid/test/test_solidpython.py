@@ -4,6 +4,7 @@ import os, sys, re
 
 import unittest
 import tempfile
+import ExpandedTestCase
 from solid import *
 
 scad_test_case_templates = [
@@ -35,7 +36,7 @@ scad_test_case_templates = [
 {'name': 'intersection_for',    'kwargs': {}, 'expected': '\n\nintersection_for(n = [0, 1, 2]);', 'args': {'n': [0, 1, 2]}, },
 ]
 
-class TestSolidPython( unittest.TestCase):
+class TestSolidPython(ExpandedTestCase.DiffOutput):
     # test cases will be dynamically added to this instance
     def test_infix_union( self):
         a = cube(2)

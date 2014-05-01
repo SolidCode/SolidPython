@@ -6,6 +6,7 @@
 .installed.cfg
 bin
 develop-eggs
+*.egg-info
 dist
 downloads
 eggs
