@@ -14,3 +14,4 @@ parts
 *.egg-info
 lib
 lib64
+Doc/_build
