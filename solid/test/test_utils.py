@@ -8,7 +8,7 @@ from solid import *
 from solid.utils import *
 from euclid import *
 import difflib
-import ExpandedTestCase
+from solid.test.ExpandedTestCase import DiffOutput
 
 
 tri = [Point3( 0,0,0), Point3( 10,0,0), Point3(0,10,0)]
@@ -52,7 +52,7 @@ other_test_cases = [
 ]
 
 
-class TestSPUtils(ExpandedTestCase.DiffOutput):
+class TestSPUtils(DiffOutput):
     # Test cases will be dynamically added to this instance
     # using the test case arrays above
     

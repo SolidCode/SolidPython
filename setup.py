@@ -21,7 +21,7 @@ setup(
         "Topic :: Scientific/Engineering :: Mathematics",
     ],
     packages=find_packages(),
-    install_requires=['euclid', 'png'],
+    install_requires=['euclid', 'PyPNG'],
 )
 
 
