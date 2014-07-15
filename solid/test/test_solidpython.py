@@ -28,10 +28,11 @@ scad_test_case_templates = [
 {'name': 'render',      'kwargs': {'convexity': None}, 'expected': '\n\nrender();', 'args': {}, },
 {'name': 'projection',  'kwargs': {'cut': None}, 'expected': '\n\nprojection();', 'args': {}, },
 {'name': 'surface',     'kwargs': {'center': False, 'convexity': None}, 'expected': '\n\nsurface(center = false, file = "/Path/to/dummy.dxf");', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
-{'name': 'import_stl',  'kwargs': {'convexity': None}, 'expected': '\n\nimport_stl(filename = "/Path/to/dummy.dxf");', 'args': {'filename': "'/Path/to/dummy.dxf'"}, },
+{'name': 'import_stl',  'kwargs': {'layer': None, 'origin': (0,0)}, 'expected': '\n\nimport(origin = [0, 0], file = "/Path/to/dummy.stl");', 'args': {'file': "'/Path/to/dummy.stl'"}, },
+{'name': 'import_dxf',  'kwargs': {'layer': None, 'origin': (0,0)}, 'expected': '\n\nimport(origin = [0, 0], file = "/Path/to/dummy.dxf");', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
+{'name': 'import_',     'kwargs': {'layer': None, 'origin': (0,0)}, 'expected': '\n\nimport(origin = [0, 0], file = "/Path/to/dummy.dxf");', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
 {'name': 'linear_extrude',      'kwargs': {'twist': None, 'slices': None, 'center': False, 'convexity': None, 'height': 1}, 'expected': '\n\nlinear_extrude(center = false, height = 1);', 'args': {}, },
 {'name': 'rotate_extrude',      'kwargs': {'convexity': None}, 'expected': '\n\nrotate_extrude();', 'args': {}, },
-{'name': 'dxf_linear_extrude',  'kwargs': {'layer': None, 'center': False, 'slices': None, 'height': 1, 'twist': None, 'convexity': None}, 'expected': '\n\ndxf_linear_extrude(center = false, height = 1, file = "/Path/to/dummy.dxf");', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
 {'name': 'intersection_for',    'kwargs': {}, 'expected': '\n\nintersection_for(n = [0, 1, 2]);', 'args': {'n': [0, 1, 2]}, },
 ]
 

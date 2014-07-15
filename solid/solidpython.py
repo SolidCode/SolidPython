@@ -28,8 +28,8 @@ openscad_builtins = [
     {'name': 'union',           'args': [],         'kwargs': []} ,
     {'name': 'intersection',    'args': [],         'kwargs': []} ,
     {'name': 'difference',      'args': [],         'kwargs': []} ,
-    {'name': 'hole',           'args': [],         'kwargs': []} ,
-    {'name': 'part',           'args': [],         'kwargs': []} ,
+    {'name': 'hole',            'args': [],         'kwargs': []} ,
+    {'name': 'part',            'args': [],         'kwargs': []} ,
     
     # Transforms
     {'name': 'translate',       'args': [],         'kwargs': ['v']} ,
@@ -43,14 +43,27 @@ openscad_builtins = [
     {'name': 'render',          'args': [],         'kwargs': ['convexity']}, 
         
     # 2D to 3D transitions
+    # FIXME: linear_extrude now has a scale parameter as of OpenSCAD 13.06 -ETJ 20 Jan 2014
+    # Also: Check release notes for any other changes to the language, here:
+    # https://github.com/openscad/openscad/blob/master/RELEASE_NOTES
+    # Add Colors as here: http://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Transformations
     {'name': 'linear_extrude',  'args': [],         'kwargs': ['height', 'center', 'convexity', 'twist','slices']} ,
     {'name': 'rotate_extrude',  'args': [],         'kwargs': ['convexity', 'segments']} ,
-    {'name': 'dxf_linear_extrude', 'args': ['file'], 'kwargs': ['layer', 'height', 'center', 'convexity', 'twist', 'slices']} ,
+    {'name': 'dxf_linear_extrude', 'args': ['file'],'kwargs': ['layer', 'height', 'center', 'convexity', 'twist', 'slices']} ,
     {'name': 'projection',      'args': [],         'kwargs': ['cut']} ,
     {'name': 'surface',         'args': ['file'],   'kwargs': ['center','convexity']} ,
     
+    #Child/ren
+    {'name': 'child',           'args': [],         'kwargs': ['index', 'vector', 'range']} ,
+    {'name': 'children',        'args': [],         'kwargs': ['index', 'vector', 'range']} ,
+    
+    # FIXME: support 'resize' as well -ETJ 20 Jan 2014
+    
     # Import/export
-    {'name': 'import_stl',      'args': ['filename'], 'kwargs': ['convexity']} ,
+    {'name': 'import_stl',      'args': ['file'],   'kwargs': ['layer', 'origin']} ,
+    {'name': 'import_dxf',      'args': ['file'],   'kwargs': ['layer', 'origin']},
+    {'name': 'import_',         'args': ['file'],   'kwargs': ['layer', 'origin']},
+
     
     # Modifiers; These are implemented by calling e.g. 
     #   obj.set_modifier( '*') or 
@@ -87,6 +100,19 @@ builtin_literals = {
     def __init__( self):
         openscad_object.__init__(self, 'part', {})
         self.set_part_root( True)
+    ''',
+    # Import, import_dxf, and import_stl all resolve to the same OpenSCAD keyword, 'import'
+    'import_':'''class import_( openscad_object):
+    def __init__( self, file, origin=(0,0), layer=None):
+        openscad_object.__init__(self, 'import', {'file':file, 'origin':origin, 'layer':layer})
+    ''',
+    'import_dxf':'''class import_dxf( openscad_object):
+    def __init__( self, file, origin=(0,0), layer=None):
+        openscad_object.__init__(self, 'import', {'file':file, 'origin':origin, 'layer':layer})
+    ''',
+    'import_stl':'''class import_stl( openscad_object):
+    def __init__( self, file, origin=(0,0), layer=None):
+        openscad_object.__init__(self, 'import', {'file':file, 'origin':origin, 'layer':layer})
     '''
 
 }
@@ -259,18 +285,26 @@ def scad_render_animated_file( func_to_animate, steps=20, back_and_forth=True, f
 def scad_render_to_file( scad_object, filepath=None, file_header='', include_orig_code=True):
     rendered_string = scad_render( scad_object, file_header)
     
-    calling_file = os.path.abspath( calling_module().__file__) 
+    try:
+        calling_file = os.path.abspath( calling_module().__file__) 
     
-    if include_orig_code:
-        rendered_string += sp_code_in_scad_comment( calling_file)
+        if include_orig_code:
+            rendered_string += sp_code_in_scad_comment( calling_file)
     
-    # This write is destructive, and ought to do some checks that the write
-    # was successful.
-    # If filepath isn't supplied, place a .scad file with the same name
-    # as the calling module next to it
-    if not filepath:
-        filepath = os.path.splitext( calling_file)[0] + '.scad'
-    
+        # This write is destructive, and ought to do some checks that the write
+        # was successful.
+        # If filepath isn't supplied, place a .scad file with the same name
+        # as the calling module next to it
+        if not filepath:
+            filepath = os.path.splitext( calling_file)[0] + '.scad'
+    except AttributeError, e:
+        # If no calling_file was found, this is being called from the terminal.
+        # We can't read original code from a file, so don't try, 
+        # and can't read filename from the calling file either, so just save to
+        # solid.scad.
+        if not filepath:
+            filepath = os.path.abspath('.') + "/solid.scad"
+        
     f = open( filepath,"w")
     f.write( rendered_string)
     f.close()
