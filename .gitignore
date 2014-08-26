@@ -1,9 +1,12 @@
+.tox
+.idea
 *.scad
 *.pyc
 *.pyo
 .installed.cfg
 bin
 develop-eggs
+*.egg-info
 dist
 downloads
 eggs
@@ -11,3 +14,4 @@ parts
 *.egg-info
 lib
 lib64
+Doc/_build

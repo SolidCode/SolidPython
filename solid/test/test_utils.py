@@ -7,6 +7,9 @@ import unittest
 from solid import *
 from solid.utils import *
 from euclid import *
+import difflib
+from solid.test.ExpandedTestCase import DiffOutput
+
 
 tri = [Point3( 0,0,0), Point3( 10,0,0), Point3(0,10,0)]
 
@@ -49,7 +52,7 @@ other_test_cases = [
 ]
 
 
-class TestSPUtils( unittest.TestCase):
+class TestSPUtils(DiffOutput):
     # Test cases will be dynamically added to this instance
     # using the test case arrays above
     
@@ -89,6 +92,8 @@ class TestSPUtils( unittest.TestCase):
         newp = fillet_2d( tri, orig_poly=poly, fillet_rad=2, remove_material=True)
         expected = '\n\ndifference() {\n\tpolygon(paths = [[0, 1, 2]], points = [[0, 0, 0], [10, 0, 0], [0, 10, 0]]);\n\ttranslate(v = [5.1715728753, 2.0000000000, 0.0000000000]) {\n\t\tdifference() {\n\t\t\tintersection() {\n\t\t\t\trotate(a = 268.0000000000) {\n\t\t\t\t\ttranslate(v = [-998, 0]) {\n\t\t\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\trotate(a = 407.0000000000) {\n\t\t\t\t\ttranslate(v = [-998, -1000]) {\n\t\t\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t\tcircle(r = 2);\n\t\t}\n\t}\n}'
         actual = scad_render( newp)
+        if expected != actual:
+            print(''.join(difflib.unified_diff(expected, actual)))
         self.assertEqual( expected, actual)
         
 
