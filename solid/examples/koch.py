@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 import os, sys, re
 
@@ -136,7 +136,7 @@ def main_3d( out_dir):
             tris.append([t-3, t-2, t-1])
         
         # Do the SCAD
-        edges = [range(len(points))]
+        edges = [list(range(len(points)))]
         all_polys.add( up( h)(
                 polyhedron( points, tris)
             )
@@ -144,7 +144,7 @@ def main_3d( out_dir):
     
     file_out = os.path.join( out_dir, 'koch_3d.scad')
     cur_file = __file__
-    print "%(cur_file)s: SCAD file written to: %(file_out)s"%vars()
+    print("%(cur_file)s: SCAD file written to: %(file_out)s"%vars())
     scad_render_to_file( all_polys, file_out, include_orig_code=True)    
 
 def main( out_dir):
@@ -191,12 +191,12 @@ def main( out_dir):
         h = orig_length *1.5 * g
                 
         # Do the SCAD
-        edges = [range(len(points))]
+        edges = [len(range(len(points)))]
         all_polys.add( forward( h)( polygon(points=points, paths=edges )))
                    
     file_out = os.path.join( out_dir,'koch.scad') 
     cur_file = __file__  
-    print "%(cur_file)s: SCAD file written to: %(file_out)s "%vars()
+    print("%(cur_file)s: SCAD file written to: %(file_out)s "%vars())
     scad_render_to_file( all_polys, file_out, include_orig_code=True )
 
 if __name__ == '__main__':

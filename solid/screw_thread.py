@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 import os, sys, re
 
@@ -8,8 +8,8 @@ from euclid import *
 # NOTE: The PyEuclid on PyPi doesn't include several elements added to 
 # the module as of 13 Feb 2013.  Add them here until euclid supports them
 # TODO: when euclid updates, remove this cruft. -ETJ 13 Feb 2013
-import patch_euclid
-patch_euclid.run_patch()
+import solid.patch_euclid
+solid.patch_euclid.run_patch()
 
 def thread( outline_pts, inner_rad, pitch, length, external=True, segments_per_rot=32,neck_in_degrees=0, neck_out_degrees=0):
     '''

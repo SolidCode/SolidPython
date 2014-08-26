@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import division
 import os, sys, re
@@ -9,7 +9,7 @@ RIGHT, TOP, LEFT, BOTTOM = range(4)
 EPSILON = 0.01
 TAU = 2*pi
 
-X, Y, Z = range(3)
+X, Y, Z = (0, 1, 2)
 
 ORIGIN      = ( 0, 0, 0)
 UP_VEC      = ( 0, 0, 1)
@@ -592,8 +592,8 @@ try:
     # NOTE: The PyEuclid on PyPi doesn't include several elements added to 
     # the module as of 13 Feb 2013.  Add them here until euclid supports them
     # TODO: when euclid updates, remove this cruft. -ETJ 13 Feb 2013
-    import patch_euclid
-    patch_euclid.run_patch()
+    import solid.patch_euclid
+    solid.patch_euclid.run_patch()
     
     def euclidify( an_obj, intended_class=Vector3):
         # If an_obj is an instance of the appropriate PyEuclid class,
@@ -1033,9 +1033,9 @@ try:
         return polyhedron( points = euc_to_arr(polyhedron_pts), triangles=facet_indices)
     
 
-except:
+except Exception as e:
     # euclid isn't available; these methods won't be either
-    pass
+    print("\n\nUnable to load euclid library. Skipping euclid-based tests with exception: \n%s\n"%e)
 
 ## {{{ http://code.activestate.com/recipes/577068/ (r1)
 def frange(*args):

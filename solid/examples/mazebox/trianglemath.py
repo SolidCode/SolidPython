@@ -70,10 +70,10 @@ def angleBetweenPlanes(p1, p2):
   n2 = planeNormal(p2)
   n1.normalize()
   n2.normalize()
-  #print n1.asTripple()
-  #print n2.asTripple()
+  #print(n1.asTripple())
+  #print(n2.asTripple())
   s = n1.scalarProduct(n2)
-  #print s
+  #print(s)
   if (s > 1):
     s = 1
   if (s < -1):

@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 import os, sys
 
@@ -100,5 +100,5 @@ if __name__ == '__main__':
                                                             
             
     file_out = os.path.join( out_dir, 'gasket_%s_gen.scad'%generations) 
-    print "%(__file__)s: SCAD file written to: \n%(file_out)s"%vars()
+    print("%(__file__)s: SCAD file written to: \n%(file_out)s"%vars())
     scad_render_to_file( t, file_out)

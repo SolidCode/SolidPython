@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 # -*- coding: UTF-8 -*-
 from __future__ import division
 import os, sys, re
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     out_dir = sys.argv[1] if len(sys.argv) > 1 else os.curdir
     file_out = os.path.join( out_dir, 'animation_example.scad')
     
-    print "%(__file__)s: SCAD file written to: \n%(file_out)s"%vars()
+    print("%(__file__)s: SCAD file written to: \n%(file_out)s"%vars())
     
     # To animate in OpenSCAD: 
     # - Run this program to generate a SCAD file.

@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 import sys, os
 
@@ -18,6 +18,6 @@ if __name__ == '__main__':
     
     a = demo_scad_include()
     
-    print "%(__file__)s: SCAD file written to: \n%(file_out)s"%vars()
+    print("%(__file__)s: SCAD file written to: \n%(file_out)s"%vars())
     
     scad_render_to_file( a, file_out)  

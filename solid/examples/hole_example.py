@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 # -*- coding: UTF-8 -*-
 from __future__ import division
 import os, sys, re
@@ -92,6 +92,6 @@ if __name__ == '__main__':
     b = up( 40)( multipart_hole())
     a += b
     
-    print "%(__file__)s: SCAD file written to: \n%(file_out)s"%vars()
+    print("%(__file__)s: SCAD file written to: \n%(file_out)s"%vars())
     scad_render_to_file( a, file_out, file_header='$fn = %s;'%SEGMENTS, include_orig_code=True)
 

@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # Basic shape with several repeated parts, demonstrating the use of 
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     
     bom = bill_of_materials()
     
-    print "%(__file__)s: SCAD file written to: \n%(file_out)s"%vars()
-    print bom
+    print("%(__file__)s: SCAD file written to: \n%(file_out)s"%vars())
+    print(bom)
     
     scad_render_to_file( a, file_out)

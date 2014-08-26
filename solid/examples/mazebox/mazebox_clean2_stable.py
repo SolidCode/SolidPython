@@ -82,9 +82,9 @@ def bumpMapCylinder(theR, hn, inset, default):
     aold = Tripple2Vec3D(circ[0]).angle2D()
     for c in circ:
       a = Tripple2Vec3D(c).angle2D()
-      #print a
+      #print(a)
       if (a > aold and (abs(a-aold) < 1*pi)):
-        #print a, aold
+        #print(a, aold)
         #exit()
         pass
       aold = a
@@ -107,7 +107,7 @@ def bumpMapCylinder(theR, hn, inset, default):
       a1 = min(a1, pi-a1)
       a2 = angleBetweenPlanes([pts[p2], pts[p1], pts[p4]], [pts[p2], pts[p3], pts[p4]])
       a2 = min(a2, pi-a2)
-      #print a1, a2
+      #print(a1, a2)
       if (a1 < a2):
         t = [p1, p2, p3]
         trls.append(t)
@@ -136,8 +136,8 @@ if part==1:
   #u.add(translate([80,0,0]).add(bumpMapCylinder(innerR, wall)))
   d.add(intersection().add(bumpMapCylinder(innerR, hn+2, wall, 0).set_modifier("")).add(translate([0,0,baseH]).add(cylinder(r=innerR+2*wall,h=h*1.1).set_modifier(""))))
   #u.add()
-  print "$fa=2; $fs=0.5;\n"
-  print d._render()
+  print("$fa=2; $fs=0.5;\n")
+  print(d._render())
 elif part==2:
   top = difference()
   u = union()
@@ -154,8 +154,8 @@ elif part==2:
     u.add(translate([(r-0.3)*cos(a),(r-0.3)*sin(a), toph-6]).add(sphere(r=2.4)))
     u2.add(translate([(r+wall-0.3)*cos(a),(r+wall-0.3)*sin(a), toph-6]).add(sphere(r=2.4)))
   #top.add(cylinder(r = innerR+wall+gap, h=h))
-  print "$fa=2; $fs=0.5;\n"
-  print top._render()
+  print("$fa=2; $fs=0.5;\n")
+  print(top._render())
 else:
   top = difference()
   u = union()
@@ -172,8 +172,8 @@ else:
     u.add(translate([r*cos(a),r*sin(a), 4]).add(sphere(r=2.3)))
     u2.add(translate([(r+wall)*cos(a),(r+wall)*sin(a), 4]).add(sphere(r=2.3)))
   #top.add(cylinder(r = innerR+wall+gap, h=h))
-  print "//$fn=20;\n"
-  print top._render()
+  print("//$fn=20;\n")
+  print(top._render())
 
 
 

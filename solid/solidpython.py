@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #    Simple Python OpenSCAD Code Generator
@@ -86,7 +86,7 @@ builtin_literals = {
     'polygon': '''class polygon( openscad_object):
         def __init__( self, points, paths=None):
             if not paths:
-                paths = [ range( len( points))]
+                paths = [ list(range( len( points)))]
             openscad_object.__init__( self, 'polygon', {'points':points, 'paths': paths})
         
             ''',
@@ -161,7 +161,7 @@ def use(scad_file_path, use_not_include=True):
         module = open(scad_file_path)
         contents = module.read()
         module.close()
-    except Exception, e:
+    except Exception as e:
         raise Exception("Failed to import SCAD module '%(scad_file_path)s' with error: %(e)s "%vars())
     
     # Once we have a list of all callables and arguments, dynamically
@@ -174,7 +174,7 @@ def use(scad_file_path, use_not_include=True):
         # If this is called from 'include', we have to look deeper in the stack 
         # to find the right module to add the new class to.
         stack_depth = 2 if use_not_include else 3
-        exec class_str in calling_module( stack_depth).__dict__
+        exec(class_str, calling_module( stack_depth).__dict__)
     
     return True
 
@@ -297,7 +297,7 @@ def scad_render_to_file( scad_object, filepath=None, file_header='', include_ori
         # as the calling module next to it
         if not filepath:
             filepath = os.path.splitext( calling_file)[0] + '.scad'
-    except AttributeError, e:
+    except AttributeError as e:
         # If no calling_file was found, this is being called from the terminal.
         # We can't read original code from a file, so don't try, 
         # and can't read filename from the calling file either, so just save to
@@ -448,13 +448,16 @@ class openscad_object( object):
         valid_keys = self.params.keys()
             
         # intkeys are the positional parameters
-        intkeys = filter(lambda x: type(x)==int, valid_keys)
+        intkeys = list(filter(lambda x: type(x)==int, valid_keys))
         intkeys.sort()
         
         # named parameters
-        nonintkeys = filter(lambda x: not type(x)==int, valid_keys)
-        
-        for k in intkeys+nonintkeys:
+        nonintkeys = list(filter(lambda x: not type(x)==int, valid_keys))
+        all_params_sorted = intkeys+nonintkeys
+        if all_params_sorted:
+            all_params_sorted = sorted(all_params_sorted)
+            
+        for k in all_params_sorted:
             v = self.params[k]
             if v == None:
                 continue
@@ -621,7 +624,7 @@ class included_openscad_object( openscad_object):
                     return os.path.abspath(whole_path)
             
         # No loadable SCAD file was found in sys.path.  Raise an error
-        raise( ValueError, "Unable to find included SCAD file: "
+        raise ValueError("Unable to find included SCAD file: "
                             "%(include_file_path)s in sys.path"%vars())
     
 
@@ -702,7 +705,8 @@ def indent(s):
 # = Parsing =
 # ===========
 def extract_callable_signatures( scad_file_path):
-    scad_code_str = open(scad_file_path).read()
+    with open(scad_file_path)  as f:
+        scad_code_str = f.read()
     return parse_scad_callables( scad_code_str)
 
 def parse_scad_callables( scad_code_str): 
@@ -760,5 +764,5 @@ for sym_dict in openscad_builtins:
     else:
         class_str = new_openscad_class_str( sym_dict['name'], sym_dict['args'], sym_dict['kwargs'])
     
-    exec class_str 
+    exec(class_str)
     

@@ -36,7 +36,7 @@ This Python code:
         cube(10),
         sphere(15)
     )
-    print scad_render( d)
+    print(scad_render( d))
  
 
 Generates this OpenSCAD code:
@@ -128,10 +128,10 @@ impossible in pure OpenSCAD.  Among these are:
     
 # Example Code<a id="example-code"></a>
 The best way to learn how SolidPython works is to look at the included example code. 
-If you've installed SolidPython, the  following line of Python will print the location of 
+If you've installed SolidPython, the  following line of Python will print(the location of )
 the examples directory:
 
-        import os, solid; print os.path.dirname( solid.__file__) + '/examples'
+        import os, solid; print(os.path.dirname( solid.__file__) + '/examples')
         
 Or browse the example code on Github [here](https://github.com/SolidCode/SolidPython/tree/master/solid/examples)
 

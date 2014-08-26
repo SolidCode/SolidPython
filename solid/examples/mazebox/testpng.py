@@ -6,9 +6,9 @@ def getPNG(fn):
   data = r.read()
   pixel = data[2]
   raw = []
-  #print data
+  #print(data)
   for row in pixel:
-    #print row
+    #print(row)
     #exit()
     r = []
     raw.append(r)

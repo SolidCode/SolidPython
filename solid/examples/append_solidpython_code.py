@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 # -*- coding: UTF-8 -*-
 import os, sys
 
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     
     a = show_appended_python_code()
     
-    print "%(__file__)s: SCAD file written to: \n%(file_out)s"%vars()
+    print("%(__file__)s: SCAD file written to: \n%(file_out)s"%vars())
     # ================================================================
     # = include_orig_code appends all python code as comments to the
     # = bottom of the generated OpenSCAD code, so the final document

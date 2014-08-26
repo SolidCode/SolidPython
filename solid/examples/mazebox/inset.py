@@ -116,11 +116,11 @@ def insetPoly(poly, inset):
                  diff = newLine.normal.minus(oldnorm).len()
                  if (diff > 0.1):
                     pass
-                    #print "error inverting"
+                    #print("error inverting")
                     #exit()
                  else:
                     pass
-                    #print "ok"
+                    #print("ok")
     istart = -1
     ilen = 0
     for i in range(0, len(poly)):
@@ -131,7 +131,7 @@ def insetPoly(poly, inset):
         newLine = MetaCADLine(asVec2D(points[iprev]), asVec2D(points[i]));
         diff = newLine.normal.minus(oldnorm).len()
         if (diff > 0.1):
-            #print "wrong dir detected"
+            #print("wrong dir detected")
             if (istart == -1):
                 istart = i
                 ilen = 1
@@ -141,10 +141,10 @@ def insetPoly(poly, inset):
             if (ilen > 0):
                 if (istart == 0 ):
                     pass
-                    #print "oh noes"
+                    #print("oh noes")
                     #exit()
                 else:
-                    #print "trying to save: ", istart, i
+                    #print("trying to save: ", istart, i)
                     idxs = (len(poly)+istart-1)%len(poly)
                     idxe = (i)%len(poly)
                     p1 = points[idxs]
@@ -153,7 +153,7 @@ def insetPoly(poly, inset):
                     #points[idxe] = p1
                     for j in range(istart, i):
                         t = float(1+j-istart)/(1+i-istart)
-                        #print t
+                        #print(t)
                         points[j] = [p2[0]*t + p1[0]*(1-t), p2[1]*t + p1[1]*(1-t), p2[2]*t + p1[2]*(1-t)]
                     istart = -1
                     ilen = 0

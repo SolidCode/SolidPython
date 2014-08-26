@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 # -*- coding: UTF-8 -*-
 import os, sys, re
 
@@ -12,7 +12,6 @@ from solid.test.ExpandedTestCase import DiffOutput
 
 
 tri = [Point3( 0,0,0), Point3( 10,0,0), Point3(0,10,0)]
-
 scad_test_cases = [
     (                               up,                 [2],   '\n\ntranslate(v = [0, 0, 2]);'),
     (                               down,               [2],   '\n\ntranslate(v = [0, 0, -2]);'),
@@ -20,8 +19,8 @@ scad_test_cases = [
     (                               right,              [2],   '\n\ntranslate(v = [2, 0, 0]);'),
     (                               forward,            [2],   '\n\ntranslate(v = [0, 2, 0]);'),
     (                               back,               [2],   '\n\ntranslate(v = [0, -2, 0]);'),   
-    (                               arc,                [10, 0, 90, 24], '\n\ndifference() {\n\tcircle(r = 10, $fn = 24);\n\trotate(a = 0) {\n\t\ttranslate(v = [0, -10, 0]) {\n\t\t\tsquare(center = true, size = [30, 20]);\n\t\t}\n\t}\n\trotate(a = -90) {\n\t\ttranslate(v = [0, -10, 0]) {\n\t\t\tsquare(center = true, size = [30, 20]);\n\t\t}\n\t}\n}'),
-    (                               arc_inverted,       [10, 0, 90, 24], '\n\ndifference() {\n\tintersection() {\n\t\trotate(a = 0) {\n\t\t\ttranslate(v = [-990, 0]) {\n\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t}\n\t\t}\n\t\trotate(a = 90) {\n\t\t\ttranslate(v = [-990, -1000]) {\n\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t}\n\t\t}\n\t}\n\tcircle(r = 10, $fn = 24);\n}'),
+    (                               arc,                [10, 0, 90, 24], '\n\ndifference() {\n\tcircle($fn = 24, r = 10);\n\trotate(a = 0) {\n\t\ttranslate(v = [0, -10, 0]) {\n\t\t\tsquare(center = true, size = [30, 20]);\n\t\t}\n\t}\n\trotate(a = -90) {\n\t\ttranslate(v = [0, -10, 0]) {\n\t\t\tsquare(center = true, size = [30, 20]);\n\t\t}\n\t}\n}'),
+    (                               arc_inverted,       [10, 0, 90, 24], '\n\ndifference() {\n\tintersection() {\n\t\trotate(a = 0) {\n\t\t\ttranslate(v = [-990, 0]) {\n\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t}\n\t\t}\n\t\trotate(a = 90) {\n\t\t\ttranslate(v = [-990, -1000]) {\n\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t}\n\t\t}\n\t}\n\tcircle($fn = 24, r = 10);\n}'),
     ( 'transform_to_point_scad',    transform_to_point, [cube(2), [2,2,2], [3,3,1]], '\n\nmultmatrix(m = [[0.7071067812, -0.1622214211, -0.6882472016, 2], [-0.7071067812, -0.1622214211, -0.6882472016, 2], [0.0000000000, 0.9733285268, -0.2294157339, 2], [0, 0, 0, 1.0000000000]]) {\n\tcube(size = 2);\n}'),
     ( 'offset_polygon_inside',      offset_polygon,     [tri, 2, True], '\n\npolygon(paths = [[0, 1, 2]], points = [[2.0000000000, 2.0000000000, 0.0000000000], [5.1715728753, 2.0000000000, 0.0000000000], [2.0000000000, 5.1715728753, 0.0000000000]]);'),
     ( 'offset_polygon_outside',     offset_polygon,     [tri, 2, False], '\n\npolygon(paths = [[0, 1, 2]], points = [[-2.0000000000, -2.0000000000, 0.0000000000], [14.8284271247, -2.0000000000, 0.0000000000], [-2.0000000000, 14.8284271247, 0.0000000000]]);'),
@@ -123,7 +122,7 @@ def read_test_tuple( test_tuple):
         test_name, func, args, expected = test_tuple
         test_name = 'test_%s'%test_name
     else:
-        print "test_tuple has %d args :%s"%( len(test_tuple), test_tuple)    
+        print("test_tuple has %d args :%s"%( len(test_tuple), test_tuple)    )
     return test_name, func, args, expected    
 
 def create_tests( ):
