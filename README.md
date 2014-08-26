@@ -75,11 +75,10 @@ impossible in pure OpenSCAD.  Among these are:
 # Installing SolidPython<a id="installing-solidpython"></a>
 *   Install via [PyPI](python setup.py sdist bdist_wininst upload):
 
-        sudo easy_install solidpython
+        pip install solidpython
         
-
-    At time of writing, `pip install solidpython` will NOT work (13 Feb 2013)
-
+    (You may need to use `sudo pip install solidpython`, depending on your environment.)
+    
 *   **OR:** Download SolidPython ( Click [here](https://github.com/SolidCode/SolidPython/archive/master.zip) to download directly, or use git to pull it all down)
 
     ( Note that SolidPython also depends on the [PyEuclid](http://pypi.python.org/pypi/euclid) Vector math library, installable via `sudo pip install euclid`)
@@ -276,7 +275,10 @@ screw threads.
 See `solid/examples/screw_thread_example.py` for more details.
 
 # Contact<a id="contact"></a>
-Enjoy, and please send any questions or bug reports to me at ```evan_t_jones@mac.com```. Cheers!
+Enjoy, and please send any questions or bug reports to me at ```evan_t_jones@mac.com```. 
+
+Cheers!
+
 Evan
 
 # License<a id="license"></a>
