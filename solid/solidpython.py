@@ -151,18 +151,18 @@ def disable( openscad_obj):
 # --include() makes those methods available AND executes all code in
 #   scad_file_path.scad, which may have side effects.  
 #   Unless you have a specific need, call use(). 
-def use( scad_file_path, use_not_include=True):
+def use(scad_file_path, use_not_include=True):
     '''
     TODO:  doctest needed
     '''
     # Opens scad_file_path, parses it for all usable calls, 
     # and adds them to caller's namespace
     try:
-        module = open( scad_file_path)
+        module = open(scad_file_path)
         contents = module.read()
         module.close()
     except Exception, e:
-        raise Exception( "Failed to import SCAD module '%(scad_file_path)s' with error: %(e)s "%vars())
+        raise Exception("Failed to import SCAD module '%(scad_file_path)s' with error: %(e)s "%vars())
     
     # Once we have a list of all callables and arguments, dynamically
     # add openscad_object subclasses for all callables to the calling module's

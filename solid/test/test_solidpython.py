@@ -4,6 +4,7 @@ import os, sys, re
 
 import unittest
 import tempfile
+from solid.test.ExpandedTestCase import DiffOutput
 from solid import *
 
 scad_test_case_templates = [
@@ -36,8 +37,16 @@ scad_test_case_templates = [
 {'name': 'intersection_for',    'kwargs': {}, 'expected': '\n\nintersection_for(n = [0, 1, 2]);', 'args': {'n': [0, 1, 2]}, },
 ]
 
-class TestSolidPython( unittest.TestCase):
+class TestSolidPython(DiffOutput):
     # test cases will be dynamically added to this instance
+    scad_path = ['solid', '..', '.']
+    def expand_scad_path(self, filename):
+        for path in self.scad_path:
+            full_path = os.path.join(path, filename)
+            if os.path.exists(full_path):
+                return full_path
+        return None
+
     def test_infix_union( self):
         a = cube(2)
         b = sphere( 2)
@@ -77,7 +86,7 @@ class TestSolidPython( unittest.TestCase):
         self.assertEqual( expected, actual)
         
     def test_use( self):
-        include_file = "../examples/scad_to_include.scad"
+        include_file = self.expand_scad_path("examples/scad_to_include.scad")
         use( include_file)
         a = steps(3)
         actual = scad_render( a)
@@ -87,8 +96,12 @@ class TestSolidPython( unittest.TestCase):
         self.assertEqual( expected, actual)     
         
     def test_include( self):
-        include_file = "../examples/scad_to_include.scad"
-        include( include_file)
+        include_file = self.expand_scad_path("examples/scad_to_include.scad")
+        self.assertIsNotNone(
+            include_file,
+            'examples/scad_to_include.scad not found'
+        )
+        include(include_file)
         a = steps(3)
         
         actual = scad_render( a)
@@ -97,8 +110,8 @@ class TestSolidPython( unittest.TestCase):
         self.assertEqual( expected, actual)        
     
     def test_extra_args_to_included_scad( self):
-        include_file = "../examples/scad_to_include.scad"
-        use( include_file)
+        include_file = self.expand_scad_path("examples/scad_to_include.scad")
+        use(include_file)
         a = steps( 3, external_var=True)
         actual = scad_render( a)
         
