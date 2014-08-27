@@ -5,10 +5,12 @@ import sys, os
 from solid import *
 
 # Import OpenSCAD code and call it from Python code.
-# The path given to use() (or include()) must be findable in sys.path.
+# The path given to use() (or include()) must be absolute or findable in sys.path
 def demo_scad_include():
     # scad_to_include.scad includes a module called steps()
-    use( "./scad_to_include.scad") #  could also use 'include', but that has side-effects
+    scad_path = os.path.join(os.path.dirname(__file__), "scad_to_include.scad")
+    use( scad_path) #  could also use 'include', but that has side-effects; 
+                    # 'use' just imports without executing any of the imported code
     return steps(5)
 
 

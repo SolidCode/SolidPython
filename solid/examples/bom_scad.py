@@ -14,7 +14,7 @@
 #   -- Optionally, you can add a description and a per-unit cost to the 
 #       decorator invocations.  
 #
-#   -- To generate the bill of materials, call bill_of_materials()
+#   -- To generate the bill of materials, call solid.utils.bill_of_materials()
 #
 #       -ETJ 08 Mar 2011
 

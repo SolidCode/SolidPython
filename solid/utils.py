@@ -496,7 +496,7 @@ def bill_of_materials():
                 res += "%8s\t%8d\t%s %8f\t%s %8.2f\n"%(desc, count, currency, price, currency, total)
             else:
                 res += "%8s\t%8d\n"%(desc, count)
-    if all_costs > 0:
+    if len(all_costs) > 0:
         res += "_"*60+'\n'
         res += "Total Cost:\n"
         for currency in all_costs.keys():
