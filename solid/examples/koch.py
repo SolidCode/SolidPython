@@ -191,7 +191,7 @@ def main( out_dir):
         h = orig_length *1.5 * g
                 
         # Do the SCAD
-        edges = [len(range(len(points)))]
+        edges = [list(range(len(points)))]
         all_polys.add( forward( h)( polygon(points=points, paths=edges )))
                    
     file_out = os.path.join( out_dir,'koch.scad') 
