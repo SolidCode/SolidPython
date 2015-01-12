@@ -532,6 +532,8 @@ class openscad_object( object):
         self.parent = parent
     
     def add_param(self, k, v):
+        if k == '$fn':
+            k = 'segments'
         self.params[k] = v
         return self
     
