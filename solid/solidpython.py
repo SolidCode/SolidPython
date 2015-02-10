@@ -15,13 +15,13 @@ import inspect
 openscad_builtins = [
     # 2D primitives
     {'name': 'polygon',         'args': ['points', 'paths'], 'kwargs': []} ,
-    {'name': 'circle',          'args': [],         'kwargs': ['r', 'segments']} ,
+    {'name': 'circle',          'args': [],         'kwargs': ['r', 'd', 'segments']} ,
     {'name': 'square',          'args': [],         'kwargs': ['size', 'center']} ,
     
     # 3D primitives
-    {'name': 'sphere',          'args': [],         'kwargs': ['r', 'segments']} ,
+    {'name': 'sphere',          'args': [],         'kwargs': ['r', 'd', 'segments']} ,
     {'name': 'cube',            'args': [],         'kwargs': ['size', 'center']} ,
-    {'name': 'cylinder',        'args': [],         'kwargs': ['r','h','r1', 'r2', 'center', 'segments']}  ,
+    {'name': 'cylinder',        'args': [],         'kwargs': ['r','h','r1', 'r2', 'd', 'd1', 'd2', 'center', 'segments']}  ,
     {'name': 'polyhedron',      'args': ['points', 'triangles' ], 'kwargs': ['convexity']} ,
     
     # Boolean operations
