@@ -125,7 +125,7 @@ def thread( outline_pts, inner_rad, pitch, length, external=True, segments_per_r
         
         
     # Make the polyhedron
-    a = polyhedron( points=all_points, triangles=all_tris)
+    a = polyhedron( points=all_points, faces=all_tris)
     
     if external:
         # Intersect with a cylindrical tube to make sure we fit into

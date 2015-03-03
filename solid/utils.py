@@ -1030,7 +1030,7 @@ try:
         for i in range( end_cap_base + 1, len(polyhedron_pts) -1):
             facet_indices.append( [ end_cap_base, i+1, i])
         
-        return polyhedron( points = euc_to_arr(polyhedron_pts), triangles=facet_indices)
+        return polyhedron( points = euc_to_arr(polyhedron_pts), faces=facet_indices)
     
 
 except Exception as e:

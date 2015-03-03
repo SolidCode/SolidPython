@@ -17,7 +17,7 @@ scad_test_case_templates = [
 {'name': 'cube',        'kwargs': {'center': False, 'size': 1}, 'expected': '\n\ncube(center = false, size = 1);', 'args': {}, },
 {'name': 'cylinder',    'kwargs': {'r1': None, 'r2': None, 'h': 1, 'segments': 12, 'r': 1, 'center': False}, 'expected': '\n\ncylinder($fn = 12, center = false, h = 1, r = 1);', 'args': {}, },
 {'name': 'cylinder',    'kwargs': {'d1': 4, 'd2': 2, 'h': 1, 'segments': 12, 'center': False}, 'expected': '\n\ncylinder($fn = 12, center = false, d1 = 4, d2 = 2, h = 1);', 'args': {}, },
-{'name': 'polyhedron',  'kwargs': {'convexity': None}, 'expected': '\n\npolyhedron(points = [[0, 0, 0], [1, 0, 0], [0, 1, 0]], triangles = [[0, 1, 2]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]], 'triangles': [[0, 1, 2]]}, },
+{'name': 'polyhedron',  'kwargs': {'convexity': None}, 'expected': '\n\npolyhedron(faces = [[0, 1, 2]], points = [[0, 0, 0], [1, 0, 0], [0, 1, 0]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]], 'faces': [[0, 1, 2]]}, },
 {'name': 'union',       'kwargs': {}, 'expected': '\n\nunion();', 'args': {}, },
 {'name': 'intersection','kwargs': {}, 'expected': '\n\nintersection();', 'args': {}, },
 {'name': 'difference',  'kwargs': {}, 'expected': '\n\ndifference();', 'args': {}, },

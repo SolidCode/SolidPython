@@ -128,17 +128,17 @@ def main_3d( out_dir):
         h = orig_length *1.5 * g
         
         # Build the points and triangles arrays that SCAD needs
-        tris = []
+        faces = []
         points = []
         for a,b,c in a_gen:
             points.extend([ [a.x, a.y, a.z], [b.x, b.y, b.z], [c.x, c.y, c.z]])
             t = len(points)
-            tris.append([t-3, t-2, t-1])
+            faces.append([t-3, t-2, t-1])
         
         # Do the SCAD
         edges = [list(range(len(points)))]
         all_polys.add( up( h)(
-                polyhedron( points, tris)
+                polyhedron( points=points, faces=faces)
             )
         )
     

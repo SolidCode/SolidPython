@@ -18,8 +18,8 @@ class DiffOutput(unittest.TestCase):
             if not msg:
                 msg = 'Strings are not equal:\n' + ''.join(
                     difflib.unified_diff(
-                        first,
-                        second,
+                        [first],
+                        [second],
                         fromfile='actual',
                         tofile='expected'
                     )

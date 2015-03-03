@@ -40,8 +40,8 @@ class SierpinskiTetrahedron(object):
         self.points = [[factor*d for d in p] for p in self.points]
     
     def scad_code( self):
-        triangles = [[0,1,2], [0,2,3], [0,3,1], [1,3,2]]
-        return polyhedron( points=self.points, triangles=triangles, convexity =1)
+        faces = [[0,1,2], [0,2,3], [0,3,1], [1,3,2]]
+        return polyhedron( points=self.points, faces=faces, convexity =1)
     
 
 
