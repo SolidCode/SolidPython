@@ -51,8 +51,9 @@ openscad_builtins = [
     {'name': 'rotate_extrude',  'args': [],         'kwargs': ['convexity', 'segments']} ,
     {'name': 'dxf_linear_extrude', 'args': ['file'],'kwargs': ['layer', 'height', 'center', 'convexity', 'twist', 'slices']} ,
     {'name': 'projection',      'args': [],         'kwargs': ['cut']} ,
-    {'name': 'surface',         'args': ['file'],   'kwargs': ['center','convexity']} ,
-    
+    {'name': 'surface',         'args': ['file'],   'kwargs': ['center','convexity','invert']} ,
+    {'name': 'text',            'args': ['text'],   'kwargs': ['size','font','halign','valign','spacing','direction','language','script','segments']} ,
+
     #Child/ren
     {'name': 'child',           'args': [],         'kwargs': ['index', 'vector', 'range']} ,
     {'name': 'children',        'args': [],         'kwargs': ['index', 'vector', 'range']} ,
