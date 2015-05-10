@@ -208,7 +208,7 @@ def scad_render( scad_object, file_header=''):
     return file_header + includes + scad_body
 
 def scad_render_animated_file( func_to_animate, steps=20, back_and_forth=True, filepath=None, file_header='', include_orig_code=True):
-    # func_to_animate takes a single float argument, _time in [0, 1], and 
+    # func_to_animate takes a single float argument, _time in [0, 1), and 
     # returns an openscad_object instance.
     #
     # Outputs an OpenSCAD file with func_to_animate() evaluated at "steps" 
@@ -613,17 +613,17 @@ class included_openscad_object( openscad_object):
         if kwargs:
             params.update( kwargs)
 
-        openscad_object.__init__( self, name, params)
+        openscad_object.__init__(self, name, params)
     
-    def _get_include_path( self, include_file_path):
+    def _get_include_path(self, include_file_path):
         # Look through sys.path for anyplace we can find a valid file ending
         # in include_file_path.  Return that absolute path
-        if os.path.isabs( include_file_path): 
+        if os.path.isabs(include_file_path) and os.path.isfile(include_file_path): 
             return include_file_path
         else:
-            for p in sys.path:       
-                whole_path = os.path.join( p, include_file_path)
-                if os.path.isfile( whole_path):
+            for p in sys.path:      
+                whole_path = os.path.join(p, include_file_path)
+                if os.path.isfile(whole_path):
                     return os.path.abspath(whole_path)
             
         # No loadable SCAD file was found in sys.path.  Raise an error
@@ -664,6 +664,11 @@ def new_openscad_class_str( class_name, args=[], kwargs=[], include_file_path=No
         args_pairs += "'%(kwarg)s':%(kwarg)s, "%vars()
     
     if include_file_path:
+        # include_file_path may include backslashes on Windows; escape them 
+        # again here so any backslashes don't get used as escape characters themselves
+        include_file_path = include_file_path.replace('\\', '\\\\')
+
+
         # NOTE the explicit import of 'solid' below. This is a fix for:
         # https://github.com/SolidCode/SolidPython/issues/20 -ETJ 16 Jan 2014
         result = ("import solid\n"
@@ -678,7 +683,7 @@ def new_openscad_class_str( class_name, args=[], kwargs=[], include_file_path=No
         "       openscad_object.__init__(self, '%(class_name)s', {%(args_pairs)s })\n"
         "   \n"
         "\n"%vars())
-                
+        
     return result
 
 def py2openscad(o):
