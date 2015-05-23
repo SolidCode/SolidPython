@@ -646,6 +646,11 @@ def calling_module( stack_depth=2):
     '''
     frm = inspect.stack()[stack_depth]
     calling_mod = inspect.getmodule( frm[0])
+    # If calling_mod is None, this is being called from an interactive session.
+    # Return that module.  (Note that __main__ doesn't have a __file__ attr,
+    # but that's caught elsewhere.)
+    if not calling_mod:
+        import __main__ as calling_mod
     return calling_mod
 
 def new_openscad_class_str( class_name, args=[], kwargs=[], include_file_path=None, use_not_include=True):
