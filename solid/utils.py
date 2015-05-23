@@ -989,8 +989,7 @@ try:
 
             # Widen start_degs and end_degs slightly so they overlap the areas
             # they're supposed to join/ remove.
-            start_degs, end_degs = _widen_angle_for_fillet(
-                start_degs, end_degs)
+            start_degs, end_degs = _widen_angle_for_fillet(start_degs, end_degs)
 
             arc_obj = translate(center_pt.as_arr())(
                 arc_inverted(
@@ -1058,8 +1057,8 @@ try:
                 this_loop = shape_pts[:]
 
             # Rotate & translate
-            this_loop = transform_to_point(
-                this_loop, dest_point=path_pt, dest_normal=tangent, src_up=src_up)
+            this_loop = transform_to_point(this_loop, dest_point=path_pt, 
+                                            dest_normal=tangent, src_up=src_up)
 
             # Add the transformed points to our final list
             polyhedron_pts += this_loop
@@ -1070,12 +1069,9 @@ try:
             if which_loop < len(path_pts) - 1:
                 for i in range(segment_start, segment_end):
                     facet_indices.append([i, i + shape_pt_count, i + 1])
-                    facet_indices.append(
-                        [i + 1, i + shape_pt_count, i + shape_pt_count + 1])
-                facet_indices.append(
-                    [segment_start, segment_end, segment_end + shape_pt_count])
-                facet_indices.append(
-                    [segment_start, segment_end + shape_pt_count, segment_start + shape_pt_count])
+                    facet_indices.append([i + 1, i + shape_pt_count, i + shape_pt_count + 1])
+                facet_indices.append([segment_start, segment_end, segment_end + shape_pt_count])
+                facet_indices.append([segment_start, segment_end + shape_pt_count, segment_start + shape_pt_count])
 
         # Cap the start of the polyhedron
         for i in range(1, shape_pt_count - 1):
@@ -1093,8 +1089,8 @@ try:
 
 except Exception as e:
     # euclid isn't available; these methods won't be either
-    print(
-        "\n\nUnable to load euclid library. Skipping euclid-based tests with exception: \n%s\n" % e)
+    print("\n\nUnable to load euclid library. Skipping euclid-based tests "
+            "with exception: \n%s\n" % e)
 
 # {{{ http://code.activestate.com/recipes/577068/ (r1)
 
