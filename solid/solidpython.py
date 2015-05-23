@@ -780,8 +780,7 @@ def parse_scad_callables(scad_code_str):
                 else:
                     args.append(arg_name)
 
-        callables.append(
-            {'name': callable_name, 'args': args, 'kwargs': kwargs})
+        callables.append({'name': callable_name, 'args': args, 'kwargs': kwargs})
 
     return callables
 
@@ -792,7 +791,6 @@ for sym_dict in openscad_builtins:
     if sym_dict['name'] in builtin_literals:
         class_str = builtin_literals[sym_dict['name']]
     else:
-        class_str = new_openscad_class_str(
-            sym_dict['name'], sym_dict['args'], sym_dict['kwargs'])
+        class_str = new_openscad_class_str(sym_dict['name'], sym_dict['args'], sym_dict['kwargs'])
 
     exec(class_str)

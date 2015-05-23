@@ -109,8 +109,7 @@ def thread(outline_pts, inner_rad, pitch, length, external=True, segments_per_ro
 
         # create new points
         for p in euc_points:
-            pt = (
-                p + elev_vec).rotate_around(axis=euc_up, theta=radians(angle))
+            pt = (p + elev_vec).rotate_around(axis=euc_up, theta=radians(angle))
             all_points.append(pt.as_arr())
 
         # Add the connectivity information
@@ -119,10 +118,8 @@ def thread(outline_pts, inner_rad, pitch, length, external=True, segments_per_ro
             for j in range(ind, ind + poly_sides - 1):
                 all_tris.append([j, j + 1,   j + poly_sides])
                 all_tris.append([j + 1, j + poly_sides + 1, j + poly_sides])
-            all_tris.append(
-                [ind, ind + poly_sides - 1 + poly_sides, ind + poly_sides - 1])
-            all_tris.append(
-                [ind, ind + poly_sides, ind + poly_sides - 1 + poly_sides])
+            all_tris.append([ind, ind + poly_sides - 1 + poly_sides, ind + poly_sides - 1])
+            all_tris.append([ind, ind + poly_sides, ind + poly_sides - 1 + poly_sides])
 
     # End triangle fans for beginning and end
     last_loop = len(all_points) - poly_sides
@@ -136,8 +133,7 @@ def thread(outline_pts, inner_rad, pitch, length, external=True, segments_per_ro
     if external:
         # Intersect with a cylindrical tube to make sure we fit into
         # the correct dimensions
-        tube = cylinder(
-            r=inner_rad + outline_w + EPSILON, h=length, segments=segments_per_rot)
+        tube = cylinder(r=inner_rad + outline_w + EPSILON, h=length, segments=segments_per_rot)
         tube -= cylinder(r=inner_rad, h=length, segments=segments_per_rot)
     else:
         # If the threading is internal, intersect with a central cylinder
