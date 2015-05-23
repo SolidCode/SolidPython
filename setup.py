@@ -1,4 +1,4 @@
-# from distutils.core import setup 
+# from distutils.core import setup
 from setuptools import setup, find_packages
 
 setup(
@@ -23,6 +23,3 @@ setup(
     packages=find_packages(),
     install_requires=['euclid', 'PyPNG'],
 )
-
-
-
