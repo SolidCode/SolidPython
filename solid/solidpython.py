@@ -206,8 +206,8 @@ def scad_render( scad_object, file_header=''):
     includes = ''.join(include_strings) + "\n"
     scad_body = root._render()
     return file_header + includes + scad_body
-
-def scad_render_animated_file( func_to_animate, steps=20, back_and_forth=True, filepath=None, file_header='', include_orig_code=True):
+    
+def scad_render_animated(func_to_animate, steps=20, back_and_forth=True, filepath=None, file_header=''):
     # func_to_animate takes a single float argument, _time in [0, 1), and 
     # returns an openscad_object instance.
     #
@@ -264,30 +264,20 @@ def scad_render_animated_file( func_to_animate, steps=20, back_and_forth=True, f
         rendered_string += (  "if ($t >= %(time)s && $t < %(end_time)s){"
                         "   %(scad_str)s\n"     
                         "}\n"%vars())
+    return rendered_string
     
-    # TODO: Remove code duplication from here to end of method: taken 
-    # from scad_render_to_file(). -ETJ 28 Mar 2013
-    calling_file = os.path.abspath( calling_module().__file__) 
-    
-    if include_orig_code:
-        rendered_string += sp_code_in_scad_comment( calling_file)
-    
-    # This write is destructive, and ought to do some checks that the write
-    # was successful.
-    # If filepath isn't supplied, place a .scad file with the same name
-    # as the calling module next to it
-    if not filepath:
-        filepath = os.path.splitext( calling_file)[0] + '.scad'
-    
-    f = open( filepath,"w")
-    f.write( rendered_string)
-    f.close()
+def scad_render_animated_file( func_to_animate, steps=20, back_and_forth=True, filepath=None, file_header='', include_orig_code=True):
+    rendered_string = scad_render_animated(func_to_animate, steps, back_and_forth, file_header)
+    return _write_code_to_file(rendered_string, filepath, include_orig_code)
 
 def scad_render_to_file( scad_object, filepath=None, file_header='', include_orig_code=True):
     rendered_string = scad_render( scad_object, file_header)
+    return _write_code_to_file(rendered_string, filepath, include_orig_code)
+
     
+def _write_code_to_file(rendered_string, filepath=None, include_orig_code=True):
     try:
-        calling_file = os.path.abspath( calling_module().__file__) 
+        calling_file = os.path.abspath( calling_module(stack_depth=3).__file__) 
     
         if include_orig_code:
             rendered_string += sp_code_in_scad_comment( calling_file)
@@ -308,7 +298,8 @@ def scad_render_to_file( scad_object, filepath=None, file_header='', include_ori
         
     f = open( filepath,"w")
     f.write( rendered_string)
-    f.close()
+    f.close()  
+    return True  
 
 def sp_code_in_scad_comment( calling_file):
     # Once a SCAD file has been created, it's difficult to reconstruct
