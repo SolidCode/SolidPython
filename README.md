@@ -134,7 +134,7 @@ the examples directory:
         
 Or browse the example code on Github [here](https://github.com/SolidCode/SolidPython/tree/master/solid/examples)
 
-Adding your own code to the example file `solid/examples/solidpython_template.py` will make some of the setup easier.
+Adding your own code to the example file [`solid/examples/solidpython_template.py`](https://github.com/SolidCode/SolidPython/blob/master/solid/examples/solidpython_template.py) will make some of the setup easier.
 
 # Extra syntactic sugar<a id="extra-syntactic-sugar"></a>
 ### Basic operators<a id="basic-operators"></a>
@@ -185,16 +185,16 @@ like a bolt, into it.  To do this, we need to specify that there's a given
 'part' with a hole and that other parts may occupy the space in that hole.
 This is done with the `part()` function.  
 
-See `solid/examples/hole_example.py` for the complete picture.
+See [`solid/examples/hole_example.py`](https://github.com/SolidCode/SolidPython/blob/master/solid/examples/hole_example.py) for the complete picture.
 
 ### Animation<a id="animation"></a>
 OpenSCAD has a special variable, `$t`, that can be used to animate motion.
 SolidPython can do this, too, using the special function `scad_render_animated_file()`.  
 
-See `solid/examples/animation_example.py` for more details.
+See [`solid/examples/animation_example.py`](https://github.com/SolidCode/SolidPython/blob/master/solid/examples/animation_example.py) for more details.
 
 # solid.utils<a id="solidutils"></a>
-SolidPython includes a number of useful functions in solid/utils.py.  Currently these include:
+SolidPython includes a number of useful functions in [`solid/utils.py`](https://github.com/SolidCode/SolidPython/blob/master/solid/utils.py).  Currently these include:
     
 ### Directions: (up, down, left, right, forward, back) for arranging things:<a id="directions-up-down-left-right-forward-back-for-arranging-things"></a>
     
@@ -237,7 +237,7 @@ See the code for futher explanation. Improvements on the inside/outside algorith
 ### Extrude Along Path<a id="extrude_along_path"></a>
 `solid.utils.extrude_along_path( shape_pts, path_pts, scale_factors=None)`
 
-See `solid/examples/path_extrude_example.py` for use.
+See [`solid/examples/path_extrude_example.py`](https://github.com/SolidCode/SolidPython/blob/master/solid/examples/path_extrude_example.py) for use.
 
     
 ### Basic color library<a id="basic-color-library"></a>
@@ -266,13 +266,13 @@ Put ```@bom_part()``` before any method that defines a part, then
 call ```bill_of_materials()``` after the program is run, and all parts will be 
 counted, priced and reported. 
 
-The example file `solid/examples/bom_scad.py` illustrates this. Check it out.
+The example file [`solid/examples/bom_scad.py`](https://github.com/SolidCode/SolidPython/blob/master/solid/examples/bom_scad.py) illustrates this. Check it out.
 
 ## solid.screw_thread<a id="solidscrew_thread"></a>
 solid.screw_thread includes a method, thread() that makes internal and external 
 screw threads.  
 
-See `solid/examples/screw_thread_example.py` for more details.
+See [`solid/examples/screw_thread_example.py`](https://github.com/SolidCode/SolidPython/blob/master/solid/examples/screw_thread_example.py) for more details.
 
 # Contact<a id="contact"></a>
 Enjoy, and please send any questions or bug reports to me at ```evan_t_jones@mac.com```. 
