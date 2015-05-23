@@ -11,7 +11,7 @@ from euclid import *
 import solid.patch_euclid
 solid.patch_euclid.run_patch()
 
-def thread( outline_pts, inner_rad, pitch, length, external=True, segments_per_rot=32,neck_in_degrees=0, neck_out_degrees=0):
+def thread(outline_pts, inner_rad, pitch, length, external=True, segments_per_rot=32,neck_in_degrees=0, neck_out_degrees=0):
     '''
     Sweeps outline_pts (an array of points describing a closed polygon in XY)
     through a spiral. 
@@ -53,20 +53,20 @@ def thread( outline_pts, inner_rad, pitch, length, external=True, segments_per_r
     total_angle = 360.0*rotations
     up_step = float(length) / (rotations*segments_per_rot)
     # Add one to total_steps so we have total_steps *segments*
-    total_steps = int(ceil( rotations * segments_per_rot)) + 1
+    total_steps = int(ceil(rotations * segments_per_rot)) + 1
     step_angle = total_angle/ (total_steps -1)
     
     all_points = []
     all_tris = []
     euc_up = Vector3( *UP_VEC)
-    poly_sides = len( outline_pts)
+    poly_sides = len(outline_pts)
     
     # Figure out how wide the tooth profile is
-    min_bb, max_bb = bounding_box( outline_pts)
+    min_bb, max_bb = bounding_box(outline_pts)
     outline_w = max_bb[0] - min_bb[0]
     outline_h = max_bb[1] - min_bb[1]
     
-    min_rad = max( 0, inner_rad-outline_w-EPSILON)    
+    min_rad = max(0, inner_rad-outline_w-EPSILON)    
     max_rad = inner_rad + outline_w + EPSILON
     
     # outline_pts, since they were created in 2D , are in the XY plane.
@@ -76,14 +76,14 @@ def thread( outline_pts, inner_rad, pitch, length, external=True, segments_per_r
     euc_points = []
     for p in outline_pts:
         # If p is in [x, y] format, make it [x, y, 0]
-        if len( p) == 2:
-            p.append( 0)
+        if len(p) == 2:
+            p.append(0)
         # [x, y, z] => [ x+inner_rad, z, y]
         external_mult = 1 if external else -1
-        s =  Point3( external_mult*p[0], p[2], p[1]) # adding inner_rad, swapping Y & Z
-        euc_points.append( s)
+        s =  Point3(external_mult*p[0], p[2], p[1]) # adding inner_rad, swapping Y & Z
+        euc_points.append(s)
         
-    for i in range( total_steps):
+    for i in range(total_steps):
         angle = i*step_angle
         
         elevation = i*up_step
@@ -101,17 +101,17 @@ def thread( outline_pts, inner_rad, pitch, length, external=True, segments_per_r
         elif angle > total_angle - neck_in_degrees:
             rad = neck_in_rad + int_ext_mult * (total_angle - angle)/neck_out_degrees * outline_w
         
-        elev_vec = Vector3( rad, 0, elevation)
+        elev_vec = Vector3(rad, 0, elevation)
         
         # create new points
         for p in euc_points:
-            pt = (p + elev_vec).rotate_around( axis=euc_up, theta=radians( angle))
-            all_points.append( pt.as_arr())
+            pt = (p + elev_vec).rotate_around(axis=euc_up, theta=radians(angle))
+            all_points.append(pt.as_arr())
         
         # Add the connectivity information
         if i < total_steps -1:
             ind = i*poly_sides
-            for j in range( ind, ind + poly_sides - 1):
+            for j in range(ind, ind + poly_sides - 1):
                 all_tris.append( [ j, j+1,   j+poly_sides])
                 all_tris.append( [ j+1, j+poly_sides+1, j+poly_sides])
             all_tris.append( [ ind, ind + poly_sides-1+poly_sides, ind + poly_sides-1])
@@ -119,29 +119,29 @@ def thread( outline_pts, inner_rad, pitch, length, external=True, segments_per_r
         
     # End triangle fans for beginning and end
     last_loop = len(all_points) - poly_sides
-    for i in range( poly_sides -2):
+    for i in range(poly_sides -2):
         all_tris.append( [ 0,  i+2, i+1])
         all_tris.append( [ last_loop, last_loop + i+1, last_loop + i + 2])
         
         
     # Make the polyhedron
-    a = polyhedron( points=all_points, faces=all_tris)
+    a = polyhedron(points=all_points, faces=all_tris)
     
     if external:
         # Intersect with a cylindrical tube to make sure we fit into
         # the correct dimensions
-        tube = cylinder( r=inner_rad+outline_w+EPSILON, h=length, segments=segments_per_rot) 
-        tube -= cylinder( r=inner_rad, h=length, segments=segments_per_rot)
+        tube = cylinder(r=inner_rad+outline_w+EPSILON, h=length, segments=segments_per_rot) 
+        tube -= cylinder(r=inner_rad, h=length, segments=segments_per_rot)
     else:
         # If the threading is internal, intersect with a central cylinder 
         # to make sure nothing else remains
-        tube = cylinder( r=inner_rad, h=length, segments=segments_per_rot)        
+        tube = cylinder(r=inner_rad, h=length, segments=segments_per_rot)        
     a *= tube
     return render()(a)
 
 
 
-def default_thread_section( tooth_height, tooth_depth):
+def default_thread_section(tooth_height, tooth_depth):
     # An isoceles triangle, tooth_height vertically, tooth_depth wide:
     res = [ [ 0, -tooth_height/2],
              [ tooth_depth, 0],
@@ -161,11 +161,11 @@ def assembly():
             [ -1, 0, 0],
             [ -1, -1, 0]    ]
             
-    a = thread( pts, inner_rad=10, pitch= 6, length=2, segments_per_rot=31, 
+    a = thread(pts, inner_rad=10, pitch= 6, length=2, segments_per_rot=31, 
                             neck_in_degrees=30, neck_out_degrees=30)
     
-    return a + cylinder( 10+EPSILON, 2)
+    return a + cylinder(10+EPSILON, 2)
 
 if __name__ == '__main__':
     a = assembly()    
-    scad_render_to_file( a)
+    scad_render_to_file(a)

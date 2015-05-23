@@ -69,7 +69,7 @@ Completed:
 -- Improving syntax so it's as close as possible to OpenSCAD's -ETJ 15 Feb 2011
 -- By default, let polygon assume that connectivity between specified points (the paths argument) is
     in the order specified in the points array.  Without this, there's always 
-    boilerplate: polygon( points=arr, paths= range(len(arr)))
+    boilerplate: polygon(points=arr, paths= range(len(arr)))
 -- Add 'segments' arguments to circle(), sphere() and cylinder()? This breaks 
     with OpenSCAD, but is simpler than circle(10).add_param('$fn', 30)    
 -- Unit testing.

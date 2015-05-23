@@ -69,14 +69,14 @@ openscad_builtins = [
     # Modifiers; These are implemented by calling e.g. 
     #   obj.set_modifier( '*') or 
     #   obj.set_modifier('disable') 
-    #   disable( obj)
+    #   disable(obj)
     # on  an existing object.
     # {'name': 'background',      'args': [],         'kwargs': []},     #   %{}
     # {'name': 'debug',           'args': [],         'kwargs': []} ,    #   #{}
     # {'name': 'root',            'args': [],         'kwargs': []} ,    #   !{}
     # {'name': 'disable',         'args': [],         'kwargs': []} ,    #   *{}
     
-    {'name': 'intersection_for', 'args': ['n'],     'kwargs': []}  ,    #   e.g.: intersection_for( n=[1..6]){}
+    {'name': 'intersection_for', 'args': ['n'],     'kwargs': []}  ,    #   e.g.: intersection_for(n=[1..6]){}
     
     # Unneeded
     {'name': 'assign',          'args': [],         'kwargs': []}   # Not really needed for Python.  Also needs a **args argument so it accepts anything
@@ -84,36 +84,36 @@ openscad_builtins = [
 
 # Some functions need custom code in them; put that code here
 builtin_literals = {
-    'polygon': '''class polygon( openscad_object):
-        def __init__( self, points, paths=None):
+    'polygon': '''class polygon(OpenSCADObject):
+        def __init__(self, points, paths=None):
             if not paths:
-                paths = [ list(range( len( points)))]
-            openscad_object.__init__( self, 'polygon', {'points':points, 'paths': paths})
+                paths = [ list(range(len(points)))]
+            OpenSCADObject.__init__(self, 'polygon', {'points':points, 'paths': paths})
         
             ''',
-    'hole':'''class hole( openscad_object):
-    def __init__( self):
-        openscad_object.__init__( self, 'hole', {})
-        self.set_hole( True)
+    'hole':'''class hole(OpenSCADObject):
+    def __init__(self):
+        OpenSCADObject.__init__(self, 'hole', {})
+        self.set_hole(True)
     
     ''', 
-    'part':'''class part( openscad_object):
-    def __init__( self):
-        openscad_object.__init__(self, 'part', {})
-        self.set_part_root( True)
+    'part':'''class part(OpenSCADObject):
+    def __init__(self):
+        OpenSCADObject.__init__(self, 'part', {})
+        self.set_part_root(True)
     ''',
     # Import, import_dxf, and import_stl all resolve to the same OpenSCAD keyword, 'import'
-    'import_':'''class import_( openscad_object):
-    def __init__( self, file, origin=(0,0), layer=None):
-        openscad_object.__init__(self, 'import', {'file':file, 'origin':origin, 'layer':layer})
+    'import_':'''class import_(OpenSCADObject):
+    def __init__(self, file, origin=(0,0), layer=None):
+        OpenSCADObject.__init__(self, 'import', {'file':file, 'origin':origin, 'layer':layer})
     ''',
-    'import_dxf':'''class import_dxf( openscad_object):
-    def __init__( self, file, origin=(0,0), layer=None):
-        openscad_object.__init__(self, 'import', {'file':file, 'origin':origin, 'layer':layer})
+    'import_dxf':'''class import_dxf(OpenSCADObject):
+    def __init__(self, file, origin=(0,0), layer=None):
+        OpenSCADObject.__init__(self, 'import', {'file':file, 'origin':origin, 'layer':layer})
     ''',
-    'import_stl':'''class import_stl( openscad_object):
-    def __init__( self, file, origin=(0,0), layer=None):
-        openscad_object.__init__(self, 'import', {'file':file, 'origin':origin, 'layer':layer})
+    'import_stl':'''class import_stl(OpenSCADObject):
+    def __init__(self, file, origin=(0,0), layer=None):
+        OpenSCADObject.__init__(self, 'import', {'file':file, 'origin':origin, 'layer':layer})
     '''
 
 }
@@ -124,19 +124,19 @@ non_rendered_classes = ['hole', 'part']
 # ================================
 # = Modifier Convenience Methods =
 # ================================
-def debug( openscad_obj):
+def debug(openscad_obj):
     openscad_obj.set_modifier("#")
     return openscad_obj
 
-def background( openscad_obj):
+def background(openscad_obj):
     openscad_obj.set_modifier("%")
     return openscad_obj
 
-def root( openscad_obj):
+def root(openscad_obj):
     openscad_obj.set_modifier("!")
     return openscad_obj
     
-def disable( openscad_obj):
+def disable(openscad_obj):
     openscad_obj.set_modifier("*")
     return openscad_obj
 
@@ -166,41 +166,41 @@ def use(scad_file_path, use_not_include=True):
         raise Exception("Failed to import SCAD module '%(scad_file_path)s' with error: %(e)s "%vars())
     
     # Once we have a list of all callables and arguments, dynamically
-    # add openscad_object subclasses for all callables to the calling module's
+    # add OpenSCADObject subclasses for all callables to the calling module's
     # namespace.
-    symbols_dicts = extract_callable_signatures( scad_file_path)
+    symbols_dicts = extract_callable_signatures(scad_file_path)
     
     for sd in symbols_dicts:
-        class_str = new_openscad_class_str( sd['name'], sd['args'], sd['kwargs'], scad_file_path, use_not_include)
+        class_str = new_openscad_class_str(sd['name'], sd['args'], sd['kwargs'], scad_file_path, use_not_include)
         # If this is called from 'include', we have to look deeper in the stack 
         # to find the right module to add the new class to.
         stack_depth = 2 if use_not_include else 3
-        exec(class_str, calling_module( stack_depth).__dict__)
+        exec(class_str, calling_module(stack_depth).__dict__)
     
     return True
 
-def include( scad_file_path):
-    return use( scad_file_path, use_not_include=False)
+def include(scad_file_path):
+    return use(scad_file_path, use_not_include=False)
 
 
 # =========================================
 # = Rendering Python code to OpenSCAD code=
 # =========================================
-def _find_include_strings( obj):
+def _find_include_strings(obj):
     include_strings = set()
-    if isinstance( obj, included_openscad_object):
-        include_strings.add( obj.include_string )
+    if isinstance(obj, IncludedOpenSCADObject):
+        include_strings.add(obj.include_string )
     for child in obj.children:
-        include_strings.update( _find_include_strings( child))
+        include_strings.update(_find_include_strings(child))
     return include_strings
 
-def scad_render( scad_object, file_header=''):
+def scad_render(scad_object, file_header=''):
     # Make this object the root of the tree
     root = scad_object
     
     # Scan the tree for all instances of 
-    # included_openscad_object, storing their strings
-    include_strings = _find_include_strings( root)
+    # IncludedOpenSCADObject, storing their strings
+    include_strings = _find_include_strings(root)
     
     # and render the string
     includes = ''.join(include_strings) + "\n"
@@ -209,7 +209,7 @@ def scad_render( scad_object, file_header=''):
     
 def scad_render_animated(func_to_animate, steps=20, back_and_forth=True, filepath=None, file_header=''):
     # func_to_animate takes a single float argument, _time in [0, 1), and 
-    # returns an openscad_object instance.
+    # returns an OpenSCADObject instance.
     #
     # Outputs an OpenSCAD file with func_to_animate() evaluated at "steps" 
     # points between 0 & 1, with time never evaluated at exactly 1
@@ -238,7 +238,7 @@ def scad_render_animated(func_to_animate, steps=20, back_and_forth=True, filepat
     # to be animated with an identical number of steps to the way it was 
     # created. -ETJ 28 Mar 2013
     scad_obj = func_to_animate()
-    include_strings = _find_include_strings( scad_obj)    
+    include_strings = _find_include_strings(scad_obj)    
     # and render the string
     includes = ''.join(include_strings) + "\n"    
 
@@ -247,7 +247,7 @@ def scad_render_animated(func_to_animate, steps=20, back_and_forth=True, filepat
     if back_and_forth: 
         steps *= 2
 
-    for i in range( steps):
+    for i in range(steps):
         time = i *1.0/steps
         end_time = (i+1)*1.0/steps
         eval_time = time
@@ -258,36 +258,35 @@ def scad_render_animated(func_to_animate, steps=20, back_and_forth=True, filepat
                 eval_time = time * 2
             else:
                 eval_time = 2 - 2*time
-        scad_obj = func_to_animate( _time=eval_time)   
+        scad_obj = func_to_animate(_time=eval_time)   
         
-        scad_str = indent( scad_obj._render())         
+        scad_str = indent(scad_obj._render())         
         rendered_string += (  "if ($t >= %(time)s && $t < %(end_time)s){"
                         "   %(scad_str)s\n"     
                         "}\n"%vars())
     return rendered_string
     
-def scad_render_animated_file( func_to_animate, steps=20, back_and_forth=True, filepath=None, file_header='', include_orig_code=True):
+def scad_render_animated_file(func_to_animate, steps=20, back_and_forth=True, filepath=None, file_header='', include_orig_code=True):
     rendered_string = scad_render_animated(func_to_animate, steps, back_and_forth, file_header)
     return _write_code_to_file(rendered_string, filepath, include_orig_code)
 
-def scad_render_to_file( scad_object, filepath=None, file_header='', include_orig_code=True):
-    rendered_string = scad_render( scad_object, file_header)
+def scad_render_to_file(scad_object, filepath=None, file_header='', include_orig_code=True):
+    rendered_string = scad_render(scad_object, file_header)
     return _write_code_to_file(rendered_string, filepath, include_orig_code)
-
-    
+ 
 def _write_code_to_file(rendered_string, filepath=None, include_orig_code=True):
     try:
-        calling_file = os.path.abspath( calling_module(stack_depth=3).__file__) 
+        calling_file = os.path.abspath(calling_module(stack_depth=3).__file__) 
     
         if include_orig_code:
-            rendered_string += sp_code_in_scad_comment( calling_file)
+            rendered_string += sp_code_in_scad_comment(calling_file)
     
         # This write is destructive, and ought to do some checks that the write
         # was successful.
         # If filepath isn't supplied, place a .scad file with the same name
         # as the calling module next to it
         if not filepath:
-            filepath = os.path.splitext( calling_file)[0] + '.scad'
+            filepath = os.path.splitext(calling_file)[0] + '.scad'
     except AttributeError as e:
         # If no calling_file was found, this is being called from the terminal.
         # We can't read original code from a file, so don't try, 
@@ -296,12 +295,12 @@ def _write_code_to_file(rendered_string, filepath=None, include_orig_code=True):
         if not filepath:
             filepath = os.path.abspath('.') + "/solid.scad"
         
-    f = open( filepath,"w")
-    f.write( rendered_string)
+    f = open(filepath,"w")
+    f.write(rendered_string)
     f.close()  
     return True  
 
-def sp_code_in_scad_comment( calling_file):
+def sp_code_in_scad_comment(calling_file):
     # Once a SCAD file has been created, it's difficult to reconstruct
     # how it got there, since it has no variables, modules, etc.  So, include
     # the Python code that generated the scad code as comments at the end of 
@@ -328,7 +327,7 @@ def sp_code_in_scad_comment( calling_file):
 # =========================
 # = Internal Utilities    =
 # =========================
-class openscad_object( object):
+class OpenSCADObject(object):
     def __init__(self, name, params):
         self.name = name
         self.params = params
@@ -339,17 +338,17 @@ class openscad_object( object):
         self.has_hole_children = False
         self.is_part_root = False
     
-    def set_hole( self, is_hole=True):
+    def set_hole(self, is_hole=True):
         self.is_hole = is_hole
         return self
     
-    def set_part_root( self, is_root=True):
+    def set_part_root(self, is_root=True):
         self.is_part_root = is_root
         return self
     
-    def find_hole_children( self, path=None):
+    def find_hole_children(self, path=None):
         # Because we don't force a copy every time we re-use a node
-        # (e.g a = cylinder(2, 6);  b = right( 10) (a)          
+        # (e.g a = cylinder(2, 6);  b = right(10) (a)          
         #  the identical 'a' object appears in the tree twice),
         # we can't count on an object's 'parent' field to trace its
         # path to the root.  Instead, keep track explicitly
@@ -357,9 +356,9 @@ class openscad_object( object):
         hole_kids = []
 
         for child in self.children:
-            path.append( child)
+            path.append(child)
             if child.is_hole:
-                hole_kids.append( child)
+                hole_kids.append(child)
                 # Mark all parents as having a hole child
                 for p in path:
                     p.has_hole_children = True
@@ -368,7 +367,7 @@ class openscad_object( object):
                 continue
             # Otherwise, look below us for children
             else:
-                hole_kids += child.find_hole_children( path)
+                hole_kids += child.find_hole_children(path)
             path.pop( )
         
         return hole_kids
@@ -402,7 +401,7 @@ class openscad_object( object):
             # And render after everything else
             if not render_holes and child.is_hole:
                 continue
-            s += child._render( render_holes)
+            s += child._render(render_holes)
                 
         # Then render self and prepend/wrap it around the children
         # I've added designated parts and explicit holes to SolidPython.
@@ -412,7 +411,7 @@ class openscad_object( object):
         elif not self.children:
             s = self._render_str_no_children() + ";"
         else:
-            s = self._render_str_no_children() + " {" + indent( s) + "\n}"
+            s = self._render_str_no_children() + " {" + indent(s) + "\n}"
             
         # If this is the root object or the top of a separate part,
         # find all holes and subtract them after all positive geometry
@@ -428,7 +427,7 @@ class openscad_object( object):
                 s = "\ndifference(){" + indent(s) + " /* End Holes */ \n}"
         return s
     
-    def _render_str_no_children( self):
+    def _render_str_no_children(self):
         s = "\n" + self.modifier + self.name + "("
         first = True
             
@@ -465,7 +464,7 @@ class openscad_object( object):
                 
         s += ")"
         return s
-    def _render_hole_children( self):
+    def _render_hole_children(self):
         # Run down the tree, rendering only those nodes
         # that are holes or have holes beneath them
         if not self.has_hole_children:
@@ -473,10 +472,10 @@ class openscad_object( object):
         s = ""    
         for child in self.children:
             if child.is_hole:
-                s += child._render( render_holes=True)
+                s += child._render(render_holes=True)
             elif child.has_hole_children:
                 # Holes exist in the compiled tree in two pieces:
-                # The shapes of the holes themselves, ( an object for which
+                # The shapes of the holes themselves, (an object for which
                 # obj.is_hole is True, and all its children) and the 
                 # transforms necessary to put that hole in place, which
                 # are inherited from non-hole geometry.
@@ -498,29 +497,29 @@ class openscad_object( object):
         if self.name in non_rendered_classes:
             pass
         else:
-            s = self._render_str_no_children() + "{" + indent( s) + "\n}"
+            s = self._render_str_no_children() + "{" + indent(s) + "\n}"
         return s
     
     def add(self, child):
         '''
-        if child is a single object, assume it's an openscad_object and 
+        if child is a single object, assume it's an OpenSCADObject and 
         add it to self.children
         
-        if child is a list, assume its members are all openscad_objects and
+        if child is a list, assume its members are all OpenSCADObjects and
         add them all to self.children
         '''
-        if isinstance( child, (list, tuple)):
+        if isinstance(child, (list, tuple)):
             # __call__ passes us a list inside a tuple, but we only care
             # about the list, so skip single-member tuples containing lists
-            if len( child) == 1 and isinstance(child[0], (list, tuple)):
+            if len(child) == 1 and isinstance(child[0], (list, tuple)):
                 child = child[0]
-            [self.add( c ) for c in child]
+            [self.add(c ) for c in child]
         else:
-            self.children.append( child)
-            child.set_parent( self)
+            self.children.append(child)
+            child.set_parent(self)
         return self
     
-    def set_parent( self, parent):
+    def set_parent(self, parent):
         self.parent = parent
     
     def add_param(self, k, v):
@@ -529,7 +528,7 @@ class openscad_object( object):
         self.params[k] = v
         return self
     
-    def copy( self):
+    def copy(self):
         # Provides a copy of this object and all children, 
         # but doesn't copy self.parent, meaning the new object belongs
         # to a different tree
@@ -545,15 +544,15 @@ class openscad_object( object):
             self.params['segments'] = self.params.pop('$fn')
         
         other = globals()[ self.name]( **self.params)
-        other.set_modifier( self.modifier)
-        other.set_hole( self.is_hole)
-        other.set_part_root( self.is_part_root)
+        other.set_modifier(self.modifier)
+        other.set_hole(self.is_hole)
+        other.set_part_root(self.is_part_root)
         other.has_hole_children = self.has_hole_children
         for c in self.children:
-            other.add( c.copy())
+            other.add(c.copy())
         return other
     
-    def __call__( self, *args):
+    def __call__(self, *args):
         '''
         Adds all objects in args to self.  This enables OpenSCAD-like syntax,
         e.g.:
@@ -567,33 +566,33 @@ class openscad_object( object):
     def __add__(self, x):
         '''
         This makes u = a+b identical to:
-        u = union()( a, b )
+        u = union()(a, b )
         '''
         return union()(self, x)
     
     def __sub__(self, x):
         '''
         This makes u = a - b identical to:
-        u = difference()( a, b )
+        u = difference()(a, b )
         '''        
         return difference()(self, x)
     
     def __mul__(self, x):
         '''
         This makes u = a * b identical to:
-        u = intersection()( a, b )
+        u = intersection()(a, b )
         '''        
         return intersection()(self, x)
     
 
-class included_openscad_object( openscad_object):
+class IncludedOpenSCADObject(OpenSCADObject):
     '''
-    Identical to openscad_object, but each subclass of included_openscad_object
+    Identical to OpenSCADObject, but each subclass of IncludedOpenSCADObject
     represents imported scad code, so each instance needs to store the path
     to the scad file it's included from.
     '''
-    def __init__( self, name, params, include_file_path, use_not_include=False, **kwargs):
-        self.include_file_path = self._get_include_path( include_file_path)
+    def __init__(self, name, params, include_file_path, use_not_include=False, **kwargs):
+        self.include_file_path = self._get_include_path(include_file_path)
                     
         if use_not_include:
             self.include_string = 'use <%s>\n'%self.include_file_path
@@ -602,9 +601,9 @@ class included_openscad_object( openscad_object):
         
         # Just pass any extra arguments straight on to OpenSCAD; it'll accept them
         if kwargs:
-            params.update( kwargs)
+            params.update(kwargs)
 
-        openscad_object.__init__(self, name, params)
+        OpenSCADObject.__init__(self, name, params)
     
     def _get_include_path(self, include_file_path):
         # Look through sys.path for anyplace we can find a valid file ending
@@ -622,7 +621,7 @@ class included_openscad_object( openscad_object):
                             "%(include_file_path)s in sys.path"%vars())
     
 
-def calling_module( stack_depth=2):
+def calling_module(stack_depth=2):
     '''
     Returns the module *2* back in the frame stack.  That means:
     code in module A calls code in module B, which asks calling_module()
@@ -636,7 +635,7 @@ def calling_module( stack_depth=2):
     Got that?
     '''
     frm = inspect.stack()[stack_depth]
-    calling_mod = inspect.getmodule( frm[0])
+    calling_mod = inspect.getmodule(frm[0])
     # If calling_mod is None, this is being called from an interactive session.
     # Return that module.  (Note that __main__ doesn't have a __file__ attr,
     # but that's caught elsewhere.)
@@ -644,7 +643,7 @@ def calling_module( stack_depth=2):
         import __main__ as calling_mod
     return calling_mod
 
-def new_openscad_class_str( class_name, args=[], kwargs=[], include_file_path=None, use_not_include=True):
+def new_openscad_class_str(class_name, args=[], kwargs=[], include_file_path=None, use_not_include=True):
     args_str = ''
     args_pairs = ''
     
@@ -668,15 +667,15 @@ def new_openscad_class_str( class_name, args=[], kwargs=[], include_file_path=No
         # NOTE the explicit import of 'solid' below. This is a fix for:
         # https://github.com/SolidCode/SolidPython/issues/20 -ETJ 16 Jan 2014
         result = ("import solid\n"
-        "class %(class_name)s( solid.included_openscad_object):\n"
+        "class %(class_name)s(solid.IncludedOpenSCADObject):\n"
         "   def __init__(self%(args_str)s, **kwargs):\n"
-        "       solid.included_openscad_object.__init__(self, '%(class_name)s', {%(args_pairs)s }, include_file_path='%(include_file_path)s', use_not_include=%(use_not_include)s, **kwargs )\n"
+        "       solid.IncludedOpenSCADObject.__init__(self, '%(class_name)s', {%(args_pairs)s }, include_file_path='%(include_file_path)s', use_not_include=%(use_not_include)s, **kwargs )\n"
         "   \n"
         "\n"%vars())
     else:
-        result = ("class %(class_name)s( openscad_object):\n"
+        result = ("class %(class_name)s(OpenSCADObject):\n"
         "   def __init__(self%(args_str)s):\n"
-        "       openscad_object.__init__(self, '%(class_name)s', {%(args_pairs)s })\n"
+        "       OpenSCADObject.__init__(self, '%(class_name)s', {%(args_pairs)s })\n"
         "   \n"
         "\n"%vars())
         
@@ -708,19 +707,19 @@ def indent(s):
 # ===========
 # = Parsing =
 # ===========
-def extract_callable_signatures( scad_file_path):
+def extract_callable_signatures(scad_file_path):
     with open(scad_file_path)  as f:
         scad_code_str = f.read()
-    return parse_scad_callables( scad_code_str)
+    return parse_scad_callables(scad_code_str)
 
-def parse_scad_callables( scad_code_str): 
+def parse_scad_callables(scad_code_str): 
     callables = []
     
     # Note that this isn't comprehensive; tuples or nested data structures in 
     # a module definition will defeat it.  
     
     # Current implementation would throw an error if you tried to call a(x, y) 
-    # since Python would expect a( x);  OpenSCAD itself ignores extra arguments, 
+    # since Python would expect a(x);  OpenSCAD itself ignores extra arguments, 
     # but that's not really preferable behavior 
     
     # TODO:  write a pyparsing grammar for OpenSCAD, or, even better, use the yacc parse grammar
@@ -739,7 +738,7 @@ def parse_scad_callables( scad_code_str):
     # remove all comments from SCAD code
     scad_code_str = re.sub(no_comments_re,'', scad_code_str)
     # get all SCAD callables
-    mod_matches = re.finditer( mod_re, scad_code_str)
+    mod_matches = re.finditer(mod_re, scad_code_str)
     
     for m in mod_matches:
         callable_name = m.group('callable_name')
@@ -747,13 +746,13 @@ def parse_scad_callables( scad_code_str):
         kwargs = []        
         all_args = m.group('all_args')
         if all_args:
-            arg_matches = re.finditer( args_re, all_args)
+            arg_matches = re.finditer(args_re, all_args)
             for am in arg_matches:
                 arg_name = am.group('arg_name')
                 if am.group('default_val'):
-                    kwargs.append( arg_name)
+                    kwargs.append(arg_name)
                 else:
-                    args.append( arg_name)
+                    args.append(arg_name)
         
         callables.append( { 'name':callable_name, 'args': args, 'kwargs':kwargs})
         
@@ -766,7 +765,7 @@ for sym_dict in openscad_builtins:
     if sym_dict['name'] in builtin_literals:
         class_str = builtin_literals[ sym_dict['name']]
     else:
-        class_str = new_openscad_class_str( sym_dict['name'], sym_dict['args'], sym_dict['kwargs'])
+        class_str = new_openscad_class_str(sym_dict['name'], sym_dict['args'], sym_dict['kwargs'])
     
     exec(class_str)
     

@@ -36,7 +36,7 @@ This Python code:
         cube(10),
         sphere(15)
     )
-    print(scad_render( d))
+    print(scad_render(d))
  
 
 Generates this OpenSCAD code:
@@ -49,7 +49,7 @@ Generates this OpenSCAD code:
 That doesn't seem like such a savings, but the following SolidPython code is a 
 lot shorter (and I think a lot clearer) than the SCAD code it compiles to:
 
-    d = cube( 5) + right(5)( sphere(5)) - cylinder( r=2, h=6)
+    d = cube(5) + right(5)(sphere(5)) - cylinder(r=2, h=6)
 
 Generates this OpenSCAD code:
 
@@ -57,10 +57,10 @@ Generates this OpenSCAD code:
         union(){
             cube(5);
             translate( [5, 0,0]){
-                sphere( 5);
+                sphere(5);
             }
         }
-        cylinder( r=2, h=6);
+        cylinder(r=2, h=6);
     }
 
 # Advantages<a id="advantages"></a>
@@ -79,9 +79,9 @@ impossible in pure OpenSCAD.  Among these are:
         
     (You may need to use `sudo pip install solidpython`, depending on your environment.)
     
-*   **OR:** Download SolidPython ( Click [here](https://github.com/SolidCode/SolidPython/archive/master.zip) to download directly, or use git to pull it all down)
+*   **OR:** Download SolidPython (Click [here](https://github.com/SolidCode/SolidPython/archive/master.zip) to download directly, or use git to pull it all down)
 
-    ( Note that SolidPython also depends on the [PyEuclid](http://pypi.python.org/pypi/euclid) Vector math library, installable via `sudo pip install euclid`)
+    (Note that SolidPython also depends on the [PyEuclid](http://pypi.python.org/pypi/euclid) Vector math library, installable via `sudo pip install euclid`)
     
     *   Unzip the file, probably in ~/Downloads/SolidPython-master
     *   In a terminal, cd to location of file:
@@ -115,8 +115,8 @@ impossible in pure OpenSCAD.  Among these are:
             sphere(15)
         )
            
-*   Call ```scad_render( py_scad_obj)``` to generate SCAD code. This returns a string of valid OpenSCAD code.
-*   *or*: call ```scad_render_to_file( py_scad_obj, filepath)``` to
+*   Call ```scad_render(py_scad_obj)``` to generate SCAD code. This returns a string of valid OpenSCAD code.
+*   *or*: call ```scad_render_to_file(py_scad_obj, filepath)``` to
     store that code in a file.  
 *   If 'filepath' is open in the OpenSCAD IDE and Design =>
     'Automatic Reload and Compile' is checked (in the OpenSCAD IDE), calling
@@ -130,7 +130,7 @@ The best way to learn how SolidPython works is to look at the included example c
 If you've installed SolidPython, the  following line of Python will print(the location of )
 the examples directory:
 
-        import os, solid; print(os.path.dirname( solid.__file__) + '/examples')
+        import os, solid; print(os.path.dirname(solid.__file__) + '/examples')
         
 Or browse the example code on Github [here](https://github.com/SolidCode/SolidPython/tree/master/solid/examples)
 
@@ -142,24 +142,24 @@ Following Elmo Mäntynen's suggestion, SCAD objects override
 the basic operators + (union), - (difference), and * (intersection).
 So
 
-    c = cylinder( r=10, h=5) + cylinder( r=2, h=30)
+    c = cylinder(r=10, h=5) + cylinder(r=2, h=30)
 is the same as:
 
     c = union()(
-        cylinder( r=10, h=5),
-        cylinder( r=2, h=30)
+        cylinder(r=10, h=5),
+        cylinder(r=2, h=30)
     )
 
 Likewise:
 
-    c = cylinder( r=10, h=5)
-    c -= cylinder( r=2, h=30)
+    c = cylinder(r=10, h=5)
+    c -= cylinder(r=2, h=30)
 
 is the same as:
 
     c = difference()(
-        cylinder( r=10, h=5),
-        cylinder( r=2, h=30)
+        cylinder(r=10, h=5),
+        cylinder(r=2, h=30)
     )
 
 ### First-class Negative Space (Holes)<a id="first-class-negative-space-holes"></a>
@@ -215,18 +215,18 @@ My apologies.
 ### Arcs<a id="arcs"></a>
 I've found this useful for fillets and rounds.
 
-    arc( rad=10, start_degrees=90, end_degrees=210)
+    arc(rad=10, start_degrees=90, end_degrees=210)
 
 draws an arc of radius 10 counterclockwise from 90 to 210 degrees. 
 
-    arc_inverted( rad=10, start_degrees=0, end_degrees=90) 
+    arc_inverted(rad=10, start_degrees=0, end_degrees=90) 
 
 draws the portion of a 10x10 square NOT in a 90 degree circle of radius 10.
 This is the shape you need to add to make fillets or remove to make rounds.
 
 ### Offsets<a id="offsets"></a>
-To offset a set of points in one direction or another ( inside or outside a closed 
-figure, for example) use `solid.utils.offset_points( point_arr, offset, inside=True)`
+To offset a set of points in one direction or another (inside or outside a closed 
+figure, for example) use `solid.utils.offset_points(point_arr, offset, inside=True)`
 
 Note that, for a non-convex figure, inside and outside may be non-intuitive.  The 
 simple solution is to manually check that your offset is going in the direction you
@@ -235,7 +235,7 @@ intend, and change the boolean value of `inside` if you're not happy.
 See the code for futher explanation. Improvements on the inside/outside algorithm would be welcome.
 
 ### Extrude Along Path<a id="extrude_along_path"></a>
-`solid.utils.extrude_along_path( shape_pts, path_pts, scale_factors=None)`
+`solid.utils.extrude_along_path(shape_pts, path_pts, scale_factors=None)`
 
 See [`solid/examples/path_extrude_example.py`](https://github.com/SolidCode/SolidPython/blob/master/solid/examples/path_extrude_example.py) for use.
 
@@ -243,8 +243,8 @@ See [`solid/examples/path_extrude_example.py`](https://github.com/SolidCode/Soli
 ### Basic color library<a id="basic-color-library"></a>
 You can change an object's color by using the OpenSCAD ```color([rgba_array])``` function:
 
-    transparent_blue = color( [0,0,1, 0.5])( cube(10))  # Specify with RGB[A]
-    red_obj = color( Red)( cube( 10))                   # Or use predefined colors
+    transparent_blue = color( [0,0,1, 0.5])(cube(10))  # Specify with RGB[A]
+    red_obj = color(Red)(cube(10))                   # Or use predefined colors
 
 These colors are pre-defined in solid.utils:
 

@@ -1,5 +1,5 @@
 external_var = false;
-module steps( howmany=3){
+module steps(howmany=3){
     union(){
         for (i=[0:howmany-1]){
             translate( [i*10,0,0]){
@@ -8,7 +8,7 @@ module steps( howmany=3){
         }
     }
     
-    if ( external_var){
+    if (external_var){
         echo( "external_var passed in as true");
     }
 }
