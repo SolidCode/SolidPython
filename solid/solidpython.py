@@ -12,6 +12,11 @@
 import os, sys, re
 import inspect
 
+try:
+    import IPython
+except ImportError:
+    IPython = None
+
 openscad_builtins = [
     # 2D primitives
     {'name': 'polygon',         'args': ['points', 'paths'], 'kwargs': []} ,
@@ -630,7 +635,6 @@ class included_openscad_object( openscad_object):
         raise ValueError("Unable to find included SCAD file: "
                             "%(include_file_path)s in sys.path"%vars())
     
-
 def calling_module( stack_depth=2):
     '''
     Returns the module *2* back in the frame stack.  That means:
@@ -646,6 +650,11 @@ def calling_module( stack_depth=2):
     '''
     frm = inspect.stack()[stack_depth]
     calling_mod = inspect.getmodule( frm[0])
+
+    # IPython does its own weird things to the stack, but gives us an out
+    if IPython and not calling_mod and "ipython-input" in frm[1]:
+        calling_mod = IPython.get_ipython().user_module
+
     return calling_mod
 
 def new_openscad_class_str( class_name, args=[], kwargs=[], include_file_path=None, use_not_include=True):
