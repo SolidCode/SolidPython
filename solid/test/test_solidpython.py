@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 # -*- coding: UTF-8 -*-
-import os, sys, re
+import os
+import sys
+import re
 
 import unittest
 import tempfile
@@ -40,9 +42,11 @@ scad_test_case_templates = [
 {'name': 'intersection_for',    'kwargs': {}, 'expected': '\n\nintersection_for(n = [0, 1, 2]);', 'args': {'n': [0, 1, 2]}, },
 ]
 
+
 class TestSolidPython(DiffOutput):
     # test cases will be dynamically added to this instance
     scad_path = ['solid', '..', '.']
+
     def expand_scad_path(self, filename):
         for path in self.scad_path:
             full_path = os.path.join(path, filename)
@@ -54,170 +58,167 @@ class TestSolidPython(DiffOutput):
         a = cube(2)
         b = sphere(2)
         expected = '\n\nunion() {\n\tcube(size = 2);\n\tsphere(r = 2);\n}'
-        actual = scad_render(a+b)
+        actual = scad_render(a + b)
         self.assertEqual(expected, actual)
-    
+
     def test_infix_difference(self):
         a = cube(2)
         b = sphere(2)
         expected = '\n\ndifference() {\n\tcube(size = 2);\n\tsphere(r = 2);\n}'
-        actual = scad_render(a-b)
+        actual = scad_render(a - b)
         self.assertEqual(expected, actual)
-    
+
     def test_infix_intersection(self):
         a = cube(2)
         b = sphere(2)
         expected = '\n\nintersection() {\n\tcube(size = 2);\n\tsphere(r = 2);\n}'
-        actual = scad_render(a*b)
+        actual = scad_render(a * b)
         self.assertEqual(expected, actual)
-    
+
     def test_parse_scad_callables(self):
         test_str = (""
-        "module hex (width=10, height=10,    \n"
-        "            flats= true, center=false){}\n"
-        "function righty (angle=90) = 1;\n"
-        "function lefty(avar) = 2;\n"
-        "module more(a=[something, other]) {}\n"
-        "module pyramid(side=10, height=-1, square=false, centerHorizontal=true, centerVertical=false){}\n"
-        "module no_comments(arg=10,   //test comment\n"
-        "other_arg=2, /* some extra comments\n"
-        "on empty lines */\n"
-        "last_arg=4){}\n"
-        "module float_arg(arg=1.0){}\n")
-        expected = [{'args': [], 'name': 'hex', 'kwargs': ['width', 'height', 'flats', 'center']}, {'args': [], 'name': 'righty', 'kwargs': ['angle']}, {'args': ['avar'], 'name': 'lefty', 'kwargs': []}, {'args': [], 'name': 'more', 'kwargs': ['a']}, {'args': [], 'name': 'pyramid', 'kwargs': ['side', 'height', 'square', 'centerHorizontal', 'centerVertical']}, {'args': [], 'name': 'no_comments', 'kwargs': ['arg', 'other_arg', 'last_arg']}, {'args': [], 'name': 'float_arg', 'kwargs': ['arg']}]
+                    "module hex (width=10, height=10,    \n"
+                    "            flats= true, center=false){}\n"
+                    "function righty (angle=90) = 1;\n"
+                    "function lefty(avar) = 2;\n"
+                    "module more(a=[something, other]) {}\n"
+                    "module pyramid(side=10, height=-1, square=false, centerHorizontal=true, centerVertical=false){}\n"
+                    "module no_comments(arg=10,   //test comment\n"
+                    "other_arg=2, /* some extra comments\n"
+                    "on empty lines */\n"
+                    "last_arg=4){}\n"
+                    "module float_arg(arg=1.0){}\n")
+        expected = [{'args': [], 'name': 'hex', 'kwargs': ['width', 'height', 'flats', 'center']}, {'args': [], 'name': 'righty', 'kwargs': ['angle']}, {'args': ['avar'], 'name': 'lefty', 'kwargs': []}, {'args': [], 'name': 'more', 'kwargs': ['a']}, {
+            'args': [], 'name': 'pyramid', 'kwargs': ['side', 'height', 'square', 'centerHorizontal', 'centerVertical']}, {'args': [], 'name': 'no_comments', 'kwargs': ['arg', 'other_arg', 'last_arg']}, {'args': [], 'name': 'float_arg', 'kwargs': ['arg']}]
         actual = parse_scad_callables(test_str)
         self.assertEqual(expected, actual)
-        
+
     def test_use(self):
         include_file = self.expand_scad_path("examples/scad_to_include.scad")
         use(include_file)
         a = steps(3)
         actual = scad_render(a)
-        
-        abs_path = a._get_include_path(include_file)        
-        expected = "use <%s>\n\n\nsteps(howmany = 3);"%abs_path
-        self.assertEqual(expected, actual)     
-        
+
+        abs_path = a._get_include_path(include_file)
+        expected = "use <%s>\n\n\nsteps(howmany = 3);" % abs_path
+        self.assertEqual(expected, actual)
+
     def test_include(self):
         include_file = self.expand_scad_path("examples/scad_to_include.scad")
-        self.assertIsNotNone(
-            include_file,
-            'examples/scad_to_include.scad not found'
-        )
+        self.assertIsNotNone(include_file, 'examples/scad_to_include.scad not found')
         include(include_file)
         a = steps(3)
-        
+
         actual = scad_render(a)
-        abs_path = a._get_include_path(include_file)        
-        expected = "include <%s>\n\n\nsteps(howmany = 3);"%abs_path
-        self.assertEqual(expected, actual)        
-    
+        abs_path = a._get_include_path(include_file)
+        expected = "include <%s>\n\n\nsteps(howmany = 3);" % abs_path
+        self.assertEqual(expected, actual)
+
     def test_extra_args_to_included_scad(self):
         include_file = self.expand_scad_path("examples/scad_to_include.scad")
         use(include_file)
         a = steps(3, external_var=True)
         actual = scad_render(a)
-        
-        abs_path = a._get_include_path(include_file)        
-        expected = "use <%s>\n\n\nsteps(external_var = true, howmany = 3);"%abs_path
-        self.assertEqual(expected, actual)         
-    
+
+        abs_path = a._get_include_path(include_file)
+        expected = "use <%s>\n\n\nsteps(external_var = true, howmany = 3);" % abs_path
+        self.assertEqual(expected, actual)
+
     def test_background(self):
         a = cube(10)
         expected = '\n\n%cube(size = 10);'
         actual = scad_render(background(a))
         self.assertEqual(expected, actual)
-    
+
     def test_debug(self):
         a = cube(10)
-        expected =  '\n\n#cube(size = 10);'
+        expected = '\n\n#cube(size = 10);'
         actual = scad_render(debug(a))
         self.assertEqual(expected, actual)
-    
+
     def test_disable(self):
         a = cube(10)
-        expected =  '\n\n*cube(size = 10);'
+        expected = '\n\n*cube(size = 10);'
         actual = scad_render(disable(a))
         self.assertEqual(expected, actual)
-    
+
     def test_root(self):
         a = cube(10)
         expected = '\n\n!cube(size = 10);'
         actual = scad_render(root(a))
         self.assertEqual(expected, actual)
-    
+
     def test_explicit_hole(self):
-        a = cube(10, center=True) + hole()(cylinder(2, 20, center=True))        
+        a = cube(10, center=True) + hole()(cylinder(2, 20, center=True))
         expected = '\n\ndifference(){\n\tunion() {\n\t\tcube(center = true, size = 10);\n\t}\n\t/* Holes Below*/\n\tunion(){\n\t\tcylinder(center = true, h = 20, r = 2);\n\t} /* End Holes */ \n}'
         actual = scad_render(a)
         self.assertEqual(expected, actual)
-    
+
     def test_hole_transform_propagation(self):
         # earlier versions of holes had problems where a hole
         # that was used a couple places wouldn't propagate correctly.
         # Confirm that's still happening as it's supposed to
-        h = hole()( 
-                rotate(a=90, v=[0, 1, 0])( 
+        h = hole()(
+                rotate(a=90, v=[0, 1, 0])(
                     cylinder(2, 20, center=True)
                 )
             )
-    
+
         h_vert = rotate(a=-90, v=[0, 1, 0])(
-                    h
-                )
-    
+            h
+        )
+
         a = cube(10, center=True) + h + h_vert
         expected = '\n\ndifference(){\n\tunion() {\n\t\tunion() {\n\t\t\tcube(center = true, size = 10);\n\t\t}\n\t\trotate(a = -90, v = [0, 1, 0]) {\n\t\t}\n\t}\n\t/* Holes Below*/\n\tunion(){\n\t\tunion(){\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(center = true, h = 20, r = 2);\n\t\t\t}\n\t\t}\n\t\trotate(a = -90, v = [0, 1, 0]){\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(center = true, h = 20, r = 2);\n\t\t\t}\n\t\t}\n\t} /* End Holes */ \n}'
         actual = scad_render(a)
         self.assertEqual(expected, actual)
 
-
     def test_separate_part_hole(self):
-        # Make two parts, a block with hole, and a cylinder that 
+        # Make two parts, a block with hole, and a cylinder that
         # fits inside it.  Make them separate parts, meaning
         # holes will be defined at the level of the part_root node,
         # not the overall node.  This allows us to preserve holes as
-        # first class space, but then to actually fill them in with 
+        # first class space, but then to actually fill them in with
         # the parts intended to fit in them.
         b = cube(10, center=True)
         c = cylinder(r=2, h=12, center=True)
         p1 = b - hole()(c)
-        
+
         # Mark this cube-with-hole as a separate part from the cylinder
         p1 = part()(p1)
-        
+
         # This fits in the hole.  If p1 is set as a part_root, it will all appear.
         # If not, the portion of the cylinder inside the cube will not appear,
         # since it would have been removed by the hole in p1
         p2 = cylinder(r=1.5, h=14, center=True)
-        
+
         a = p1 + p2
-        
+
         expected = '\n\nunion() {\n\tdifference(){\n\t\tdifference() {\n\t\t\tcube(center = true, size = 10);\n\t\t}\n\t\t/* Holes Below*/\n\t\tdifference(){\n\t\t\tcylinder(center = true, h = 12, r = 2);\n\t\t} /* End Holes */ \n\t}\n\tcylinder(center = true, h = 14, r = 1.5000000000);\n}'
         actual = scad_render(a)
         self.assertEqual(expected, actual)
-    
+
     def test_scad_render_animated_file(self):
         def my_animate(_time=0):
             import math
             # _time will range from 0 to 1, not including 1
             rads = _time * 2 * math.pi
             rad = 15
-            c = translate( [rad*math.cos(rads), rad*math.sin(rads)])(square(10))
+            c = translate([rad * math.cos(rads), rad * math.sin(rads)])(square(10))
             return c
         tmp = tempfile.NamedTemporaryFile()
-        
-        scad_render_animated_file(my_animate, steps=2, back_and_forth=False, 
-                filepath=tmp.name, include_orig_code=False)
+
+        scad_render_animated_file(my_animate, steps=2, back_and_forth=False,
+                                  filepath=tmp.name, include_orig_code=False)
         tmp.seek(0)
         actual = tmp.read()
         expected = b'\nif ($t >= 0.0 && $t < 0.5){   \n\ttranslate(v = [15.0000000000, 0.0000000000]) {\n\t\tsquare(size = 10);\n\t}\n}\nif ($t >= 0.5 && $t < 1.0){   \n\ttranslate(v = [-15.0000000000, 0.0000000000]) {\n\t\tsquare(size = 10);\n\t}\n}\n'
         tmp.close()
         self.assertEqual(expected, actual)
-        
+
     def test_scad_render_to_file(self):
         a = circle(10)
-        
+
         # No header, no included original code
         tmp = tempfile.NamedTemporaryFile()
         scad_render_to_file(a, filepath=tmp.name, include_orig_code=False)
@@ -226,46 +227,47 @@ class TestSolidPython(DiffOutput):
         expected = b'\n\ncircle(r = 10);'
         tmp.close()
         self.assertEqual(expected, actual)
-        
+
         # Header
         tmp = tempfile.NamedTemporaryFile()
         scad_render_to_file(a, filepath=tmp.name, include_orig_code=False,
-                     file_header='$fn = 24;')
+                            file_header='$fn = 24;')
         tmp.seek(0)
         actual = tmp.read()
         expected = b'$fn = 24;\n\ncircle(r = 10);'
         tmp.close()
         self.assertEqual(expected, actual)
-        
+
         # TODO: test include_orig_code=True, but that would have to
         # be done from a separate file, or include everything in this one
-    
-        
+
+
 def single_test(test_dict):
     name, args, kwargs, expected = test_dict['name'], test_dict['args'], test_dict['kwargs'], test_dict['expected']
-    
+
     def test(self):
-        call_str= name + "(" 
+        call_str = name + "("
         for k, v in args.items():
-            call_str += "%s=%s, "%(k,v)
+            call_str += "%s=%s, " % (k, v)
         for k, v in kwargs.items():
-            call_str += "%s=%s, "%(k,v)
+            call_str += "%s=%s, " % (k, v)
         call_str += ')'
-        
+
         scad_obj = eval(call_str)
         actual = scad_render(scad_obj)
-        
+
         self.assertEqual(expected, actual)
-    
+
     return test
-    
+
+
 def generate_cases_from_templates():
     for test_dict in scad_test_case_templates:
         test = single_test(test_dict)
-        test_name = "test_%(name)s"%test_dict
-        setattr(TestSolidPython, test_name, test)     
+        test_name = "test_%(name)s" % test_dict
+        setattr(TestSolidPython, test_name, test)
 
 
 if __name__ == '__main__':
-    generate_cases_from_templates()                           
+    generate_cases_from_templates()
     unittest.main()

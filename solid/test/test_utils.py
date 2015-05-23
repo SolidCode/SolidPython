@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 # -*- coding: UTF-8 -*-
-import os, sys, re
+import os
+import sys
+import re
 
 import unittest
 
@@ -11,7 +13,7 @@ import difflib
 from solid.test.ExpandedTestCase import DiffOutput
 
 
-tri = [Point3(0,0,0), Point3(10,0,0), Point3(0,10,0)]
+tri = [Point3(0, 0, 0), Point3(10, 0, 0), Point3(0, 10, 0)]
 scad_test_cases = [
     (                               up,                 [2],   '\n\ntranslate(v = [0, 0, 2]);'),
     (                               down,               [2],   '\n\ntranslate(v = [0, 0, -2]);'),
@@ -54,19 +56,20 @@ other_test_cases = [
 class TestSPUtils(DiffOutput):
     # Test cases will be dynamically added to this instance
     # using the test case arrays above
-    
+
     def test_split_body_planar(self):
         offset = [10, 10, 10]
         body = translate(offset)(sphere(20))
-        body_bb = BoundingBox( [40, 40, 40], offset)
+        body_bb = BoundingBox([40, 40, 40], offset)
         actual = []
-        for split_dir in [ RIGHT_VEC, FORWARD_VEC, UP_VEC]:
+        for split_dir in [RIGHT_VEC, FORWARD_VEC, UP_VEC]:
             actual_tuple = split_body_planar(body, body_bb, cutting_plane_normal=split_dir, cut_proportion=0.25)
             actual.append(actual_tuple)
-        
-        # Ignore the bounding box object that come back, taking only the SCAD objects
-        actual = [scad_render(a) for splits in actual for a in splits[::2] ]
-        
+
+        # Ignore the bounding box object that come back, taking only the SCAD
+        # objects
+        actual = [scad_render(a) for splits in actual for a in splits[::2]]
+
         expected = ['\n\nintersection() {\n\ttranslate(v = [10, 10, 10]) {\n\t\tsphere(r = 20);\n\t}\n\ttranslate(v = [-5.0000000000, 10, 10]) {\n\t\tcube(center = true, size = [10.0000000000, 40, 40]);\n\t}\n}',
                     '\n\nintersection() {\n\ttranslate(v = [10, 10, 10]) {\n\t\tsphere(r = 20);\n\t}\n\ttranslate(v = [15.0000000000, 10, 10]) {\n\t\tcube(center = true, size = [30.0000000000, 40, 40]);\n\t}\n}',
                     '\n\nintersection() {\n\ttranslate(v = [10, 10, 10]) {\n\t\tsphere(r = 20);\n\t}\n\ttranslate(v = [10, -5.0000000000, 10]) {\n\t\tcube(center = true, size = [40, 10.0000000000, 40]);\n\t}\n}',
@@ -75,67 +78,68 @@ class TestSPUtils(DiffOutput):
                     '\n\nintersection() {\n\ttranslate(v = [10, 10, 10]) {\n\t\tsphere(r = 20);\n\t}\n\ttranslate(v = [10, 10, 15.0000000000]) {\n\t\tcube(center = true, size = [40, 40, 30.0000000000]);\n\t}\n}'
                     ]
         self.assertEqual(actual, expected)
-    
+
     def test_fillet_2d_add(self):
-        pts = [  [0,5], [5,5], [5,0], [10,0], [10,10], [0,10],]
+        pts = [[0, 5], [5, 5], [5, 0], [10, 0], [10, 10], [0, 10], ]
         p = polygon(pts)
         newp = fillet_2d(euclidify(pts[0:3], Point3), orig_poly=p, fillet_rad=2, remove_material=False)
         expected = '\n\nunion() {\n\tpolygon(paths = [[0, 1, 2, 3, 4, 5]], points = [[0, 5], [5, 5], [5, 0], [10, 0], [10, 10], [0, 10]]);\n\ttranslate(v = [3.0000000000, 3.0000000000, 0.0000000000]) {\n\t\tdifference() {\n\t\t\tintersection() {\n\t\t\t\trotate(a = 358.0000000000) {\n\t\t\t\t\ttranslate(v = [-998, 0]) {\n\t\t\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\trotate(a = 452.0000000000) {\n\t\t\t\t\ttranslate(v = [-998, -1000]) {\n\t\t\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t\tcircle(r = 2);\n\t\t}\n\t}\n}'
         actual = scad_render(newp)
         self.assertEqual(expected, actual)
-    
+
     def test_fillet_2d_remove(self):
         pts = tri
         poly = polygon(euc_to_arr(tri))
-        
+
         newp = fillet_2d(tri, orig_poly=poly, fillet_rad=2, remove_material=True)
         expected = '\n\ndifference() {\n\tpolygon(paths = [[0, 1, 2]], points = [[0, 0, 0], [10, 0, 0], [0, 10, 0]]);\n\ttranslate(v = [5.1715728753, 2.0000000000, 0.0000000000]) {\n\t\tdifference() {\n\t\t\tintersection() {\n\t\t\t\trotate(a = 268.0000000000) {\n\t\t\t\t\ttranslate(v = [-998, 0]) {\n\t\t\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\trotate(a = 407.0000000000) {\n\t\t\t\t\ttranslate(v = [-998, -1000]) {\n\t\t\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t\tcircle(r = 2);\n\t\t}\n\t}\n}'
         actual = scad_render(newp)
         if expected != actual:
             print(''.join(difflib.unified_diff(expected, actual)))
         self.assertEqual(expected, actual)
-        
 
 
-           
 def test_generator_scad(func, args, expected):
     def test_scad(self):
-        scad_obj = func( *args)
+        scad_obj = func(*args)
         actual = scad_render(scad_obj)
         self.assertEqual(expected, actual)
-    
+
     return test_scad
+
 
 def test_generator_no_scad(func, args, expected):
     def test_no_scad(self):
-        actual = str(func( *args))
+        actual = str(func(*args))
         self.assertEqual(expected, actual)
-    
+
     return test_no_scad
+
 
 def read_test_tuple(test_tuple):
     if len(test_tuple) == 3:
         # If test name not supplied, create it programmatically
         func, args, expected = test_tuple
-        test_name = 'test_%s'%func.__name__
+        test_name = 'test_%s' % func.__name__
     elif len(test_tuple) == 4:
         test_name, func, args, expected = test_tuple
-        test_name = 'test_%s'%test_name
+        test_name = 'test_%s' % test_name
     else:
-        print("test_tuple has %d args :%s"%(len(test_tuple), test_tuple)    )
-    return test_name, func, args, expected    
+        print("test_tuple has %d args :%s" % (len(test_tuple), test_tuple))
+    return test_name, func, args, expected
 
-def create_tests( ):
+
+def create_tests():
     for test_tuple in scad_test_cases:
         test_name, func, args, expected = read_test_tuple(test_tuple)
         test = test_generator_scad(func, args, expected)
-        setattr(TestSPUtils, test_name, test)     
-        
+        setattr(TestSPUtils, test_name, test)
+
     for test_tuple in other_test_cases:
         test_name, func, args, expected = read_test_tuple(test_tuple)
         test = test_generator_no_scad(func, args, expected)
-        setattr(TestSPUtils, test_name, test)      
+        setattr(TestSPUtils, test_name, test)
 
 if __name__ == '__main__':
-    create_tests( )
+    create_tests()
     unittest.main()
