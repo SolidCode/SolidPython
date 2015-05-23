@@ -28,14 +28,15 @@ if __name__ == '__main__':
     #       at the bottom of the OpenSCAD window
     # - FPS & Steps are flexible.  For a start, set both to 20 
     #       play around from there      
-    scad_render_animated_file( my_animate, # A function that takes a float argument in [0,1)
+    scad_render_animated_file( my_animate, # A function that takes a float argument
+                                           # called '_time' in [0,1)
                                            # and returns an OpenSCAD object
-                                steps=20,  # Number of steps to create one complete motion
-                                back_and_forth=True, # If true, runs the complete motion
-                                                     # forward and then in reverse,
-                                                     # to avoid discontinuity
-                                filepath=file_out,   # Output file 
-                                include_orig_code=True ) # Append SolidPython code
+                               steps=20,   # Number of steps to create one complete motion
+                               back_and_forth=True, # If true, runs the complete motion
+                                                    # forward and then in reverse,
+                                                    # to avoid discontinuity
+                               filepath=file_out,   # Output file 
+                               include_orig_code=True ) # Append SolidPython code
                                                          # to the end of the generated
                                                          # OpenSCAD code.
 
