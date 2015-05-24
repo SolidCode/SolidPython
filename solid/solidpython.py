@@ -11,6 +11,8 @@
 
 import os, sys, re
 import inspect
+import subprocess
+import tempfile
 
 openscad_builtins = [
     # 2D primitives
