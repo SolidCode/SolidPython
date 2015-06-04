@@ -244,18 +244,18 @@ See [`solid/examples/path_extrude_example.py`](https://github.com/SolidCode/Soli
 You can change an object's color by using the OpenSCAD ```color([rgba_array])``` function:
 
     transparent_blue = color([0,0,1, 0.5])(cube(10))  # Specify with RGB[A]
-    red_obj = color(Red)(cube(10))                   # Or use predefined colors
+    red_obj = color(Red)(cube(10))                    # Or use predefined colors
 
 These colors are pre-defined in solid.utils:
 
 <table border="0" cellspacing="5" cellpadding="0">
-    <tr><td>* Red        </td><td>* Green      </td><td>* Blue       </td></tr>
-    <tr><td>* Cyan       </td><td>* Magenta    </td><td>* Yellow     </td></tr>
-    <tr><td>* Black      </td><td>* White      </td><td>* Transparent</td></tr>
-    <tr><td>* Oak        </td><td>* Pine       </td><td>* Birch      </td></tr>
-    <tr><td>* Iron       </td><td>* Steel      </td><td>* Stainless  </td></tr>
-    <tr><td>* Aluminum   </td><td>* Brass      </td><td>* BlackPaint </td></tr>
-    <tr><td>* FiberBoard </td></tr>
+    <tr><td>Red        </td><td>Green      </td><td>Blue       </td></tr>
+    <tr><td>Cyan       </td><td>Magenta    </td><td>Yellow     </td></tr>
+    <tr><td>Black      </td><td>White      </td><td>Transparent</td></tr>
+    <tr><td>Oak        </td><td>Pine       </td><td>Birch      </td></tr>
+    <tr><td>Iron       </td><td>Steel      </td><td>Stainless  </td></tr>
+    <tr><td>Aluminum   </td><td>Brass      </td><td>BlackPaint </td></tr>
+    <tr><td>FiberBoard </td></tr>
 </table>
 
 They're a conversion of the materials in the [MCAD OpenSCAD library](https://github.com/openscad/MCAD), as seen [here] (https://github.com/openscad/MCAD/blob/master/materials.scad).
