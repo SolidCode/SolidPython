@@ -24,6 +24,7 @@ BACK_VEC    = ( 0,-1, 0)
 # ==========
 # = Colors =
 # ========== 
+# From Hans Häggström's materials.scad in MCAD: https://github.com/openscad/MCAD
 Red         = (1, 0, 0)
 Green       = (0, 1, 0)
 Blue        = (0, 0, 1)

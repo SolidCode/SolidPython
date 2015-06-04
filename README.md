@@ -243,7 +243,7 @@ See [`solid/examples/path_extrude_example.py`](https://github.com/SolidCode/Soli
 ### Basic color library<a id="basic-color-library"></a>
 You can change an object's color by using the OpenSCAD ```color([rgba_array])``` function:
 
-    transparent_blue = color( [0,0,1, 0.5])(cube(10))  # Specify with RGB[A]
+    transparent_blue = color([0,0,1, 0.5])(cube(10))  # Specify with RGB[A]
     red_obj = color(Red)(cube(10))                   # Or use predefined colors
 
 These colors are pre-defined in solid.utils:
@@ -258,8 +258,7 @@ These colors are pre-defined in solid.utils:
     <tr><td>* FiberBoard </td></tr>
 </table>
 
-I took this from someone on Thingiverse and I'm ashamed that I can't find the 
-original source.  I owe someone some attribution.
+They're a conversion of the materials in the [MCAD OpenSCAD library](https://github.com/openscad/MCAD), as seen [here] (https://github.com/openscad/MCAD/blob/master/materials.scad).
     
 ### Bill Of Materials<a id="bill-of-materials"></a>
 Put ```@bom_part()``` before any method that defines a part, then 
