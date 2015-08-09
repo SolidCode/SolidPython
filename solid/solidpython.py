@@ -14,112 +14,8 @@ import inspect
 import subprocess
 import tempfile
 
-openscad_builtins = [
-    # 2D primitives
-    {'name': 'polygon',         'args': ['points', 'paths'], 'kwargs': []} ,
-    {'name': 'circle',          'args': [],         'kwargs': ['r', 'd', 'segments']} ,
-    {'name': 'square',          'args': [],         'kwargs': ['size', 'center']} ,
-    
-    # 3D primitives
-    {'name': 'sphere',          'args': [],         'kwargs': ['r', 'd', 'segments']} ,
-    {'name': 'cube',            'args': [],         'kwargs': ['size', 'center']} ,
-    {'name': 'cylinder',        'args': [],         'kwargs': ['r','h','r1', 'r2', 'd', 'd1', 'd2', 'center', 'segments']}  ,
-    {'name': 'polyhedron',      'args': ['points', 'faces' ], 'kwargs': ['convexity', 'triangles']} ,
-    
-    # Boolean operations
-    {'name': 'union',           'args': [],         'kwargs': []} ,
-    {'name': 'intersection',    'args': [],         'kwargs': []} ,
-    {'name': 'difference',      'args': [],         'kwargs': []} ,
-    {'name': 'hole',            'args': [],         'kwargs': []} ,
-    {'name': 'part',            'args': [],         'kwargs': []} ,
-    
-    # Transforms
-    {'name': 'translate',       'args': [],         'kwargs': ['v']} ,
-    {'name': 'scale',           'args': [],         'kwargs': ['v']} ,
-    {'name': 'rotate',          'args': [],         'kwargs': ['a', 'v']} ,
-    {'name': 'mirror',          'args': ['v'],      'kwargs': []},
-    {'name': 'multmatrix',      'args': ['m'],      'kwargs': []},
-    {'name': 'color',           'args': ['c'],      'kwargs': []},
-    {'name': 'minkowski',       'args': [],         'kwargs': []},
-    {'name': 'hull',            'args': [],         'kwargs': []},
-    {'name': 'render',          'args': [],         'kwargs': ['convexity']}, 
-        
-    # 2D to 3D transitions
-    # FIXME: linear_extrude now has a scale parameter as of OpenSCAD 13.06 -ETJ 20 Jan 2014
-    # Also: Check release notes for any other changes to the language, here:
-    # https://github.com/openscad/openscad/blob/master/RELEASE_NOTES
-    # Add Colors as here: http://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Transformations
-    {'name': 'linear_extrude',  'args': [],         'kwargs': ['height', 'center', 'convexity', 'twist','slices']} ,
-    {'name': 'rotate_extrude',  'args': [],         'kwargs': ['convexity', 'segments']} ,
-    {'name': 'dxf_linear_extrude', 'args': ['file'],'kwargs': ['layer', 'height', 'center', 'convexity', 'twist', 'slices']} ,
-    {'name': 'projection',      'args': [],         'kwargs': ['cut']} ,
-    {'name': 'surface',         'args': ['file'],   'kwargs': ['center','convexity','invert']} ,
-    {'name': 'text',            'args': ['text'],   'kwargs': ['size','font','halign','valign','spacing','direction','language','script','segments']} ,
 
-    #Child/ren
-    {'name': 'child',           'args': [],         'kwargs': ['index', 'vector', 'range']} ,
-    {'name': 'children',        'args': [],         'kwargs': ['index', 'vector', 'range']} ,
-    
-    # FIXME: support 'resize' as well -ETJ 20 Jan 2014
-    
-    # Import/export
-    {'name': 'import_stl',      'args': ['file'],   'kwargs': ['layer', 'origin']} ,
-    {'name': 'import_dxf',      'args': ['file'],   'kwargs': ['layer', 'origin']},
-    {'name': 'import_',         'args': ['file'],   'kwargs': ['layer', 'origin']},
 
-    
-    # Modifiers; These are implemented by calling e.g. 
-    #   obj.set_modifier( '*') or 
-    #   obj.set_modifier('disable') 
-    #   disable(obj)
-    # on  an existing object.
-    # {'name': 'background',      'args': [],         'kwargs': []},     #   %{}
-    # {'name': 'debug',           'args': [],         'kwargs': []} ,    #   #{}
-    # {'name': 'root',            'args': [],         'kwargs': []} ,    #   !{}
-    # {'name': 'disable',         'args': [],         'kwargs': []} ,    #   *{}
-    
-    {'name': 'intersection_for', 'args': ['n'],     'kwargs': []}  ,    #   e.g.: intersection_for(n=[1..6]){}
-    
-    # Not really needed for Python.  Also needs a **args argument so it accepts anything
-    {'name': 'assign',          'args': [],         'kwargs': []}   
-]
-
-# Some functions need custom code in them; put that code here
-builtin_literals = {
-    'polygon': '''class polygon(OpenSCADObject):
-        def __init__(self, points, paths=None):
-            if not paths:
-                paths = [ list(range(len(points)))]
-            OpenSCADObject.__init__(self, 'polygon', {'points':points, 'paths': paths})
-        
-            ''',
-    'hole': '''class hole(OpenSCADObject):
-    def __init__(self):
-        OpenSCADObject.__init__(self, 'hole', {})
-        self.set_hole(True)
-    
-    ''',
-    'part': '''class part(OpenSCADObject):
-    def __init__(self):
-        OpenSCADObject.__init__(self, 'part', {})
-        self.set_part_root(True)
-    ''',
-    # Import, import_dxf, and import_stl all resolve to the same OpenSCAD
-    # keyword, 'import'
-    'import_': '''class import_(OpenSCADObject):
-    def __init__(self, file, origin=(0,0), layer=None):
-        OpenSCADObject.__init__(self, 'import', {'file':file, 'origin':origin, 'layer':layer})
-    ''',
-    'import_dxf': '''class import_dxf(OpenSCADObject):
-    def __init__(self, file, origin=(0,0), layer=None):
-        OpenSCADObject.__init__(self, 'import', {'file':file, 'origin':origin, 'layer':layer})
-    ''',
-    'import_stl': '''class import_stl(OpenSCADObject):
-    def __init__(self, file, origin=(0,0), layer=None):
-        OpenSCADObject.__init__(self, 'import', {'file':file, 'origin':origin, 'layer':layer})
-    '''
-
-}
 # These are features added to SolidPython but NOT in OpenSCAD.
 # Mark them for special treatment
 non_rendered_classes = ['hole', 'part']
@@ -815,12 +711,219 @@ def parse_scad_callables(scad_code_str):
     return callables
 
 
-# Dynamically add all builtins to this namespace on import
-for sym_dict in openscad_builtins:
-    # entries in 'builtin_literals' override the entries in 'openscad_builtins'
-    if sym_dict['name'] in builtin_literals:
-        class_str = builtin_literals[sym_dict['name']]
-    else:
-        class_str = new_openscad_class_str(sym_dict['name'], sym_dict['args'], sym_dict['kwargs'])
+# ===============================
+# Classes for OpenSCAD builtins =
+# ===============================
+class polygon(OpenSCADObject):
+    def __init__(self, points, paths=None):
+        if not paths:
+            paths = [list(range(len(points)))]
+        OpenSCADObject.__init__(self, 'polygon',
+                                {'points': points, 'paths': paths})
 
-    exec(class_str)
+
+class circle(OpenSCADObject):
+    def __init__(self, r=None, d=None, segments=None):
+        OpenSCADObject.__init__(self, 'circle',
+                                {'r': r, 'd': d, 'segments': segments})
+
+
+class square(OpenSCADObject):
+    def __init__(self, size=None, center=None):
+        OpenSCADObject.__init__(self, 'square',
+                                {'size': size, 'center': center})
+
+
+class sphere(OpenSCADObject):
+    def __init__(self, r=None, d=None, segments=None):
+        OpenSCADObject.__init__(self, 'sphere',
+                                {'r': r, 'd': d, 'segments': segments})
+
+
+class cube(OpenSCADObject):
+    def __init__(self, size=None, center=None):
+        OpenSCADObject.__init__(self, 'cube',
+                                {'size': size, 'center': center})
+
+
+class cylinder(OpenSCADObject):
+    def __init__(self, r=None, h=None, r1=None, r2=None, d=None, d1=None,
+                 d2=None, center=None, segments=None):
+        OpenSCADObject.__init__(self, 'cylinder',
+                                {'r': r, 'h': h, 'r1': r1, 'r2': r2, 'd': d,
+                                 'd1': d1, 'd2': d2, 'center': center,
+                                 'segments': segments})
+
+
+class polyhedron(OpenSCADObject):
+    def __init__(self, points, faces, convexity=None, triangles=None):
+        OpenSCADObject.__init__(self, 'polyhedron',
+                                {'points': points, 'faces': faces,
+                                 'convexity': convexity,
+                                 'triangles': triangles})
+
+
+class union(OpenSCADObject):
+    def __init__(self):
+        OpenSCADObject.__init__(self, 'union', {})
+
+
+class intersection(OpenSCADObject):
+    def __init__(self):
+        OpenSCADObject.__init__(self, 'intersection', {})
+
+
+class difference(OpenSCADObject):
+    def __init__(self):
+        OpenSCADObject.__init__(self, 'difference', {})
+
+
+class hole(OpenSCADObject):
+    def __init__(self):
+        OpenSCADObject.__init__(self, 'hole', {})
+        self.set_hole(True)
+
+
+class part(OpenSCADObject):
+    def __init__(self):
+        OpenSCADObject.__init__(self, 'part', {})
+        self.set_part_root(True)
+
+
+class translate(OpenSCADObject):
+    def __init__(self, v=None):
+        OpenSCADObject.__init__(self, 'translate', {'v': v})
+
+
+class scale(OpenSCADObject):
+    def __init__(self, v=None):
+        OpenSCADObject.__init__(self, 'scale', {'v': v})
+
+
+class rotate(OpenSCADObject):
+    def __init__(self, a=None, v=None):
+        OpenSCADObject.__init__(self, 'rotate', {'a': a, 'v': v})
+
+
+class mirror(OpenSCADObject):
+    def __init__(self, v):
+        OpenSCADObject.__init__(self, 'mirror', {'v': v})
+
+
+class multmatrix(OpenSCADObject):
+    def __init__(self, m):
+        OpenSCADObject.__init__(self, 'multmatrix', {'m': m})
+
+
+class color(OpenSCADObject):
+    def __init__(self, c):
+        OpenSCADObject.__init__(self, 'color', {'c': c})
+
+
+class minkowski(OpenSCADObject):
+    def __init__(self):
+        OpenSCADObject.__init__(self, 'minkowski', {})
+
+
+class hull(OpenSCADObject):
+    def __init__(self):
+        OpenSCADObject.__init__(self, 'hull', {})
+
+
+class render(OpenSCADObject):
+    def __init__(self, convexity=None):
+        OpenSCADObject.__init__(self, 'render', {'convexity': convexity})
+
+
+class linear_extrude(OpenSCADObject):
+    def __init__(self, height=None, center=None, convexity=None, twist=None,
+                 slices=None):
+        OpenSCADObject.__init__(self, 'linear_extrude',
+                                {'height': height, 'center': center,
+                                 'convexity': convexity, 'twist': twist,
+                                 'slices': slices})
+
+
+class rotate_extrude(OpenSCADObject):
+    def __init__(self, convexity=None, segments=None):
+        OpenSCADObject.__init__(self, 'rotate_extrude',
+                                {'convexity': convexity, 'segments': segments})
+
+
+class dxf_linear_extrude(OpenSCADObject):
+    def __init__(self, file, layer=None, height=None, center=None,
+                 convexity=None, twist=None, slices=None):
+        OpenSCADObject.__init__(self, 'dxf_linear_extrude',
+                                {'file': file, 'layer': layer,
+                                 'height': height, 'center': center,
+                                 'convexity': convexity, 'twist': twist,
+                                 'slices': slices})
+
+
+class projection(OpenSCADObject):
+    def __init__(self, cut=None):
+        OpenSCADObject.__init__(self, 'projection', {'cut': cut})
+
+
+class surface(OpenSCADObject):
+    def __init__(self, file, center=None, convexity=None, invert=None):
+        OpenSCADObject.__init__(self, 'surface',
+                                {'file': file, 'center': center,
+                                 'convexity': convexity, 'invert': invert})
+
+
+class text(OpenSCADObject):
+    def __init__(self, text, size=None, font=None, halign=None, valign=None,
+                 spacing=None, direction=None, language=None, script=None,
+                 segments=None):
+        OpenSCADObject.__init__(self, 'text',
+                                {'text': text, 'size': size, 'font': font,
+                                 'halign': halign, 'valign': valign,
+                                 'spacing': spacing, 'direction': direction,
+                                 'language': language, 'script': script,
+                                 'segments': segments})
+
+
+class child(OpenSCADObject):
+    def __init__(self, index=None, vector=None, range=None):
+        OpenSCADObject.__init__(self, 'child',
+                                {'index': index, 'vector': vector,
+                                 'range': range})
+
+
+class children(OpenSCADObject):
+    def __init__(self, index=None, vector=None, range=None):
+        OpenSCADObject.__init__(self, 'children',
+                                {'index': index, 'vector': vector,
+                                 'range': range})
+
+
+class import_stl(OpenSCADObject):
+    def __init__(self, file, origin=(0, 0), layer=None):
+        OpenSCADObject.__init__(self, 'import',
+                                {'file': file, 'origin': origin,
+                                 'layer': layer})
+
+
+class import_dxf(OpenSCADObject):
+    def __init__(self, file, origin=(0, 0), layer=None):
+        OpenSCADObject.__init__(self, 'import',
+                                {'file': file, 'origin': origin,
+                                 'layer': layer})
+
+
+class import_(OpenSCADObject):
+    def __init__(self, file, origin=(0, 0), layer=None):
+        OpenSCADObject.__init__(self, 'import',
+                                {'file': file, 'origin': origin,
+                                 'layer': layer})
+
+
+class intersection_for(OpenSCADObject):
+    def __init__(self, n):
+        OpenSCADObject.__init__(self, 'intersection_for', {'n': n})
+
+
+class assign(OpenSCADObject):
+    def __init__(self):
+        OpenSCADObject.__init__(self, 'assign', {})
