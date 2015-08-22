@@ -45,14 +45,10 @@ scad_test_case_templates = [
 
 class TestSolidPython(DiffOutput):
     # test cases will be dynamically added to this instance
-    scad_path = ['solid', '..', '.']
 
     def expand_scad_path(self, filename):
-        for path in self.scad_path:
-            full_path = os.path.join(path, filename)
-            if os.path.exists(full_path):
-                return full_path
-        return None
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../')
+        return os.path.join(path, filename)
 
     def test_infix_union(self):
         a = cube(2)
