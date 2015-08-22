@@ -11,6 +11,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+.. include:: ../README.rst
+
 .. automodule:: solid
     :members:
 .. automodule:: solid.screw_thread
