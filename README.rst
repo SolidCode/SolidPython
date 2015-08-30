@@ -421,3 +421,8 @@ General Public License for more details.
 
 `Full text of the
 license <http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt>`__.
+
+Some class docstrings are derived from the `OpenSCAD User Manual
+<https://en.wikibooks.org/wiki/OpenSCAD_User_Manual>`__, so 
+are available under the `Creative Commons Attribution-ShareAlike License
+<https://creativecommons.org/licenses/by-sa/3.0/>`__. 
