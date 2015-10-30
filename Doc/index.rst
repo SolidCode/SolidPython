@@ -11,13 +11,18 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+.. include:: ../README.rst
+
+Library Reference
+=================
+
+.. automodule:: solid.solidpython
+    :members:
 .. automodule:: solid
     :members:
 .. automodule:: solid.screw_thread
     :members:
 .. automodule:: solid.utils
-    :members:
-.. automodule:: solid.solidpython
     :members:
 
 
