@@ -66,6 +66,8 @@ compiles to:
 
 ::
 
+    from solid import *
+    from solid.utils import *
     d = cube(5) + right(5)(sphere(5)) - cylinder(r=2, h=6)
 
 Generates this OpenSCAD code:
