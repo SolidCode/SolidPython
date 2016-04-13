@@ -1033,13 +1033,16 @@ class linear_extrude(OpenSCADObject):
     :param slices: number of slices to extrude. Can be used to improve the output.
     :type slices: int
 
+    :param scale: relative size of the top of the extrusion compared to the start
+    :type scale: number
+
     '''
     def __init__(self, height=None, center=None, convexity=None, twist=None,
-                 slices=None):
+                 slices=None, scale=None):
         OpenSCADObject.__init__(self, 'linear_extrude',
                                 {'height': height, 'center': center,
                                  'convexity': convexity, 'twist': twist,
-                                 'slices': slices})
+                                 'slices': slices, 'scale':scale})
 
 
 class rotate_extrude(OpenSCADObject):
