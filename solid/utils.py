@@ -539,7 +539,7 @@ def bom_part(description='', per_unit_price=None, currency='US$', *args, **kwarg
     return wrap
 
 
-def bill_of_materials():
+def bill_of_materials(csv=False):
     res = ''
     res += "%8s\t%8s\t%8s\t%8s" % ("Desc.", "Count", "Unit Price", "Total Price")
     for x in g_bom_headers:
@@ -550,6 +550,8 @@ def bill_of_materials():
     for desc, elements in g_parts_dict.items():
         count = elements['Count']
         currency = elements['currency']
+        if not csv:
+            currency += ' '
         price = elements['Unit Price']
 
         if count > 0:
@@ -560,7 +562,7 @@ def bill_of_materials():
                 except:
                     all_costs[currency] = total
 
-                res += ("%8s\t%8d\t%s %8f\t%s %8.2f" 
+                res += ("%8s\t%8d\t%s%8f\t%s%8.2f" 
                         % (desc, count, currency, price, currency, total))
             else:
                 res += "%8s\t%8d" % (desc, count)
@@ -568,16 +570,25 @@ def bill_of_materials():
         for key in g_bom_headers:
             value = elements[key]
             # String formatting just converts everything via str() anyways.
-            res += "\t%8s" % value
+            res += "\t%s" % value
 
         res += '\n'
 
     if len(all_costs) > 0:
-        res += "_" * 60 + '\n'
+        if not csv:
+            res += "_" * 60 + '\n'
+        else:
+            res += '\n'
+
         res += "Total Cost:\n"
+
         for currency in all_costs.keys():
-            res += "\t\t%s %.2f\n" % (currency, all_costs[currency])
-        res += "\n"
+            if not csv:
+                res += "\t\t%s %.2f\n" % (currency, all_costs[currency])
+            else:
+                res += "%s\t%.2f\n" % (currency, all_costs[currency])
+
+        res += '\n'
     return res
 
 
