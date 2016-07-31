@@ -565,7 +565,7 @@ def bill_of_materials(csv=False):
                 res += ("%8s\t%8d\t%s%8f\t%s%8.2f" 
                         % (desc, count, currency, price, currency, total))
             else:
-                res += "%8s\t%8d" % (desc, count)
+                res += "%8s\t%8d\t\t" % (desc, count)
 
         for key in g_bom_headers:
             value = elements[key]
