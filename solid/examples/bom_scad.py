@@ -34,12 +34,13 @@ m3_rad = 1.4
 
 doohickey_h = 5
 
+set_bom_headers("link", "leftover")
 
 def head():
     return cylinder(h=head_height, r=head_rad)
 
 
-@bom_part("M3x16 Bolt", 0.12, currency="€")
+@bom_part("M3x16 Bolt", 0.12, currency="€", link="http://example.io/M3x16", leftover=0)
 def m3_16(a=3):
     bolt_height = 16
     m = union()(
@@ -51,7 +52,7 @@ def m3_16(a=3):
     return m
 
 
-@bom_part("M3x12 Bolt", 0.09)
+@bom_part("M3x12 Bolt", 0.09, leftover=0)
 def m3_12():
     bolt_height = 12
     m = union()(
