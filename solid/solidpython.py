@@ -1000,6 +1000,50 @@ class hull(OpenSCADObject):
         OpenSCADObject.__init__(self, 'hull', {})
 
 
+class inset(OpenSCADObject):
+    '''
+    Creates a polygon at an offset `d` inside a 2D shape.
+
+    :param d: offset
+    :type d: number
+    '''
+    def __init__(self, d=None):
+        OpenSCADObject.__init__(self, 'inset', {'d': d})
+
+
+class outset(OpenSCADObject):
+    '''
+    Creates a polygon at an offset `d` outside a 2D shape.
+
+    :param d: offset
+    :type d: number
+    '''
+    def __init__(self, d=None):
+        OpenSCADObject.__init__(self, 'outset', {'d': d})
+
+
+class fillet(OpenSCADObject):
+    '''
+    Adds fillets of radius `r` to all concave corners of a 2D shape.
+
+    :param r: radius
+    :type r: number
+    '''
+    def __init__(self, r=None):
+        OpenSCADObject.__init__(self, 'fillet', {'r': r})
+
+
+class rounding(OpenSCADObject):
+    '''
+    Adds rounding of radius `r` to all convex corners of a 2D shape.
+
+    :param r: radius
+    :type r: number
+    '''
+    def __init__(self, r=None):
+        OpenSCADObject.__init__(self, 'rounding', {'r': r})
+
+
 class render(OpenSCADObject):
     '''
     Always calculate the CSG model for this tree (even in OpenCSG preview
