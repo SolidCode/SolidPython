@@ -504,10 +504,10 @@ def section_cut_xz(body, y_cut_point=0):
 g_parts_dict = {}
 
 
-def bom_part(description='', per_unit_price=None, currency='US$'):
+def bom_part(description='', price=None, currency='RMB', print_time=None):
     def wrap(f):
         name = description if description else f.__name__
-        g_parts_dict[name] = [0, currency, per_unit_price]
+        g_parts_dict[name] = [0, currency, price, print_time]
 
         def wrapped_f(*args):
             name = description if description else f.__name__
@@ -520,28 +520,33 @@ def bom_part(description='', per_unit_price=None, currency='US$'):
 
 
 def bill_of_materials():
-    res = ''
-    res += "%8s\t%8s\t%8s\t%8s\n" % ("Desc.", "Count", "Unit Price", "Total Price")
+    res = '\n\n'
+    res += "%20s\t%8s\t%8s\t%8s\t%8s\n" % ("Desc.", "Count", "Unit Price", "Total Price", "Print Time")
     all_costs = {}
-    for desc, (count, currency, price) in g_parts_dict.items():
+    total_print_time = 0
+    total_parts = 0
+    for desc, (count, currency, price, print_time) in g_parts_dict.items():
         if count > 0:
-            if price:
-                total = price * count
-                try:
-                    all_costs[currency] += total
-                except:
-                    all_costs[currency] = total
-
-                res += ("%8s\t%8d\t%s %8f\t%s %8.2f\n" 
-                        % (desc, count, currency, price, currency, total))
-            else:
-                res += "%8s\t%8d\n" % (desc, count)
-    if len(all_costs) > 0:
-        res += "_" * 60 + '\n'
-        res += "Total Cost:\n"
-        for currency in all_costs.keys():
-            res += "\t\t%s %.2f\n" % (currency, all_costs[currency])
-        res += "\n"
+            if price == None:
+                price = 0
+            if print_time == None:
+                print_time = 0
+            total = price * count
+            total_print_time += print_time
+            total_parts += count
+            try:
+                all_costs[currency] += total
+            except:
+                all_costs[currency] = total
+            res += ("%20s\t%8d\t%s %5.2f\t%s %5.2f\t%d\n"
+                    % (desc, count, currency, price, currency, total, print_time))
+    res += "_" * 60 + '\n'
+    res += "Total:\n"
+    for currency in all_costs.keys():
+        res += "Cost:\t\t%s %.2f" % (currency, all_costs[currency])
+    res += "\n"
+    res += "Print time:\t %d minutes\n" % (total_print_time)
+    res += "Part count:\t %d\n" % (total_parts)
     return res
 
 
