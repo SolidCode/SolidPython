@@ -571,55 +571,22 @@ def bill_of_materials(csv=False):
                 all_costs[currency] += total
             except:
                 all_costs[currency] = total
-            res += ("%20s\t%8d\t%s%5.2f\t%s%5.2f\t%d\t"
+            res += ("%20s\t%8d\t%s%5.2f\t%s%5.2f\t%d\t\t"
                     % (desc, count, currency, price, currency, total, print_time))
 
-        for key in g_bom_headers:
-            value = elements[key]
-            # String formatting just converts everything via str() anyways.
-            res += "\t%s" % value
+            for key in g_bom_headers:
+                value = elements[key]
+                # String formatting just converts everything via str() anyways.
+                res += "\t%s" % value
+            res += '\n'
 
-        res += '\n'
-
-    if not csv:
-        res += "_" * 60 + '\n'
-    else:
-        res += '\n'
-
-    res += "Total:\n"
+    res += "\nTotal:\n"
     for currency in all_costs.keys():
         res += "Cost:\t\t%s %.2f" % (currency, all_costs[currency])
     res += "\n"
     res += "Print time:\t %d minutes\n" % (total_print_time)
     res += "Part count:\t %d\n" % (total_parts)
 
-    return res
-
-
-# FIXME: finish this.
-def bill_of_materials_justified():
-    res = ''
-    columns = [s.rjust(8)
-               for s in ("Desc.", "Count", "Unit Price", "Total Price")]
-    all_costs = {}
-    for desc, (count, currency, price) in g_parts_dict.items():
-        if count > 0:
-            if price:
-                total = price * count
-                try:
-                    all_costs[currency] += total
-                except:
-                    all_costs[currency] = total
-
-                res += "%(desc)s %(count)s %(currency)s %(price)s %(currency)s %(total)s \n" % vars()
-            else:
-                res += "%(desc)s %(count)s " % vars()
-    if all_costs > 0:
-        res += "_" * 60 + '\n'
-        res += "Total Cost:\n"
-        for currency in all_costs.keys():
-            res += "\t\t%s %.2f\n" % (currency, all_costs[currency])
-        res += "\n"
     return res
 
 # ================
@@ -649,9 +616,34 @@ screw_dimensions = {
     'm3': {'nut_thickness': 2.4, 'nut_inner_diam': 5.4, 'nut_outer_diam': 6.1, 'screw_outer_diam': 3.0, 'cap_diam': 5.5, 'cap_height': 3.0},
     'm4': {'nut_thickness': 3.1, 'nut_inner_diam': 7.0, 'nut_outer_diam': 7.9, 'screw_outer_diam': 4.0, 'cap_diam': 6.9, 'cap_height': 3.9},
     'm5': {'nut_thickness': 4.7, 'nut_inner_diam': 7.9, 'nut_outer_diam': 8.8, 'screw_outer_diam': 5.0, 'cap_diam': 8.7, 'cap_height': 5},
-
 }
 
+bearing_dimensions = {
+    '608': {'inner_d':8, 'outer_d':22, 'thickness':7},
+    '688': {'inner_d':8, 'outer_d':16, 'thickness':5},
+    '686': {'inner_d':6, 'outer_d':13, 'thickness':5},
+    '626': {'inner_d':6, 'outer_d':19, 'thickness':6},
+    '625': {'inner_d':5, 'outer_d':16, 'thickness':5},
+    '624': {'inner_d':4, 'outer_d':13, 'thickness':5},
+    '623': {'inner_d':3, 'outer_d':10, 'thickness':4},
+    '603': {'inner_d':3, 'outer_d':9,  'thickness':5},
+    '633': {'inner_d':3, 'outer_d':13, 'thickness':5},
+}
+
+def bearing(bearing_type='624'):
+    dims = bearing_dimensions[bearing_type.lower()]
+    outerR = dims['outer_d']/2
+    innerR = dims['inner_d']/2
+    thickness = dims['thickness']
+    bearing = cylinder(outerR,thickness)
+    bearing.add_param('$fs', 1)
+    hole = cylinder(innerR,thickness+2)
+    hole.add_param('$fs', 1)
+    bearing = difference()(
+                            bearing,
+                            translate([0,0,-1])(hole)
+                          )
+    return bearing
 
 def screw(screw_type='m3', screw_length=16):
     dims = screw_dimensions[screw_type.lower()]
