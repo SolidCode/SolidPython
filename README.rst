@@ -127,7 +127,7 @@ Installing SolidPython
 
       ::
 
-          sudo python setup.py --install
+          sudo python setup.py install
 
 Using SolidPython
 =================
