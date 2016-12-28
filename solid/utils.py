@@ -4,6 +4,7 @@ from __future__ import division
 import os
 import sys
 import re
+from itertools import zip_longest
 from solid import *
 from math import *
 
@@ -501,29 +502,58 @@ def section_cut_xz(body, y_cut_point=0):
 # @bom_part() decorator. After all parts have been created, call
 # bill_of_materials()
 # to generate a report.  Se examples/bom_scad.py for usage
+#
+#   Additional columns can be added (such as leftover material or URL to part)
+# by calling bom_headers with a series of string arguments. 
+#
+#   Calling bom_part with additional, non-keyworded arguments will 
+# populate the new columns in order of their addition via bom_headers, or 
+# keyworded arguments can be used in any order.
+
 g_parts_dict = {}
+g_bom_headers = []
 
+def set_bom_headers(*args):
+    global g_bom_headers
+    g_bom_headers += args
 
-def bom_part(description='', per_unit_price=None, currency='US$'):
+def bom_part(description='', per_unit_price=None, currency='US$', *args, **kwargs):
     def wrap(f):
         name = description if description else f.__name__
-        g_parts_dict[name] = [0, currency, per_unit_price]
 
-        def wrapped_f(*args):
+        elements = {}
+        elements.update({'Count':0, 'currency':currency, 'Unit Price':per_unit_price})
+        # This update also adds empty key value pairs to prevent key exceptions.
+        elements.update(dict(zip_longest(g_bom_headers, args, fillvalue='')))
+        elements.update(kwargs)
+
+        g_parts_dict[name] = elements
+
+        def wrapped_f(*wargs):
             name = description if description else f.__name__
-            g_parts_dict[name][0] += 1
-            return f(*args)
+            g_parts_dict[name]['Count'] += 1
+            return f(*wargs)
 
         return wrapped_f
 
     return wrap
 
 
-def bill_of_materials():
+def bill_of_materials(csv=False):
     res = ''
-    res += "%8s\t%8s\t%8s\t%8s\n" % ("Desc.", "Count", "Unit Price", "Total Price")
+    res += "%8s\t%8s\t%8s\t%8s" % ("Desc.", "Count", "Unit Price", "Total Price")
+    for x in g_bom_headers:
+        res += '\t' + x
+    res += '\n'
+
     all_costs = {}
-    for desc, (count, currency, price) in g_parts_dict.items():
+    for desc, elements in g_parts_dict.items():
+        count = elements['Count']
+        currency = elements['currency']
+        if not csv:
+            currency += ' '
+        price = elements['Unit Price']
+
         if count > 0:
             if price:
                 total = price * count
@@ -532,16 +562,33 @@ def bill_of_materials():
                 except:
                     all_costs[currency] = total
 
-                res += ("%8s\t%8d\t%s %8f\t%s %8.2f\n" 
+                res += ("%8s\t%8d\t%s%8f\t%s%8.2f" 
                         % (desc, count, currency, price, currency, total))
             else:
-                res += "%8s\t%8d\n" % (desc, count)
+                res += "%8s\t%8d\t\t" % (desc, count)
+
+        for key in g_bom_headers:
+            value = elements[key]
+            # String formatting just converts everything via str() anyways.
+            res += "\t%s" % value
+
+        res += '\n'
+
     if len(all_costs) > 0:
-        res += "_" * 60 + '\n'
+        if not csv:
+            res += "_" * 60 + '\n'
+        else:
+            res += '\n'
+
         res += "Total Cost:\n"
+
         for currency in all_costs.keys():
-            res += "\t\t%s %.2f\n" % (currency, all_costs[currency])
-        res += "\n"
+            if not csv:
+                res += "\t\t%s %.2f\n" % (currency, all_costs[currency])
+            else:
+                res += "%s\t%.2f\n" % (currency, all_costs[currency])
+
+        res += '\n'
     return res
 
 
