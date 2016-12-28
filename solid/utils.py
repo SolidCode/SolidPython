@@ -583,6 +583,8 @@ def bill_of_materials(csv=False):
     res += "\nTotal:\n"
     for currency in all_costs.keys():
         res += "Cost:\t\t%s %.2f" % (currency, all_costs[currency])
+        if "RMB" in currency:
+            res += " (~ %d Euro, ~ %d USD)" % (all_costs[currency]*0.14,all_costs[currency]*0.14)
     res += "\n"
     res += "Print time:\t %d minutes\n" % (total_print_time)
     res += "Part count:\t %d\n" % (total_parts)
