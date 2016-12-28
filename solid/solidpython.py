@@ -954,6 +954,17 @@ class mirror(OpenSCADObject):
         OpenSCADObject.__init__(self, 'mirror', {'v': v})
 
 
+class resize(OpenSCADObject):
+    '''
+    Modify the size of the child object to match the given new size.
+
+    :param newsize: X, Y and Z values
+    :type newsize: 3 value sequence
+    '''
+    def __init__(self, newsize):
+        OpenSCADObject.__init__(self, 'resize', {'newsize': newsize})
+
+
 class multmatrix(OpenSCADObject):
     '''
     Multiplies the geometry of all child elements with the given 4x4
