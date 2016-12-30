@@ -770,9 +770,26 @@ try:
                 src_up = EUC_FORWARD
             else:
                 src_up = EUC_UP
-
-        look_at_matrix = Matrix4.new_look_at(eye=dest_point, at=at, up=src_up)
-
+                
+        def _orig_euclid_look_at(eye, at, up):
+            '''
+            Taken from the original source of PyEuclid's Matrix4.new_look_at() 
+            prior to 1184a07d119a62fc40b2c6becdbeaf053a699047 (11 Jan 2015), 
+            as discussed here:
+            https://github.com/ezag/pyeuclid/commit/1184a07d119a62fc40b2c6becdbeaf053a699047
+        
+            We were dependent on the old behavior, which is duplicated here:
+            '''
+            z = (eye - at).normalized()
+            x = up.cross(z).normalized()
+            y = z.cross(x)
+  
+            m = Matrix4.new_rotate_triple_axis(x, y, z)
+            m.d, m.h, m.l = eye.x, eye.y, eye.z
+            return m
+                
+        look_at_matrix = _orig_euclid_look_at(eye=dest_point, at=at, up=src_up)
+        
         if is_scad(body):
             # If the body being altered is a SCAD object, do the matrix mult
             # in OpenSCAD
@@ -785,6 +802,8 @@ try:
             else:
                 res = look_at_matrix * body
         return res
+        
+
 
     # ========================================
     # = Vector drawing: 3D arrow from a line =
