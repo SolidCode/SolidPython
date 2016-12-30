@@ -31,10 +31,6 @@
             		}
             	}
             }     
--- Once you've declared something a hole(), you *can't put anything in
-    it*.  This kind of defeats the purpose of most holes in mechanical design.
-    This feature may need some rethinking.
--- bill_of_materials() entries should be left-justified in their columns.
 
 -- Applescript or other inter-app communication that will recompile in OpenSCAD
     whenever requested via your Python code
@@ -77,4 +73,10 @@ Completed:
 -- Add to PyPI so SolidPython can be installed with pip install solidpython
 -- Update README with PyEuclid information and PyPI-aware install info
 -- Comprehensive docs
+-- Once you've declared something a hole(), you *can't put anything in
+    it*.  This kind of defeats the purpose of most holes in mechanical design.
+    This feature may need some rethinking. (Resolved via the part() class)
+-- bill_of_materials() entries should be left-justified in their columns. (BOM 
+    now created via prettytable module)
+
     

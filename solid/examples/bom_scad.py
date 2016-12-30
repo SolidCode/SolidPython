@@ -114,4 +114,9 @@ if __name__ == '__main__':
     print("%(__file__)s: SCAD file written to: \n%(file_out)s" % vars())
     print(bom)
 
+    print("Or, Spreadsheet-ready TSV:\n\n")
+    bom = bill_of_materials(csv=True)
+    print(bom)
+
+
     scad_render_to_file(a, file_out)

@@ -543,85 +543,77 @@ def bom_part(description='', per_unit_price=None, currency='US$', *args, **kwarg
 
     return wrap
 
-
 def bill_of_materials(csv=False):
-    res = ''
-    res += "%8s\t%8s\t%8s\t%8s" % ("Desc.", "Count", "Unit Price", "Total Price")
-    for x in g_bom_headers:
-        res += '\t' + x
-    res += '\n'
-
+    field_names = ["Description", "Count", "Unit Price", "Total Price"]
+    field_names += g_bom_headers
+    
+    rows = []
+    
     all_costs = {}
     for desc, elements in g_parts_dict.items():
         count = elements['Count']
         currency = elements['currency']
-        if not csv:
-            currency += ' '
         price = elements['Unit Price']
 
         if count > 0:
             if price:
                 total = price * count
-                try:
-                    all_costs[currency] += total
-                except:
-                    all_costs[currency] = total
-
-                res += ("%8s\t%8d\t%s%8f\t%s%8.2f" 
-                        % (desc, count, currency, price, currency, total))
+                if currency not in all_costs:
+                    all_costs[currency] = 0 
+                
+                all_costs[currency] += total
+                unit_price = _currency_str(price, currency)
+                total_price = _currency_str(total, currency)
             else:
-                res += "%8s\t%8d\t\t" % (desc, count)
+                unit_price = total_price = ""
+            row = [desc, count, unit_price, total_price]
 
         for key in g_bom_headers:
             value = elements[key]
-            # String formatting just converts everything via str() anyways.
-            res += "\t%s" % value
+            row.append(value)
+        rows.append(row)
 
-        res += '\n'
-
+    # Add total costs if we have values to add
     if len(all_costs) > 0:
-        if not csv:
-            res += "_" * 60 + '\n'
-        else:
-            res += '\n'
+        empty_row = [""] * len(field_names)
+        rows.append(empty_row)
+        for currency, cost in all_costs.items():
+            row = empty_row[:]
+            row[0] = "Total Cost, {currency:>4}".format(**vars())
+            row[3] = "{currency:>4} {cost:.2f}".format(**vars())
+            
+            rows.append(row)
 
-        res += "Total Cost:\n"
+    res = _table_string(field_names, rows, csv)
 
-        for currency in all_costs.keys():
-            if not csv:
-                res += "\t\t%s %.2f\n" % (currency, all_costs[currency])
-            else:
-                res += "%s\t%.2f\n" % (currency, all_costs[currency])
-
-        res += '\n'
     return res
 
+def _currency_str(value, currency="$"):
+    return "{currency:>4} {value:.2f}".format(**vars())
+    
+def _table_string(field_names, rows, csv=False):
+    # Output a justified table string using the prettytable module.
+    # Fall back to Excel-ready tab-separated values if prettytable's not found 
+    # or CSV is requested
+    if not csv:
+        try:
+            import prettytable
+            table = prettytable.PrettyTable(field_names=field_names)
+            for row in rows:
+                table.add_row(row)
+            res = table.get_string()
+        except ImportError as e:
+            print("Unable to import prettytable module.  Outputting in TSV format")
+            csv = True
+    if csv:
+        lines = ["\t".join(field_names)]
+        for row in rows:
+            line = "\t".join([str(f) for f in row])
+            lines.append(line)
 
-# FIXME: finish this.
-def bill_of_materials_justified():
-    res = ''
-    columns = [s.rjust(8)
-               for s in ("Desc.", "Count", "Unit Price", "Total Price")]
-    all_costs = {}
-    for desc, (count, currency, price) in g_parts_dict.items():
-        if count > 0:
-            if price:
-                total = price * count
-                try:
-                    all_costs[currency] += total
-                except:
-                    all_costs[currency] = total
-
-                res += "%(desc)s %(count)s %(currency)s %(price)s %(currency)s %(total)s \n" % vars()
-            else:
-                res += "%(desc)s %(count)s " % vars()
-    if all_costs > 0:
-        res += "_" * 60 + '\n'
-        res += "Total Cost:\n"
-        for currency in all_costs.keys():
-            res += "\t\t%s %.2f\n" % (currency, all_costs[currency])
-        res += "\n"
-    return res
+        res = "\n".join(lines) 
+        
+    return res  + "\n"            
 
 # ================
 # = Bounding Box =
