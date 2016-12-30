@@ -1,6 +1,9 @@
 SolidPython
 -----------
 
+.. image:: https://circleci.com/gh/SolidCode/SolidPython.svg?style=shield
+    :target: https://circleci.com/gh/SolidCode/SolidPython
+
 -  `SolidPython: OpenSCAD for
    Python <#solidpython--openscad-for-python>`__
 -  `Advantages <#advantages>`__
