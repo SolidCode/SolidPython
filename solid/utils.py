@@ -503,15 +503,15 @@ def section_cut_xz(body, y_cut_point=0):
 # =====================
 # = Bill of Materials =
 # =====================
-#   Any part defined in a method can be automatically counted using the
-# @bom_part() decorator. After all parts have been created, call
-# bill_of_materials()
-# to generate a report.  Se examples/bom_scad.py for usage
+# Any part defined in a method can be automatically counted using the
+# `@bom_part()` decorator. After all parts have been created, call
+# `bill_of_materials()`
+# to generate a report.  See `examples/bom_scad.py` for usage
 #
-#   Additional columns can be added (such as leftover material or URL to part)
-# by calling bom_headers with a series of string arguments. 
+# Additional columns can be added (such as leftover material or URL to part)
+# by calling `set_bom_headers()` with a series of string arguments. 
 #
-#   Calling bom_part with additional, non-keyworded arguments will 
+# Calling `bom_part()` with additional, non-keyworded arguments will 
 # populate the new columns in order of their addition via bom_headers, or 
 # keyworded arguments can be used in any order.
 

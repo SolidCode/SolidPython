@@ -4,8 +4,8 @@ SolidPython
 .. image:: https://circleci.com/gh/SolidCode/SolidPython.svg?style=shield
     :target: https://circleci.com/gh/SolidCode/SolidPython
 .. image:: https://readthedocs.org/projects/solidpython/badge/?version=latest
-:target: http://solidpython.readthedocs.io/en/latest/?badge=latest
-:alt: Documentation Status
+    :target: http://solidpython.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
 
 -  `SolidPython: OpenSCAD for
    Python <#solidpython--openscad-for-python>`__
@@ -34,8 +34,7 @@ SolidPython
 -  `Contact <#contact>`__
 -  `License <#license>`__
 
-**Table of Contents** *generated with
-`DocToc <http://doctoc.herokuapp.com/>`__*
+**Table of Contents** generated with `DocToc <http://doctoc.herokuapp.com/>`__
 
 SolidPython: OpenSCAD for Python
 ================================
@@ -67,8 +66,7 @@ Generates this OpenSCAD code:
     }
 
 That doesn't seem like such a savings, but the following SolidPython
-code is a lot shorter (and I think a lot clearer) than the SCAD code it
-compiles to:
+code is a lot shorter (and I think clearer) than the SCAD code it compiles to:
 
 ::
 
@@ -112,15 +110,15 @@ Installing SolidPython
        pip install solidpython
 
    (You may need to use ``sudo pip install solidpython``, depending on
-   your environment.)
+   your environment. This is commonly discouraged though.)
 
 -  **OR:** Download SolidPython (Click
    `here <https://github.com/SolidCode/SolidPython/archive/master.zip>`__
    to download directly, or use git to pull it all down)
 
    (Note that SolidPython also depends on the
-   `PyEuclid <http://pypi.python.org/pypi/euclid>`__ Vector math
-   library, installable via ``sudo pip install euclid``)
+   `PyEuclid <http://pypi.python.org/pypi/euclid3>`__ Vector math
+   library, installable via ``pip install euclid3``)
 
    -  Unzip the file, probably in ~/Downloads/SolidPython-master
    -  In a terminal, cd to location of file:
@@ -133,7 +131,7 @@ Installing SolidPython
 
       ::
 
-          sudo python setup.py install
+          python setup.py install
 
 Using SolidPython
 =================
@@ -201,7 +199,7 @@ Extra syntactic sugar
 =====================
 
 Basic operators
-~~~~~~~~~~~~~~~
+---------------
 
 Following Elmo Mäntynen's suggestion, SCAD objects override the basic
 operators + (union), - (difference), and \* (intersection). So
@@ -236,7 +234,7 @@ is the same as:
     )
 
 First-class Negative Space (Holes)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------
 
 OpenSCAD requires you to be very careful with the order in which you add
 or subtract objects. SolidPython's ``hole()`` function makes this
@@ -269,7 +267,7 @@ See
 for the complete picture.
 
 Animation
-~~~~~~~~~
+---------
 
 OpenSCAD has a special variable, ``$t``, that can be used to animate
 motion. SolidPython can do this, too, using the special function
@@ -287,7 +285,7 @@ SolidPython includes a number of useful functions in
 Currently these include:
 
 Directions: (up, down, left, right, forward, back) for arranging things:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------------------------------------------
 
 ::
 
@@ -308,7 +306,7 @@ seems a lot clearer to me than:
 | My apologies.
 
 Arcs
-~~~~
+----
 
 I've found this useful for fillets and rounds.
 
@@ -327,7 +325,7 @@ draws the portion of a 10x10 square NOT in a 90 degree circle of radius
 rounds.
 
 Offsets
-~~~~~~~
+-------
 
 To offset a set of points in one direction or another (inside or outside
 a closed figure, for example) use
@@ -342,7 +340,7 @@ See the code for futher explanation. Improvements on the inside/outside
 algorithm would be welcome.
 
 Extrude Along Path
-~~~~~~~~~~~~~~~~~~
+------------------
 
 ``solid.utils.extrude_along_path(shape_pts, path_pts, scale_factors=None)``
 
@@ -351,7 +349,7 @@ See
 for use.
 
 Basic color library
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 You can change an object's color by using the OpenSCAD
 ``color([rgba_array])`` function:
@@ -384,7 +382,7 @@ library <https://github.com/openscad/MCAD>`__, as seen [here]
 (https://github.com/openscad/MCAD/blob/master/materials.scad).
 
 Bill Of Materials
-~~~~~~~~~~~~~~~~~
+-----------------
 
 Put ``@bom_part()`` before any method that defines a part, then call
 ``bill_of_materials()`` after the program is run, and all parts will be
