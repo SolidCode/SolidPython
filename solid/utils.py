@@ -1,12 +1,17 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import division
-import os
 import sys
-import re
-from itertools import zip_longest
+import itertools
+if sys.version[0]=='2':
+    from itertools import izip_longest as zip_longest
+else:
+    from itertools import zip_longest
+
 from solid import *
 from math import *
+
+
 
 RIGHT, TOP, LEFT, BOTTOM = range(4)
 EPSILON = 0.01
