@@ -685,8 +685,8 @@ def nut(screw_type='m3'):
 # = PyEuclid Utils =
 # = -------------- =
 try:
-    import euclid
-    from euclid import *
+    import euclid3
+    from euclid3 import *
     # NOTE: The PyEuclid on PyPi doesn't include several elements added to
     # the module as of 13 Feb 2013.  Add them here until euclid supports them
     # TODO: when euclid updates, remove this cruft. -ETJ 13 Feb 2013

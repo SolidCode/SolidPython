@@ -7,7 +7,7 @@ import re
 from solid import *
 from solid.utils import *
 
-from euclid import *
+from euclid3 import *
 
 ONE_THIRD = 1 / 3.0
 

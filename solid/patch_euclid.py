@@ -1,5 +1,5 @@
-import euclid
-from euclid import *
+import euclid3
+from euclid3 import *
 
 from solid.utils import *  # Only needed for EPSILON. Tacky.
 
@@ -25,7 +25,7 @@ def _intersect_line3_line3(A, B):
     # Connect A & B
     # If the length of the connecting segment  is 0, they intersect
     # at the endpoint(s) of the connecting segment
-    sol = euclid._connect_line3_line3(A, B)
+    sol = euclid3._connect_line3_line3(A, B)
     # TODO: Ray3 and LineSegment3 would like to be able to know
     # if their intersection points fall within the segment.
     if sol.magnitude_squared() < EPSILON:
