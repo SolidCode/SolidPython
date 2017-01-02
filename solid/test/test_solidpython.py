@@ -42,6 +42,32 @@ scad_test_case_templates = [
 {'name': 'intersection_for',    'kwargs': {}, 'expected': '\n\nintersection_for(n = [0, 1, 2]);', 'args': {'n': [0, 1, 2]}, },
 ]
 
+class TemporaryFileBuffer(object):
+    name = None
+    contents = None
+    def __enter__(self):
+        f = tempfile.NamedTemporaryFile(delete=False)
+        self.name = f.name
+        try:
+            f.close()
+        except:
+            self._cleanup()
+            raise
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        try:
+            with open(self.name, 'r') as f:
+                self.contents = f.read()
+        finally:
+            self._cleanup()
+
+    def _cleanup(self):
+        try:
+            os.unlink(self.name)
+        except:
+            pass
+
 
 class TestSolidPython(DiffOutput):
     # test cases will be dynamically added to this instance
@@ -202,36 +228,35 @@ class TestSolidPython(DiffOutput):
             rad = 15
             c = translate([rad * math.cos(rads), rad * math.sin(rads)])(square(10))
             return c
-        tmp = tempfile.NamedTemporaryFile()
+        with TemporaryFileBuffer() as tmp:
+            scad_render_animated_file(my_animate, steps=2, back_and_forth=False,
+                                      filepath=tmp.name, include_orig_code=False)
 
-        scad_render_animated_file(my_animate, steps=2, back_and_forth=False,
-                                  filepath=tmp.name, include_orig_code=False)
-        tmp.seek(0)
-        actual = tmp.read()
-        expected = b'\nif ($t >= 0.0 && $t < 0.5){   \n\ttranslate(v = [15.0000000000, 0.0000000000]) {\n\t\tsquare(size = 10);\n\t}\n}\nif ($t >= 0.5 && $t < 1.0){   \n\ttranslate(v = [-15.0000000000, 0.0000000000]) {\n\t\tsquare(size = 10);\n\t}\n}\n'
-        tmp.close()
+        actual = tmp.contents
+        expected = '\nif ($t >= 0.0 && $t < 0.5){   \n\ttranslate(v = [15.0000000000, 0.0000000000]) {\n\t\tsquare(size = 10);\n\t}\n}\nif ($t >= 0.5 && $t < 1.0){   \n\ttranslate(v = [-15.0000000000, 0.0000000000]) {\n\t\tsquare(size = 10);\n\t}\n}\n'
+
         self.assertEqual(expected, actual)
 
     def test_scad_render_to_file(self):
         a = circle(10)
 
         # No header, no included original code
-        tmp = tempfile.NamedTemporaryFile()
-        scad_render_to_file(a, filepath=tmp.name, include_orig_code=False)
-        tmp.seek(0)
-        actual = tmp.read()
-        expected = b'\n\ncircle(r = 10);'
-        tmp.close()
+        with TemporaryFileBuffer() as tmp:
+            scad_render_to_file(a, filepath=tmp.name, include_orig_code=False)
+
+        actual = tmp.contents
+        expected = '\n\ncircle(r = 10);'
+
         self.assertEqual(expected, actual)
 
         # Header
-        tmp = tempfile.NamedTemporaryFile()
-        scad_render_to_file(a, filepath=tmp.name, include_orig_code=False,
-                            file_header='$fn = 24;')
-        tmp.seek(0)
-        actual = tmp.read()
-        expected = b'$fn = 24;\n\ncircle(r = 10);'
-        tmp.close()
+        with TemporaryFileBuffer() as tmp:
+            scad_render_to_file(a, filepath=tmp.name, include_orig_code=False,
+                                file_header='$fn = 24;')
+
+        actual = tmp.contents
+        expected = '$fn = 24;\n\ncircle(r = 10);'
+
         self.assertEqual(expected, actual)
 
         # TODO: test include_orig_code=True, but that would have to
