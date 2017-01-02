@@ -103,7 +103,7 @@ Installing SolidPython
 ======================
 
 -  Install via
-   `PyPI <python%20setup.py%20sdist%20bdist_wininst%20upload>`__:
+   `PyPI <https://pypi.python.org/pypi/solidpython>`__:
 
    ::
 
