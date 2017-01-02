@@ -2,6 +2,7 @@
 Classes for OpenSCAD builtins
 """
 from .solidpython import OpenSCADObject
+from .solidpython import IncludedOpenSCADObject
 
 class polygon(OpenSCADObject):
     '''
@@ -533,3 +534,73 @@ class intersection_for(OpenSCADObject):
 class assign(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'assign', {})
+
+# ================================
+# = Modifier Convenience Methods =
+# ================================
+def debug(openscad_obj):
+    openscad_obj.set_modifier("#")
+    return openscad_obj
+
+
+def background(openscad_obj):
+    openscad_obj.set_modifier("%")
+    return openscad_obj
+
+
+def root(openscad_obj):
+    openscad_obj.set_modifier("!")
+    return openscad_obj
+
+
+def disable(openscad_obj):
+    openscad_obj.set_modifier("*")
+    return openscad_obj
+
+
+# ===============
+# = Including OpenSCAD code =
+# ===============
+
+# use() & include() mimic OpenSCAD's use/include mechanics.
+# -- use() makes methods in scad_file_path.scad available to
+#   be called.
+# --include() makes those methods available AND executes all code in
+#   scad_file_path.scad, which may have side effects.
+#   Unless you have a specific need, call use().
+def use(scad_file_path, use_not_include=True):
+    '''
+    Opens scad_file_path, parses it for all usable calls,
+    and adds them to caller's namespace.
+    '''
+    # These functions in solidpython are used here and only here; don't pollute
+    # the global namespace with them
+    from .solidpython import extract_callable_signatures
+    from .solidpython import new_openscad_class_str 
+    from .solidpython import calling_module    
+    
+    try:
+        with open(scad_file_path) as module:
+            contents = module.read()
+    except Exception as e:
+        raise Exception("Failed to import SCAD module '%(scad_file_path)s' "
+                        "with error: %(e)s " % vars())
+
+    # Once we have a list of all callables and arguments, dynamically
+    # add OpenSCADObject subclasses for all callables to the calling module's
+    # namespace.
+    symbols_dicts = extract_callable_signatures(scad_file_path)
+
+    for sd in symbols_dicts:
+        class_str = new_openscad_class_str(sd['name'], sd['args'], sd['kwargs'], 
+                                            scad_file_path, use_not_include)
+        # If this is called from 'include', we have to look deeper in the stack
+        # to find the right module to add the new class to.
+        stack_depth = 2 if use_not_include else 3
+        exec(class_str, calling_module(stack_depth).__dict__)
+
+    return True
+
+
+def include(scad_file_path):
+    return use(scad_file_path, use_not_include=False)

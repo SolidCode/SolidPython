@@ -18,75 +18,6 @@ import tempfile
 # Mark them for special treatment
 non_rendered_classes = ['hole', 'part']
 
-# ================================
-# = Modifier Convenience Methods =
-# ================================
-
-
-def debug(openscad_obj):
-    openscad_obj.set_modifier("#")
-    return openscad_obj
-
-
-def background(openscad_obj):
-    openscad_obj.set_modifier("%")
-    return openscad_obj
-
-
-def root(openscad_obj):
-    openscad_obj.set_modifier("!")
-    return openscad_obj
-
-
-def disable(openscad_obj):
-    openscad_obj.set_modifier("*")
-    return openscad_obj
-
-
-# ===============
-# = Including OpenSCAD code =
-# ===============
-
-# use() & include() mimic OpenSCAD's use/include mechanics.
-# -- use() makes methods in scad_file_path.scad available to
-#   be called.
-# --include() makes those methods available AND executes all code in
-#   scad_file_path.scad, which may have side effects.
-#   Unless you have a specific need, call use().
-def use(scad_file_path, use_not_include=True):
-    '''
-    Opens scad_file_path, parses it for all usable calls,
-    and adds them to caller's namespace.
-    '''
-    # TODO:  doctest needed
-    try:
-        module = open(scad_file_path)
-        contents = module.read()
-        module.close()
-    except Exception as e:
-        raise Exception("Failed to import SCAD module '%(scad_file_path)s' "
-                        "with error: %(e)s " % vars())
-
-    # Once we have a list of all callables and arguments, dynamically
-    # add OpenSCADObject subclasses for all callables to the calling module's
-    # namespace.
-    symbols_dicts = extract_callable_signatures(scad_file_path)
-
-    for sd in symbols_dicts:
-        class_str = new_openscad_class_str(sd['name'], sd['args'], sd['kwargs'], 
-                                            scad_file_path, use_not_include)
-        # If this is called from 'include', we have to look deeper in the stack
-        # to find the right module to add the new class to.
-        stack_depth = 2 if use_not_include else 3
-        exec(class_str, calling_module(stack_depth).__dict__)
-
-    return True
-
-
-def include(scad_file_path):
-    return use(scad_file_path, use_not_include=False)
-
-
 # =========================================
 # = Rendering Python code to OpenSCAD code=
 # =========================================
@@ -234,6 +165,120 @@ def sp_code_in_scad_comment(calling_file):
                       "************************************************/\n") % vars()
     return pyopenscad_str
 
+# ===========
+# = Parsing =
+# ===========
+def extract_callable_signatures(scad_file_path):
+    with open(scad_file_path) as f:
+        scad_code_str = f.read()
+    return parse_scad_callables(scad_code_str)
+
+def parse_scad_callables(scad_code_str):
+    callables = []
+
+    # Note that this isn't comprehensive; tuples or nested data structures in
+    # a module definition will defeat it.
+
+    # Current implementation would throw an error if you tried to call a(x, y)
+    # since Python would expect a(x);  OpenSCAD itself ignores extra arguments,
+    # but that's not really preferable behavior
+
+    # TODO:  write a pyparsing grammar for OpenSCAD, or, even better, use the yacc parse grammar
+    # used by the language itself.  -ETJ 06 Feb 2011
+
+    no_comments_re = r'(?mxs)(//.*?\n|/\*.*?\*/)'
+
+    # Also note: this accepts: 'module x(arg) =' and 'function y(arg) {', both
+    # of which are incorrect syntax
+    mod_re = r'(?mxs)^\s*(?:module|function)\s+(?P<callable_name>\w+)\s*\((?P<all_args>.*?)\)\s*(?:{|=)'
+
+    # This is brittle.  To get a generally applicable expression for all arguments,
+    # we'd need a real parser to handle nested-list default args or parenthesized statements.
+    # For the moment, assume a maximum of one square-bracket-delimited list
+    args_re = r'(?mxs)(?P<arg_name>\w+)(?:\s*=\s*(?P<default_val>[\w.-]+|\[.*\]))?(?:,|$)'
+
+    # remove all comments from SCAD code
+    scad_code_str = re.sub(no_comments_re, '', scad_code_str)
+    # get all SCAD callables
+    mod_matches = re.finditer(mod_re, scad_code_str)
+
+    for m in mod_matches:
+        callable_name = m.group('callable_name')
+        args = []
+        kwargs = []
+        all_args = m.group('all_args')
+        if all_args:
+            arg_matches = re.finditer(args_re, all_args)
+            for am in arg_matches:
+                arg_name = am.group('arg_name')
+                if am.group('default_val'):
+                    kwargs.append(arg_name)
+                else:
+                    args.append(arg_name)
+
+        callables.append({'name': callable_name, 'args': args, 'kwargs': kwargs})
+
+    return callables
+
+def calling_module(stack_depth=2):
+    '''
+    Returns the module *2* back in the frame stack.  That means:
+    code in module A calls code in module B, which asks calling_module()
+    for module A.
+
+    This means that we have to know exactly how far back in the stack
+    our desired module is; if code in module B calls another function in 
+    module B, we have to increase the stack_depth argument to account for
+    this.
+
+    Got that?
+    '''
+    frm = inspect.stack()[stack_depth]
+    calling_mod = inspect.getmodule(frm[0])
+    # If calling_mod is None, this is being called from an interactive session.
+    # Return that module.  (Note that __main__ doesn't have a __file__ attr,
+    # but that's caught elsewhere.)
+    if not calling_mod:
+        import __main__ as calling_mod
+    return calling_mod
+
+def new_openscad_class_str(class_name, args=[], kwargs=[], include_file_path=None, use_not_include=True):
+    args_str = ''
+    args_pairs = ''
+
+    for arg in args:
+        args_str += ', ' + arg
+        args_pairs += "'%(arg)s':%(arg)s, " % vars()
+
+    # kwargs have a default value defined in their SCAD versions.  We don't
+    # care what that default value will be (SCAD will take care of that), just
+    # that one is defined.
+    for kwarg in kwargs:
+        args_str += ', %(kwarg)s=None' % vars()
+        args_pairs += "'%(kwarg)s':%(kwarg)s, " % vars()
+
+    if include_file_path:
+        # include_file_path may include backslashes on Windows; escape them
+        # again here so any backslashes don't get used as escape characters
+        # themselves
+        include_file_path = include_file_path.replace('\\', '\\\\')
+
+        # NOTE the explicit import of 'solid' below. This is a fix for:
+        # https://github.com/SolidCode/SolidPython/issues/20 -ETJ 16 Jan 2014
+        result = ("import solid\n"
+                  "class %(class_name)s(solid.IncludedOpenSCADObject):\n"
+                  "   def __init__(self%(args_str)s, **kwargs):\n"
+                  "       solid.IncludedOpenSCADObject.__init__(self, '%(class_name)s', {%(args_pairs)s }, include_file_path='%(include_file_path)s', use_not_include=%(use_not_include)s, **kwargs )\n"
+                  "   \n"
+                  "\n" % vars())
+    else:
+        result = ("class %(class_name)s(OpenSCADObject):\n"
+                  "   def __init__(self%(args_str)s):\n"
+                  "       OpenSCADObject.__init__(self, '%(class_name)s', {%(args_pairs)s })\n"
+                  "   \n"
+                  "\n" % vars())
+
+    return result
 
 # =========================
 # = Internal Utilities    =
@@ -526,8 +571,6 @@ class OpenSCADObject(object):
 
         return png_data
 
-# now that we have the base class defined, we can do a circular import
-from . import objects
 
 class IncludedOpenSCADObject(OpenSCADObject):
     # Identical to OpenSCADObject, but each subclass of IncludedOpenSCADObject
@@ -564,68 +607,8 @@ class IncludedOpenSCADObject(OpenSCADObject):
         raise ValueError("Unable to find included SCAD file: "
                          "%(include_file_path)s in sys.path" % vars())
 
-
-def calling_module(stack_depth=2):
-    '''
-    Returns the module *2* back in the frame stack.  That means:
-    code in module A calls code in module B, which asks calling_module()
-    for module A.
-
-    This means that we have to know exactly how far back in the stack
-    our desired module is; if code in module B calls another function in 
-    module B, we have to increase the stack_depth argument to account for
-    this.
-
-    Got that?
-    '''
-    frm = inspect.stack()[stack_depth]
-    calling_mod = inspect.getmodule(frm[0])
-    # If calling_mod is None, this is being called from an interactive session.
-    # Return that module.  (Note that __main__ doesn't have a __file__ attr,
-    # but that's caught elsewhere.)
-    if not calling_mod:
-        import __main__ as calling_mod
-    return calling_mod
-
-
-def new_openscad_class_str(class_name, args=[], kwargs=[], include_file_path=None, use_not_include=True):
-    args_str = ''
-    args_pairs = ''
-
-    for arg in args:
-        args_str += ', ' + arg
-        args_pairs += "'%(arg)s':%(arg)s, " % vars()
-
-    # kwargs have a default value defined in their SCAD versions.  We don't
-    # care what that default value will be (SCAD will take care of that), just
-    # that one is defined.
-    for kwarg in kwargs:
-        args_str += ', %(kwarg)s=None' % vars()
-        args_pairs += "'%(kwarg)s':%(kwarg)s, " % vars()
-
-    if include_file_path:
-        # include_file_path may include backslashes on Windows; escape them
-        # again here so any backslashes don't get used as escape characters
-        # themselves
-        include_file_path = include_file_path.replace('\\', '\\\\')
-
-        # NOTE the explicit import of 'solid' below. This is a fix for:
-        # https://github.com/SolidCode/SolidPython/issues/20 -ETJ 16 Jan 2014
-        result = ("import solid\n"
-                  "class %(class_name)s(solid.IncludedOpenSCADObject):\n"
-                  "   def __init__(self%(args_str)s, **kwargs):\n"
-                  "       solid.IncludedOpenSCADObject.__init__(self, '%(class_name)s', {%(args_pairs)s }, include_file_path='%(include_file_path)s', use_not_include=%(use_not_include)s, **kwargs )\n"
-                  "   \n"
-                  "\n" % vars())
-    else:
-        result = ("class %(class_name)s(OpenSCADObject):\n"
-                  "   def __init__(self%(args_str)s):\n"
-                  "       OpenSCADObject.__init__(self, '%(class_name)s', {%(args_pairs)s })\n"
-                  "   \n"
-                  "\n" % vars())
-
-    return result
-
+# now that we have the base class defined, we can do a circular import
+from . import objects
 
 def py2openscad(o):
     if type(o) == bool:
@@ -649,60 +632,3 @@ def py2openscad(o):
 
 def indent(s):
     return s.replace("\n", "\n\t")
-
-
-# ===========
-# = Parsing =
-# ===========
-def extract_callable_signatures(scad_file_path):
-    with open(scad_file_path) as f:
-        scad_code_str = f.read()
-    return parse_scad_callables(scad_code_str)
-
-
-def parse_scad_callables(scad_code_str):
-    callables = []
-
-    # Note that this isn't comprehensive; tuples or nested data structures in
-    # a module definition will defeat it.
-
-    # Current implementation would throw an error if you tried to call a(x, y)
-    # since Python would expect a(x);  OpenSCAD itself ignores extra arguments,
-    # but that's not really preferable behavior
-
-    # TODO:  write a pyparsing grammar for OpenSCAD, or, even better, use the yacc parse grammar
-    # used by the language itself.  -ETJ 06 Feb 2011
-
-    no_comments_re = r'(?mxs)(//.*?\n|/\*.*?\*/)'
-
-    # Also note: this accepts: 'module x(arg) =' and 'function y(arg) {', both
-    # of which are incorrect syntax
-    mod_re = r'(?mxs)^\s*(?:module|function)\s+(?P<callable_name>\w+)\s*\((?P<all_args>.*?)\)\s*(?:{|=)'
-
-    # This is brittle.  To get a generally applicable expression for all arguments,
-    # we'd need a real parser to handle nested-list default args or parenthesized statements.
-    # For the moment, assume a maximum of one square-bracket-delimited list
-    args_re = r'(?mxs)(?P<arg_name>\w+)(?:\s*=\s*(?P<default_val>[\w.-]+|\[.*\]))?(?:,|$)'
-
-    # remove all comments from SCAD code
-    scad_code_str = re.sub(no_comments_re, '', scad_code_str)
-    # get all SCAD callables
-    mod_matches = re.finditer(mod_re, scad_code_str)
-
-    for m in mod_matches:
-        callable_name = m.group('callable_name')
-        args = []
-        kwargs = []
-        all_args = m.group('all_args')
-        if all_args:
-            arg_matches = re.finditer(args_re, all_args)
-            for am in arg_matches:
-                arg_name = am.group('arg_name')
-                if am.group('default_val'):
-                    kwargs.append(arg_name)
-                else:
-                    args.append(arg_name)
-
-        callables.append({'name': callable_name, 'args': args, 'kwargs': kwargs})
-
-    return callables

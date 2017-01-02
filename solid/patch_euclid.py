@@ -1,7 +1,7 @@
 import euclid3
 from euclid3 import *
 
-from solid.utils import *  # Only needed for EPSILON. Tacky.
+from solid.utils import EPSILON
 
 # NOTE: The PyEuclid on PyPi doesn't include several elements added to
 # the module as of 13 Feb 2013.  Add them here until euclid supports them
