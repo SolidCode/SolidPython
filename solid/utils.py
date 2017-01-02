@@ -644,7 +644,17 @@ screw_dimensions = {
     'm5': {'nut_thickness': 4.7, 'nut_inner_diam': 7.9, 'nut_outer_diam': 8.8, 'screw_outer_diam': 5.0, 'cap_diam': 8.7, 'cap_height': 5},
 
 }
-
+bearing_dimensions = {
+    '608': {'inner_d':8, 'outer_d':22, 'thickness':7},
+    '688': {'inner_d':8, 'outer_d':16, 'thickness':5},
+    '686': {'inner_d':6, 'outer_d':13, 'thickness':5},
+    '626': {'inner_d':6, 'outer_d':19, 'thickness':6},
+    '625': {'inner_d':5, 'outer_d':16, 'thickness':5},
+    '624': {'inner_d':4, 'outer_d':13, 'thickness':5},
+    '623': {'inner_d':3, 'outer_d':10, 'thickness':4},
+    '603': {'inner_d':3, 'outer_d':9,  'thickness':5},
+    '633': {'inner_d':3, 'outer_d':13, 'thickness':5},
+}
 
 def screw(screw_type='m3', screw_length=16):
     dims = screw_dimensions[screw_type.lower()]
@@ -660,7 +670,6 @@ def screw(screw_type='m3', screw_length=16):
     )
     return ret
 
-
 def nut(screw_type='m3'):
     dims = screw_dimensions[screw_type.lower()]
     outer_rad = dims['nut_outer_diam']
@@ -672,6 +681,20 @@ def nut(screw_type='m3'):
     )
     return ret
 
+def bearing(bearing_type='624'):
+    dims = bearing_dimensions[bearing_type.lower()]
+    outerR = dims['outer_d']/2
+    innerR = dims['inner_d']/2
+    thickness = dims['thickness']
+    bearing = cylinder(outerR,thickness)
+    bearing.add_param('$fs', 1)
+    hole = cylinder(innerR,thickness+2)
+    hole.add_param('$fs', 1)
+    bearing = difference()(
+        bearing,
+        translate([0,0,-1])(hole)
+    )
+    return bearing
 
 # ==================
 # = PyEuclid Utils =
