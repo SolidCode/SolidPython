@@ -868,12 +868,6 @@ try:
     # = ------ =
     LEFT, RIGHT = radians(90), radians(-90)
 
-    def offset_polygon(point_arr, offset, inside=True, closed_poly=True):
-        # returns a closed solidPython polygon offset by offset distance
-        # from the polygon described by point_arr.
-        op = offset_points(point_arr, offset=offset, inside=inside, closed_poly=closed_poly)
-        return polygon(euc_to_arr(op))
-
     def offset_points(point_arr, offset, inside=True, closed_poly=True):
         # Given a set of points, return a set of points offset from
         # them.

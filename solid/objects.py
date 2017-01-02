@@ -293,6 +293,32 @@ class minkowski(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'minkowski', {})
 
+class offset(OpenSCADObject):
+    '''
+    
+    :param r: Amount to offset the polygon (rounded corners). When negative, 
+        the polygon is offset inwards. The parameter r specifies the radius 
+        that is used to generate rounded corners, using delta gives straight edges.
+    :type r: number
+    
+    :param delta: Amount to offset the polygon (sharp corners). When negative, 
+        the polygon is offset inwards. The parameter r specifies the radius 
+        that is used to generate rounded corners, using delta gives straight edges.
+    :type delta: number
+    
+    :param chamfer: When using the delta parameter, this flag defines if edges 
+        should be chamfered (cut off with a straight line) or not (extended to 
+        their intersection).
+    :type chamfer: bool
+    '''
+    def __init__(self, r=None, delta=None, chamfer=False):
+        if r:
+            kwargs = {'r':r}
+        elif delta:
+            kwargs = {'delta':delta, 'chamfer':chamfer}
+        else:
+            raise ValueError("offset(): Must supply r or delta")
+        OpenSCADObject.__init__(self, 'offset', kwargs)
 
 class hull(OpenSCADObject):
     '''
