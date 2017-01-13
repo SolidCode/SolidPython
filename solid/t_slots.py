@@ -149,7 +149,7 @@ def nut_trap_slot(screw_type='m3', screw_length=16, material_thickness=DFM):
         screw_w = screw_dict['screw_outer_diam']
         screw_w2 = screw_w / 2
         # NOTE: How are these tolerances?
-        nut_hole_x = (screw_dict['nut_inner_diam'] + 0.2) / 2
+        nut_hole_x = (screw_dict['nut_diam'] + 0.2) / 2
         nut_hole_h = screw_dict['nut_thickness'] + 0.5
         slot_depth = material_thickness - screw_length - 0.5
         # If a nut isn't far enough into the material, the sections

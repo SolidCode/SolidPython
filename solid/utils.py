@@ -639,11 +639,11 @@ def bounding_box(points):
 # = Hardware dimensions =
 # =======================
 screw_dimensions = {
-    'm3': {'nut_thickness': 2.4, 'nut_inner_diam': 5.4, 'nut_outer_diam': 6.1, 'screw_outer_diam': 3.0, 'cap_diam': 5.5, 'cap_height': 3.0},
-    'm4': {'nut_thickness': 3.1, 'nut_inner_diam': 7.0, 'nut_outer_diam': 7.9, 'screw_outer_diam': 4.0, 'cap_diam': 6.9, 'cap_height': 3.9},
-    'm5': {'nut_thickness': 4.7, 'nut_inner_diam': 7.9, 'nut_outer_diam': 8.8, 'screw_outer_diam': 5.0, 'cap_diam': 8.7, 'cap_height': 5},
-
+    'm3': {'nut_thickness': 2.4, 'nut_diam': 5.5, 'screw_outer_diam': 3.0, 'cap_diam': 5.5, 'cap_height': 3.0},
+    'm4': {'nut_thickness': 3.2, 'nut_diam': 7.0, 'screw_outer_diam': 4.0, 'cap_diam': 6.9, 'cap_height': 3.9},
+    'm5': {'nut_thickness': 4, 'nut_diam': 8, 'screw_outer_diam': 5.0, 'cap_diam': 8.7, 'cap_height': 5},
 }
+
 bearing_dimensions = {
     '608': {'inner_d':8, 'outer_d':22, 'thickness':7},
     '688': {'inner_d':8, 'outer_d':16, 'thickness':5},
@@ -656,31 +656,6 @@ bearing_dimensions = {
     '633': {'inner_d':3, 'outer_d':13, 'thickness':5},
 }
 
-def screw(screw_type='m3', screw_length=16):
-    dims = screw_dimensions[screw_type.lower()]
-    shaft_rad = dims['screw_outer_diam'] / 2
-    cap_rad = dims['cap_diam'] / 2
-    cap_height = dims['cap_height']
-
-    ret = union()(
-        cylinder(shaft_rad, screw_length),
-        up(screw_length)(
-            cylinder(cap_rad, cap_height)
-        )
-    )
-    return ret
-
-def nut(screw_type='m3'):
-    dims = screw_dimensions[screw_type.lower()]
-    outer_rad = dims['nut_outer_diam']
-    inner_rad = dims['screw_outer_diam']
-
-    ret = difference()(
-        circle(outer_rad, segments=6),
-        circle(inner_rad)
-    )
-    return ret
-
 def bearing(bearing_type='624'):
     dims = bearing_dimensions[bearing_type.lower()]
     outerR = dims['outer_d']/2
@@ -691,10 +666,41 @@ def bearing(bearing_type='624'):
     hole = cylinder(innerR,thickness+2)
     hole.add_param('$fs', 1)
     bearing = difference()(
-        bearing,
-        translate([0,0,-1])(hole)
-    )
+                            bearing,
+                            translate([0,0,-1])(hole)
+                          )
     return bearing
+
+def screw(screw_type='m3', screw_length=16):
+    dims = screw_dimensions[screw_type.lower()]
+    shaft_rad = dims['screw_outer_diam'] / 2
+    cap_rad = dims['cap_diam'] / 2
+    cap_height = dims['cap_height']
+
+    shaft = cylinder(shaft_rad, screw_length)
+    shaft.add_param('$fs', 1)
+    cap = cylinder(cap_rad, cap_height)
+    cap.add_param('$fs', 1)
+
+    ret = union()(
+        shaft,
+        up(screw_length)(
+            cap
+        )
+    )
+    return ret
+
+
+def nut(screw_type='m3'):
+    dims = screw_dimensions[screw_type.lower()]
+    outer_rad = dims['nut_diam']/2
+    inner_rad = dims['screw_outer_diam']/2
+
+    ret = difference()(
+        cylinder(outer_rad, segments=6,h=dims['nut_thickness']),
+        translate([0,0,-1])(cylinder(inner_rad,h=dims['nut_thickness']+2)),
+    )
+    return ret
 
 def helix(rad=10, length=20,pitch=0.2,flatEnd=True):
     outline = []
