@@ -568,10 +568,10 @@ def bill_of_materials(csv=False):
                 unit_price = total_price = ""
             row = [desc, count, unit_price, total_price]
 
-        for key in g_bom_headers:
-            value = elements[key]
-            row.append(value)
-        rows.append(row)
+            for key in g_bom_headers:
+                value = elements[key]
+                row.append(value)
+            rows.append(row)
 
     # Add total costs if we have values to add
     if len(all_costs) > 0:
@@ -695,6 +695,52 @@ def bearing(bearing_type='624'):
         translate([0,0,-1])(hole)
     )
     return bearing
+
+def helix(rad=10, length=20,pitch=0.2,flatEnd=True):
+    outline = []
+    z = 0.0
+    segmentsPerTurn=140.0
+
+    #for i in range(segments):
+    #    angle = i * 360*10 / segments
+    i = 0
+    startAngleAtEnd = 0.0
+
+    while z <= length:
+        angle = i*360*10/segmentsPerTurn
+        x = rad * cos(radians(angle))
+        y = rad * sin(radians(angle))
+
+        if flatEnd:
+            if  angle > 180: # this makes start of helix flat
+                if z + pitch >= length and startAngleAtEnd == 0:
+                     startAngleAtEnd = angle
+                if startAngleAtEnd != 0: # this makes end of helix flat
+                     if startAngleAtEnd + 180 <= angle:
+                         break
+                else:
+                    z = z + pitch
+        else:
+             z = z + pitch
+        outline.append(Point3(x, y, z))
+        i+=1
+    return outline
+
+
+def circleShape(num_points=5, outer_rad=1.0):
+    circle_pts = []
+    for i in range(2 * num_points):
+        rad = outer_rad
+        angle = radians(360 / (2 * num_points) * i)
+        circle_pts.append(Point3(rad * cos(angle), rad * sin(angle), 0))
+    return circle_pts
+
+
+def springGenerator(length=32,wireRadius=1,pitch=0.4,SpringRadius=7.5,pointsInCircle=5):
+    shape = circleShape(num_points=5,outer_rad = wireRadius)
+    path = helix(rad=SpringRadius,length=length-wireRadius*2,pitch=pitch)
+    extruded = extrude_along_path(shape_pts=shape, path_pts=path)
+    return extruded
 
 # ==================
 # = PyEuclid Utils =
