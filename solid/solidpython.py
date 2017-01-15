@@ -511,17 +511,6 @@ class OpenSCADObject(object):
             other.add(c.copy())
         return other
 
-    def __call__(self, *args):
-        '''
-        Adds all objects in args to self.  This enables OpenSCAD-like syntax,
-        e.g.:
-        union()(
-            cube(),
-            sphere()
-        )
-        '''
-        return self.add(args)
-
     def __add__(self, x):
         '''
         This makes u = a+b identical to:
@@ -570,6 +559,18 @@ class OpenSCADObject(object):
             os.unlink(tmp_png.name)
 
         return png_data
+
+class OpenSCADTransformation(OpenSCADObject):
+    def __call__(self, *args):
+        '''
+        Adds all objects in args to self.  This enables OpenSCAD-like syntax,
+        e.g.:
+        union()(
+            cube(),
+            sphere()
+        )
+        '''
+        return self.add(args)
 
 
 class IncludedOpenSCADObject(OpenSCADObject):

@@ -1,7 +1,7 @@
 """
 Classes for OpenSCAD builtins
 """
-from .solidpython import OpenSCADObject
+from .solidpython import OpenSCADObject, OpenSCADTransformation
 from .solidpython import IncludedOpenSCADObject
 
 class polygon(OpenSCADObject):
@@ -160,7 +160,7 @@ class polyhedron(OpenSCADObject):
                                  'triangles': triangles})
 
 
-class union(OpenSCADObject):
+class union(OpenSCADTransformation):
     '''
     Creates a union of all its child nodes. This is the **sum** of all
     children.
@@ -169,7 +169,7 @@ class union(OpenSCADObject):
         OpenSCADObject.__init__(self, 'union', {})
 
 
-class intersection(OpenSCADObject):
+class intersection(OpenSCADTransformation):
     '''
     Creates the intersection of all child nodes. This keeps the
     **overlapping** portion
@@ -178,7 +178,7 @@ class intersection(OpenSCADObject):
         OpenSCADObject.__init__(self, 'intersection', {})
 
 
-class difference(OpenSCADObject):
+class difference(OpenSCADTransformation):
     '''
     Subtracts the 2nd (and all further) child nodes from the first one.
     '''
@@ -186,19 +186,19 @@ class difference(OpenSCADObject):
         OpenSCADObject.__init__(self, 'difference', {})
 
 
-class hole(OpenSCADObject):
+class hole(OpenSCADTransformation):
     def __init__(self):
         OpenSCADObject.__init__(self, 'hole', {})
         self.set_hole(True)
 
 
-class part(OpenSCADObject):
+class part(OpenSCADTransformation):
     def __init__(self):
         OpenSCADObject.__init__(self, 'part', {})
         self.set_part_root(True)
 
 
-class translate(OpenSCADObject):
+class translate(OpenSCADTransformation):
     '''
     Translates (moves) its child elements along the specified vector.
 
@@ -209,7 +209,7 @@ class translate(OpenSCADObject):
         OpenSCADObject.__init__(self, 'translate', {'v': v})
 
 
-class scale(OpenSCADObject):
+class scale(OpenSCADTransformation):
     '''
     Scales its child elements using the specified vector.
 
@@ -220,7 +220,7 @@ class scale(OpenSCADObject):
         OpenSCADObject.__init__(self, 'scale', {'v': v})
 
 
-class rotate(OpenSCADObject):
+class rotate(OpenSCADTransformation):
     '''
     Rotates its child 'a' degrees about the origin of the coordinate system
     or around an arbitrary axis.
@@ -235,7 +235,7 @@ class rotate(OpenSCADObject):
         OpenSCADObject.__init__(self, 'rotate', {'a': a, 'v': v})
 
 
-class mirror(OpenSCADObject):
+class mirror(OpenSCADTransformation):
     '''
     Mirrors the child element on a plane through the origin.
 
@@ -247,7 +247,7 @@ class mirror(OpenSCADObject):
         OpenSCADObject.__init__(self, 'mirror', {'v': v})
 
 
-class resize(OpenSCADObject):
+class resize(OpenSCADTransformation):
     '''
     Modify the size of the child object to match the given new size.
 
@@ -258,7 +258,7 @@ class resize(OpenSCADObject):
         OpenSCADObject.__init__(self, 'resize', {'newsize': newsize})
 
 
-class multmatrix(OpenSCADObject):
+class multmatrix(OpenSCADTransformation):
     '''
     Multiplies the geometry of all child elements with the given 4x4
     transformation matrix.
@@ -270,7 +270,7 @@ class multmatrix(OpenSCADObject):
         OpenSCADObject.__init__(self, 'multmatrix', {'m': m})
 
 
-class color(OpenSCADObject):
+class color(OpenSCADTransformation):
     '''
     Displays the child elements using the specified RGB color + alpha value.
     This is only used for the F5 preview as CGAL and STL (F6) do not
@@ -284,7 +284,7 @@ class color(OpenSCADObject):
         OpenSCADObject.__init__(self, 'color', {'c': c})
 
 
-class minkowski(OpenSCADObject):
+class minkowski(OpenSCADTransformation):
     '''
     Renders the `minkowski
     sum <http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Minkowski_sum_3/Chapter_main.html>`__
@@ -293,7 +293,7 @@ class minkowski(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'minkowski', {})
 
-class offset(OpenSCADObject):
+class offset(OpenSCADTransformation):
     '''
     
     :param r: Amount to offset the polygon (rounded corners). When negative, 
@@ -320,7 +320,7 @@ class offset(OpenSCADObject):
             raise ValueError("offset(): Must supply r or delta")
         OpenSCADObject.__init__(self, 'offset', kwargs)
 
-class hull(OpenSCADObject):
+class hull(OpenSCADTransformation):
     '''
     Renders the `convex
     hull <http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Convex_hull_2/Chapter_main.html>`__
@@ -330,7 +330,7 @@ class hull(OpenSCADObject):
         OpenSCADObject.__init__(self, 'hull', {})
 
 
-class render(OpenSCADObject):
+class render(OpenSCADTransformation):
     '''
     Always calculate the CSG model for this tree (even in OpenCSG preview
     mode).
@@ -342,7 +342,7 @@ class render(OpenSCADObject):
         OpenSCADObject.__init__(self, 'render', {'convexity': convexity})
 
 
-class linear_extrude(OpenSCADObject):
+class linear_extrude(OpenSCADTransformation):
     '''
     Linear Extrusion is a modeling operation that takes a 2D polygon as
     input and extends it in the third dimension. This way a 3D shape is
@@ -375,7 +375,7 @@ class linear_extrude(OpenSCADObject):
                                  'slices': slices, 'scale':scale})
 
 
-class rotate_extrude(OpenSCADObject):
+class rotate_extrude(OpenSCADTransformation):
     '''
     A rotational extrusion is a Linear Extrusion with a twist, literally.
     Unfortunately, it can not be used to produce a helix for screw threads
@@ -401,7 +401,7 @@ class rotate_extrude(OpenSCADObject):
                                 {'convexity': convexity, 'segments': segments})
 
 
-class dxf_linear_extrude(OpenSCADObject):
+class dxf_linear_extrude(OpenSCADTransformation):
     def __init__(self, file, layer=None, height=None, center=None,
                  convexity=None, twist=None, slices=None):
         OpenSCADObject.__init__(self, 'dxf_linear_extrude',
@@ -411,7 +411,7 @@ class dxf_linear_extrude(OpenSCADObject):
                                  'slices': slices})
 
 
-class projection(OpenSCADObject):
+class projection(OpenSCADTransformation):
     '''
     Creates 2d shapes from 3d models, and export them to the dxf format.
     It works by projecting a 3D model to the (x,y) plane, with z at 0.
@@ -423,7 +423,7 @@ class projection(OpenSCADObject):
         OpenSCADObject.__init__(self, 'projection', {'cut': cut})
 
 
-class surface(OpenSCADObject):
+class surface(OpenSCADTransformation):
     '''
     Surface reads information from text or image files.
 
@@ -548,7 +548,7 @@ class import_(OpenSCADObject):
                                  'layer': layer})
 
 
-class intersection_for(OpenSCADObject):
+class intersection_for(OpenSCADTransformation):
     '''
     Iterate over the values in a vector or range and take an
     intersection of the contents.
@@ -557,7 +557,7 @@ class intersection_for(OpenSCADObject):
         OpenSCADObject.__init__(self, 'intersection_for', {'n': n})
 
 
-class assign(OpenSCADObject):
+class assign(OpenSCADTransformation):
     def __init__(self):
         OpenSCADObject.__init__(self, 'assign', {})
 
