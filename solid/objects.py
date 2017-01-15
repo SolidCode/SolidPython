@@ -165,8 +165,10 @@ class union(OpenSCADObject):
     Creates a union of all its child nodes. This is the **sum** of all
     children.
     '''
-    def __init__(self):
+    def __init__(self, *args):
         OpenSCADObject.__init__(self, 'union', {})
+        if args:
+            self(args)
 
 
 class intersection(OpenSCADObject):
@@ -174,28 +176,36 @@ class intersection(OpenSCADObject):
     Creates the intersection of all child nodes. This keeps the
     **overlapping** portion
     '''
-    def __init__(self):
+    def __init__(self, *args):
         OpenSCADObject.__init__(self, 'intersection', {})
+        if args:
+            self(args)
 
 
 class difference(OpenSCADObject):
     '''
     Subtracts the 2nd (and all further) child nodes from the first one.
     '''
-    def __init__(self):
+    def __init__(self, *args):
         OpenSCADObject.__init__(self, 'difference', {})
+        if args:
+            self(args)
 
 
 class hole(OpenSCADObject):
-    def __init__(self):
+    def __init__(self, *args):
         OpenSCADObject.__init__(self, 'hole', {})
         self.set_hole(True)
+        if args:
+            self(args)
 
 
 class part(OpenSCADObject):
-    def __init__(self):
+    def __init__(self, *args):
         OpenSCADObject.__init__(self, 'part', {})
         self.set_part_root(True)
+        if args:
+            self(args)
 
 
 class translate(OpenSCADObject):
@@ -290,8 +300,10 @@ class minkowski(OpenSCADObject):
     sum <http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Minkowski_sum_3/Chapter_main.html>`__
     of child nodes.
     '''
-    def __init__(self):
+    def __init__(self, *args):
         OpenSCADObject.__init__(self, 'minkowski', {})
+        if args:
+            self(args)
 
 class offset(OpenSCADObject):
     '''
@@ -326,8 +338,10 @@ class hull(OpenSCADObject):
     hull <http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Convex_hull_2/Chapter_main.html>`__
     of child nodes.
     '''
-    def __init__(self):
+    def __init__(self, *args):
         OpenSCADObject.__init__(self, 'hull', {})
+        if args:
+            self(args)
 
 
 class render(OpenSCADObject):
