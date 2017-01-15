@@ -1,7 +1,8 @@
 """
 Classes for OpenSCAD builtins
 """
-from .solidpython import OpenSCADObject, OpenSCADTransformation
+from .solidpython import OpenSCADObject
+from .solidpython import OpenSCADTransformation
 from .solidpython import IncludedOpenSCADObject
 
 class polygon(OpenSCADObject):
