@@ -25,8 +25,9 @@ def _find_include_strings(obj):
     include_strings = set()
     if isinstance(obj, IncludedOpenSCADObject):
         include_strings.add(obj.include_string)
-    for child in obj.children:
-        include_strings.update(_find_include_strings(child))
+    if isinstance(obj, OpenSCADTransformation):
+        for child in obj.children:
+            include_strings.update(_find_include_strings(child))
     return include_strings
 
 
@@ -288,11 +289,9 @@ class OpenSCADObject(object):
     def __init__(self, name, params):
         self.name = name
         self.params = params
-        self.children = []
         self.modifier = ""
         self.parent = None
         self.is_hole = False
-        self.has_hole_children = False
         self.is_part_root = False
 
     def set_hole(self, is_hole=True):
@@ -302,32 +301,6 @@ class OpenSCADObject(object):
     def set_part_root(self, is_root=True):
         self.is_part_root = is_root
         return self
-
-    def find_hole_children(self, path=None):
-        # Because we don't force a copy every time we re-use a node
-        # (e.g a = cylinder(2, 6);  b = right(10) (a)
-        #  the identical 'a' object appears in the tree twice),
-        # we can't count on an object's 'parent' field to trace its
-        # path to the root.  Instead, keep track explicitly
-        path = path if path else [self]
-        hole_kids = []
-
-        for child in self.children:
-            path.append(child)
-            if child.is_hole:
-                hole_kids.append(child)
-                # Mark all parents as having a hole child
-                for p in path:
-                    p.has_hole_children = True
-            # Don't append holes from separate parts below us
-            elif child.is_part_root:
-                continue
-            # Otherwise, look below us for children
-            else:
-                hole_kids += child.find_hole_children(path)
-            path.pop()
-
-        return hole_kids
 
     def set_modifier(self, m):
         # Used to add one of the 4 single-character modifiers: 
@@ -350,39 +323,14 @@ class OpenSCADObject(object):
         you really want scad_render(), 
         Calling obj._render won't include necessary 'use' or 'include' statements
         '''
-        # First, render all children
-        s = ""
-        for child in self.children:
-            # Don't immediately render hole children.
-            # Add them to the parent's hole list,
-            # And render after everything else
-            if not render_holes and child.is_hole:
-                continue
-            s += child._render(render_holes)
 
-        # Then render self and prepend/wrap it around the children
+        # Render self
         # I've added designated parts and explicit holes to SolidPython.
         # OpenSCAD has neither, so don't render anything from these objects
         if self.name in non_rendered_classes:
-            pass
-        elif not self.children:
-            s = self._render_str_no_children() + ";"
+            return ""
         else:
-            s = self._render_str_no_children() + " {" + indent(s) + "\n}"
-
-        # If this is the root object or the top of a separate part,
-        # find all holes and subtract them after all positive geometry
-        # is rendered
-        if (not self.parent) or self.is_part_root:
-            hole_children = self.find_hole_children()
-
-            if len(hole_children) > 0:
-                s += "\n/* Holes Below*/"
-                s += self._render_hole_children()
-
-                # wrap everything in the difference
-                s = "\ndifference(){" + indent(s) + " /* End Holes */ \n}"
-        return s
+            return self._render_str_no_children() + ";"
 
     def _render_str_no_children(self):
         s = "\n" + self.modifier + self.name + "("
@@ -422,62 +370,6 @@ class OpenSCADObject(object):
         s += ")"
         return s
 
-    def _render_hole_children(self):
-        # Run down the tree, rendering only those nodes
-        # that are holes or have holes beneath them
-        if not self.has_hole_children:
-            return ""
-        s = ""
-        for child in self.children:
-            if child.is_hole:
-                s += child._render(render_holes=True)
-            elif child.has_hole_children:
-                # Holes exist in the compiled tree in two pieces:
-                # The shapes of the holes themselves, (an object for which
-                # obj.is_hole is True, and all its children) and the
-                # transforms necessary to put that hole in place, which
-                # are inherited from non-hole geometry.
-
-                # Non-hole Intersections & differences can change (shrink)
-                # the size of holes, and that shouldn't happen: an
-                # intersection/difference with an empty space should be the
-                # entirety of the empty space.
-                #  In fact, the intersection of two empty spaces should be
-                # everything contained in both of them:  their union.
-                # So... replace all super-hole intersection/diff transforms
-                # with union in the hole segment of the compiled tree.
-                # And if you figure out a better way to explain this,
-                # please, please do... because I think this works, but I
-                # also think my rationale is shaky and imprecise. 
-                # -ETJ 19 Feb 2013
-                s = s.replace("intersection", "union")
-                s = s.replace("difference", "union")
-                s += child._render_hole_children()
-        if self.name in non_rendered_classes:
-            pass
-        else:
-            s = self._render_str_no_children() + "{" + indent(s) + "\n}"
-        return s
-
-    def add(self, child):
-        '''
-        if child is a single object, assume it's an OpenSCADObject and 
-        add it to self.children
-
-        if child is a list, assume its members are all OpenSCADObjects and
-        add them all to self.children
-        '''
-        if isinstance(child, (list, tuple)):
-            # __call__ passes us a list inside a tuple, but we only care
-            # about the list, so skip single-member tuples containing lists
-            if len(child) == 1 and isinstance(child[0], (list, tuple)):
-                child = child[0]
-            [self.add(c) for c in child]
-        else:
-            self.children.append(child)
-            child.set_parent(self)
-        return self
-
     def set_parent(self, parent):
         self.parent = parent
 
@@ -489,7 +381,7 @@ class OpenSCADObject(object):
 
     def copy(self):
         '''
-        Provides a copy of this object and all children,
+        Provides a copy of this object,
         but doesn't copy self.parent, meaning the new object belongs
         to a different tree
         Initialize an instance of this class with the same params
@@ -506,9 +398,7 @@ class OpenSCADObject(object):
         other.set_modifier(self.modifier)
         other.set_hole(self.is_hole)
         other.set_part_root(self.is_part_root)
-        other.has_hole_children = self.has_hole_children
-        for c in self.children:
-            other.add(c.copy())
+
         return other
 
     def __add__(self, x):
@@ -561,6 +451,12 @@ class OpenSCADObject(object):
         return png_data
 
 class OpenSCADTransformation(OpenSCADObject):
+    def __init__(self, name, params):
+        # The objects uppon which the transformations are applied are kept as children
+        OpenSCADObject.__init__(self, name, params)
+        self.children = []
+        self.has_hole_children = False
+
     def __call__(self, *args):
         '''
         Adds all objects in args to self.  This enables OpenSCAD-like syntax,
@@ -572,6 +468,135 @@ class OpenSCADTransformation(OpenSCADObject):
         '''
         return self.add(args)
 
+    def add(self, child):
+        '''
+        if child is a single object, assume it's an OpenSCADObject and
+        add it to self.children
+
+        if child is a list, assume its members are all OpenSCADObjects and
+        add them all to self.children
+        '''
+        if isinstance(child, (list, tuple)):
+            # __call__ passes us a list inside a tuple, but we only care
+            # about the list, so skip single-member tuples containing lists
+            if len(child) == 1 and isinstance(child[0], (list, tuple)):
+                child = child[0]
+            [self.add(c) for c in child]
+        else:
+            self.children.append(child)
+            child.set_parent(self)
+        return self
+
+    def copy(self):
+        # Transformations includes a copy of its children
+        other = OpenSCADObject.copy(self)
+        other.has_hole_children = self.has_hole_children
+        for c in self.children:
+            other.add(c.copy())
+        return other
+
+
+    def _render(self, render_holes=False):
+        '''
+        NOTE: In general, you won't want to call this method. For most purposes,
+        you really want scad_render(),
+        Calling obj._render won't include necessary 'use' or 'include' statements
+        '''
+        # First, render all children
+        s = ""
+        for child in self.children:
+            # Don't immediately render hole children.
+            # Add them to the parent's hole list,
+            # And render after everything else
+            if not render_holes and child.is_hole:
+                continue
+            s += child._render(render_holes)
+
+        # Then render self and prepend/wrap it around the children
+        # I've added designated parts and explicit holes to SolidPython.
+        # OpenSCAD has neither, so don't render anything from these objects
+        if self.name in non_rendered_classes:
+            pass
+        else:
+            s = self._render_str_no_children() + " {" + indent(s) + "\n}"
+
+        # If this is the root object or the top of a separate part,
+        # find all holes and subtract them after all positive geometry
+        # is rendered
+        if (not self.parent) or self.is_part_root:
+            hole_children = self.find_hole_children()
+
+            if len(hole_children) > 0:
+                s += "\n/* Holes Below*/"
+                s += self._render_hole_children()
+
+                # wrap everything in the difference
+                s = "\ndifference(){" + indent(s) + " /* End Holes */ \n}"
+        return s
+
+    def _render_hole_children(self):
+        # Run down the tree, rendering only those nodes
+        # that are holes or have holes beneath them
+        if not self.has_hole_children:
+            return ""
+        s = ""
+        for child in self.children:
+            if child.is_hole:
+                s += child._render(render_holes=True)
+            elif child.has_hole_children:
+                # Holes exist in the compiled tree in two pieces:
+                # The shapes of the holes themselves, (an object for which
+                # obj.is_hole is True, and all its children) and the
+                # transforms necessary to put that hole in place, which
+                # are inherited from non-hole geometry.
+
+                # Non-hole Intersections & differences can change (shrink)
+                # the size of holes, and that shouldn't happen: an
+                # intersection/difference with an empty space should be the
+                # entirety of the empty space.
+                #  In fact, the intersection of two empty spaces should be
+                # everything contained in both of them:  their union.
+                # So... replace all super-hole intersection/diff transforms
+                # with union in the hole segment of the compiled tree.
+                # And if you figure out a better way to explain this,
+                # please, please do... because I think this works, but I
+                # also think my rationale is shaky and imprecise.
+                # -ETJ 19 Feb 2013
+                s = s.replace("intersection", "union")
+                s = s.replace("difference", "union")
+                s += child._render_hole_children()
+        if self.name in non_rendered_classes:
+            pass
+        else:
+            s = self._render_str_no_children() + "{" + indent(s) + "\n}"
+        return s
+
+    def find_hole_children(self, path=None):
+        # Because we don't force a copy every time we re-use a node
+        # (e.g a = cylinder(2, 6);  b = right(10) (a)
+        #  the identical 'a' object appears in the tree twice),
+        # we can't count on an object's 'parent' field to trace its
+        # path to the root.  Instead, keep track explicitly
+        path = path if path else [self]
+        hole_kids = []
+
+        for child in self.children:
+            path.append(child)
+            if child.is_hole:
+                hole_kids.append(child)
+                # Mark all parents as having a hole child
+                for p in path:
+                    p.has_hole_children = True
+            # Don't append holes from separate parts below us
+            elif child.is_part_root:
+                continue
+            # Otherwise, look below us for children
+            else:
+                if isinstance(child, OpenSCADTransformation):
+                    hole_kids += child.find_hole_children(path)
+            path.pop()
+
+        return hole_kids
 
 class IncludedOpenSCADObject(OpenSCADObject):
     # Identical to OpenSCADObject, but each subclass of IncludedOpenSCADObject

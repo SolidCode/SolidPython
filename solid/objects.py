@@ -167,7 +167,7 @@ class union(OpenSCADTransformation):
     children.
     '''
     def __init__(self):
-        OpenSCADObject.__init__(self, 'union', {})
+        OpenSCADTransformation.__init__(self, 'union', {})
 
 
 class intersection(OpenSCADTransformation):
@@ -176,7 +176,7 @@ class intersection(OpenSCADTransformation):
     **overlapping** portion
     '''
     def __init__(self):
-        OpenSCADObject.__init__(self, 'intersection', {})
+        OpenSCADTransformation.__init__(self, 'intersection', {})
 
 
 class difference(OpenSCADTransformation):
@@ -184,18 +184,18 @@ class difference(OpenSCADTransformation):
     Subtracts the 2nd (and all further) child nodes from the first one.
     '''
     def __init__(self):
-        OpenSCADObject.__init__(self, 'difference', {})
+        OpenSCADTransformation.__init__(self, 'difference', {})
 
 
 class hole(OpenSCADTransformation):
     def __init__(self):
-        OpenSCADObject.__init__(self, 'hole', {})
+        OpenSCADTransformation.__init__(self, 'hole', {})
         self.set_hole(True)
 
 
 class part(OpenSCADTransformation):
     def __init__(self):
-        OpenSCADObject.__init__(self, 'part', {})
+        OpenSCADTransformation.__init__(self, 'part', {})
         self.set_part_root(True)
 
 
@@ -207,7 +207,7 @@ class translate(OpenSCADTransformation):
     :type v: 3 value sequence
     '''
     def __init__(self, v=None):
-        OpenSCADObject.__init__(self, 'translate', {'v': v})
+        OpenSCADTransformation.__init__(self, 'translate', {'v': v})
 
 
 class scale(OpenSCADTransformation):
@@ -218,7 +218,7 @@ class scale(OpenSCADTransformation):
     :type v: 3 value sequence
     '''
     def __init__(self, v=None):
-        OpenSCADObject.__init__(self, 'scale', {'v': v})
+        OpenSCADTransformation.__init__(self, 'scale', {'v': v})
 
 
 class rotate(OpenSCADTransformation):
@@ -233,7 +233,7 @@ class rotate(OpenSCADTransformation):
     :type v: 3 value sequence
     '''
     def __init__(self, a=None, v=None):
-        OpenSCADObject.__init__(self, 'rotate', {'a': a, 'v': v})
+        OpenSCADTransformation.__init__(self, 'rotate', {'a': a, 'v': v})
 
 
 class mirror(OpenSCADTransformation):
@@ -245,7 +245,7 @@ class mirror(OpenSCADTransformation):
 
     '''
     def __init__(self, v):
-        OpenSCADObject.__init__(self, 'mirror', {'v': v})
+        OpenSCADTransformation.__init__(self, 'mirror', {'v': v})
 
 
 class resize(OpenSCADTransformation):
@@ -256,7 +256,7 @@ class resize(OpenSCADTransformation):
     :type newsize: 3 value sequence
     '''
     def __init__(self, newsize):
-        OpenSCADObject.__init__(self, 'resize', {'newsize': newsize})
+        OpenSCADTransformation.__init__(self, 'resize', {'newsize': newsize})
 
 
 class multmatrix(OpenSCADTransformation):
@@ -268,7 +268,7 @@ class multmatrix(OpenSCADTransformation):
     :type m: sequence of 4 sequences, each containing 4 numbers.
     '''
     def __init__(self, m):
-        OpenSCADObject.__init__(self, 'multmatrix', {'m': m})
+        OpenSCADTransformation.__init__(self, 'multmatrix', {'m': m})
 
 
 class color(OpenSCADTransformation):
@@ -282,7 +282,7 @@ class color(OpenSCADTransformation):
     :type c: sequence of 3 or 4 numbers between 0 and 1
     '''
     def __init__(self, c):
-        OpenSCADObject.__init__(self, 'color', {'c': c})
+        OpenSCADTransformation.__init__(self, 'color', {'c': c})
 
 
 class minkowski(OpenSCADTransformation):
@@ -292,7 +292,7 @@ class minkowski(OpenSCADTransformation):
     of child nodes.
     '''
     def __init__(self):
-        OpenSCADObject.__init__(self, 'minkowski', {})
+        OpenSCADTransformation.__init__(self, 'minkowski', {})
 
 class offset(OpenSCADTransformation):
     '''
@@ -319,7 +319,7 @@ class offset(OpenSCADTransformation):
             kwargs = {'delta':delta, 'chamfer':chamfer}
         else:
             raise ValueError("offset(): Must supply r or delta")
-        OpenSCADObject.__init__(self, 'offset', kwargs)
+            OpenSCADTransformation.__init__(self, 'offset', kwargs)
 
 class hull(OpenSCADTransformation):
     '''
@@ -328,7 +328,7 @@ class hull(OpenSCADTransformation):
     of child nodes.
     '''
     def __init__(self):
-        OpenSCADObject.__init__(self, 'hull', {})
+        OpenSCADTransformation.__init__(self, 'hull', {})
 
 
 class render(OpenSCADTransformation):
@@ -340,7 +340,7 @@ class render(OpenSCADTransformation):
     :type convexity: int
     '''
     def __init__(self, convexity=None):
-        OpenSCADObject.__init__(self, 'render', {'convexity': convexity})
+        OpenSCADTransformation.__init__(self, 'render', {'convexity': convexity})
 
 
 class linear_extrude(OpenSCADTransformation):
@@ -370,7 +370,7 @@ class linear_extrude(OpenSCADTransformation):
     '''
     def __init__(self, height=None, center=None, convexity=None, twist=None,
                  slices=None, scale=None):
-        OpenSCADObject.__init__(self, 'linear_extrude',
+        OpenSCADTransformation.__init__(self, 'linear_extrude',
                                 {'height': height, 'center': center,
                                  'convexity': convexity, 'twist': twist,
                                  'slices': slices, 'scale':scale})
@@ -398,14 +398,14 @@ class rotate_extrude(OpenSCADTransformation):
 
     '''
     def __init__(self, convexity=None, segments=None):
-        OpenSCADObject.__init__(self, 'rotate_extrude',
+        OpenSCADTransformation.__init__(self, 'rotate_extrude',
                                 {'convexity': convexity, 'segments': segments})
 
 
 class dxf_linear_extrude(OpenSCADTransformation):
     def __init__(self, file, layer=None, height=None, center=None,
                  convexity=None, twist=None, slices=None):
-        OpenSCADObject.__init__(self, 'dxf_linear_extrude',
+        OpenSCADTransformation.__init__(self, 'dxf_linear_extrude',
                                 {'file': file, 'layer': layer,
                                  'height': height, 'center': center,
                                  'convexity': convexity, 'twist': twist,
@@ -421,7 +421,7 @@ class projection(OpenSCADTransformation):
     :type cut: boolean
     '''
     def __init__(self, cut=None):
-        OpenSCADObject.__init__(self, 'projection', {'cut': cut})
+        OpenSCADTransformation.__init__(self, 'projection', {'cut': cut})
 
 
 class surface(OpenSCADTransformation):
@@ -441,7 +441,7 @@ class surface(OpenSCADTransformation):
     :type convexity: int
     '''
     def __init__(self, file, center=None, convexity=None, invert=None):
-        OpenSCADObject.__init__(self, 'surface',
+        OpenSCADTransformation.__init__(self, 'surface',
                                 {'file': file, 'center': center,
                                  'convexity': convexity, 'invert': invert})
 
@@ -555,12 +555,12 @@ class intersection_for(OpenSCADTransformation):
     intersection of the contents.
     '''
     def __init__(self, n):
-        OpenSCADObject.__init__(self, 'intersection_for', {'n': n})
+        OpenSCADTransformation.__init__(self, 'intersection_for', {'n': n})
 
 
 class assign(OpenSCADTransformation):
     def __init__(self):
-        OpenSCADObject.__init__(self, 'assign', {})
+        OpenSCADTransformation.__init__(self, 'assign', {})
 
 # ================================
 # = Modifier Convenience Methods =
