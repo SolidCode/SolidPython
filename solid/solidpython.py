@@ -543,6 +543,211 @@ class OpenSCADObject(object):
         '''
         return objects.intersection()(self, x)
 
+    # Mapping of transformations into cascade operations
+    def union(self, x):
+        '''
+        Creates a union of the current object and the provided one
+        '''
+        return objects.union()(self, x)
+
+    def intersection(self, x):
+        '''
+        Creates the intersection of the current object and the provided one
+        '''
+        return objects.intersection()(self, x)
+
+    def difference(self, x):
+        '''
+        Creates the difference of the current object with the provided one
+        '''
+        return objects.difference()(self, x)
+
+    def translate(self, v=None):
+        '''
+        Translates (moves) the current object by the specified vector
+
+        :param v: X, Y and Z translation
+        :type v: 3 value sequence
+        '''
+        return objects.translate(v)(self)
+
+    def scale(self, v=None):
+        '''
+        Scales this object using the specified vector.
+
+        :param v: X, Y and Z translation
+        :type v: 3 value sequence        '''
+        return objects.scale(v)(self)
+
+    def rotate(self, a=None, v=None):
+        '''
+        Rotates the object 'a' degrees about the origin of the coordinate system
+        or around an arbitrary axis.
+
+        :param a: degrees of rotation, or sequence for degrees of rotation in each of the X, Y and Z axis.
+        :type a: number or 3 value sequence
+
+        :param v: sequence specifying 0 or 1 to indicate which axis to rotate by 'a' degrees. Ignored if 'a' is a sequence.
+        :type v: 3 value sequence
+        '''
+
+        return objects.rotate(a, v)(self)
+
+    def mirror(self, v):
+        '''
+        Mirrors the object on a plane through the origin.
+
+        :param v: the normal vector of a plane intersecting the origin through which to mirror the object.
+        :type v: 3 number sequence
+
+        '''
+        return objects.mirror(v)(self)
+
+    def resize(self, newsize):
+        '''
+        Modify the size of the object to match the given new size.
+
+        :param newsize: X, Y and Z values
+        :type newsize: 3 value sequence
+        '''
+        return objects.resize(newsize)(self)
+
+    def multmatrix(self, m):
+        '''
+        Multiplies the geometry of the object with the given 4x4
+        transformation matrix.
+
+        :param m: transformation matrix
+        :type m: sequence of 4 sequences, each containing 4 numbers.
+        '''
+        return objects.multmatrix(m)(self)
+
+    def color(self, c):
+        '''
+        Displays the object using the specified RGB color + alpha value.
+        This is only used for the F5 preview as CGAL and STL (F6) do not
+        currently support color. The alpha value will default to 1.0 (opaque) if
+        not specified.
+
+        :param c: RGB color + alpha value.
+        :type c: sequence of 3 or 4 numbers between 0 and 1
+        '''
+        return objects.color(c)(self)
+
+    def minkowski(self, x):
+        '''
+        Renders the `minkowski
+        sum <http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Minkowski_sum_3/Chapter_main.html>`__
+        of the object.
+        '''
+        return objects.minkowski()(self, x)
+
+    def offset(self, r=None, delta=None, chamfer=False):
+        '''
+
+        :param r: Amount to offset the polygon (rounded corners). When negative,
+            the polygon is offset inwards. The parameter r specifies the radius
+            that is used to generate rounded corners, using delta gives straight edges.
+        :type r: number
+
+        :param delta: Amount to offset the polygon (sharp corners). When negative,
+            the polygon is offset inwards. The parameter r specifies the radius
+            that is used to generate rounded corners, using delta gives straight edges.
+        :type delta: number
+
+        :param chamfer: When using the delta parameter, this flag defines if edges
+            should be chamfered (cut off with a straight line) or not (extended to
+            their intersection).
+        :type chamfer: bool
+        '''
+        return objects.offset(r, delta, chamfer)(self)
+
+    def hull(self, x):
+        '''
+        Renders the `convex
+        hull <http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Convex_hull_2/Chapter_main.html>`__
+        of the object with a given one.
+        '''
+        return objects.hull()(self, x)
+
+    def render(self, convexity=None):
+        '''
+        Always calculate the CSG model for this object (even in OpenCSG preview
+        mode).
+
+        :param convexity: The convexity parameter specifies the maximum number of front sides (back sides) a ray intersecting the object might penetrate. This parameter is only needed for correctly displaying the object in OpenCSG preview mode and has no effect on the polyhedron rendering.
+        :type convexity: int
+        '''
+        return objects.render(convexity)(self)
+
+    def linear_extrude(self, height=None, center=None, convexity=None, twist=None,
+                       slices=None, scale=None):
+        '''
+        Linear Extrusion is a modeling operation that takes a 2D polygon as
+        input and extends it in the third dimension. This way a 3D shape is
+        created.
+
+        :param height: the extrusion height.
+        :type height: number
+
+        :param center: determines if the object is centered on the Z-axis after extrusion.
+        :type center: boolean
+
+        :param convexity: The convexity parameter specifies the maximum number of front sides (back sides) a ray intersecting the object might penetrate. This parameter is only needed for correctly displaying the object in OpenCSG preview mode and has no effect on the polyhedron rendering.
+        :type convexity: int
+
+        :param twist: Twist is the number of degrees of through which the shape is extruded.  Setting to 360 will extrude through one revolution.  The twist direction follows the left hand rule.
+        :type twist: number
+
+        :param slices: number of slices to extrude. Can be used to improve the output.
+        :type slices: int
+
+        :param scale: relative size of the top of the extrusion compared to the start
+        :type scale: number
+
+        '''
+
+        return objects.linear_extrude(height, center, convexity, twist, slices, scale)(self)
+
+    def rotate_extrude(self,convexity=None, segments=None):
+        '''
+        A rotational extrusion is a Linear Extrusion with a twist, literally.
+        Unfortunately, it can not be used to produce a helix for screw threads
+        as the 2D outline must be normal to the axis of rotation, ie they need
+        to be flat in 2D space.
+
+        The 2D shape needs to be either completely on the positive, or negative
+        side (not recommended), of the X axis. It can touch the axis, i.e. zero,
+        however if the shape crosses the X axis a warning will be shown in the
+        console windows and the rotate\_extrude() will be ignored. If the shape
+        is in the negative axis the faces will be inside-out, you probably don't
+        want to do that; it may be fixed in the future.
+
+        :param convexity: The convexity parameter specifies the maximum number of front sides (back sides) a ray intersecting the object might penetrate. This parameter is only needed for correctly displaying the object in OpenCSG preview mode and has no effect on the polyhedron rendering.
+        :type convexity: int
+
+        :param segments: The fixed number of fragments to use.
+        :type segments: int
+
+        '''
+        return objects.rotate_extrude(convexity, segments)(self)
+
+    def dxf_linear_extrude(self, file, layer=None, height=None, center=None,
+                           convexity=None, twist=None, slices=None):
+        return objects.dxf_linear_extrude(file, layer, height, center,
+                                          convexity, twis, slices)(self)
+
+    def projection(self, cut=None):
+        '''
+        Creates 2d shapes from 3d models, and export them to the dxf format.
+        It works by projecting a 3D model to the (x,y) plane, with z at 0.
+
+        :param cut: when True only points with z=0 will be considered (effectively cutting the object) When False points above and below the plane will be considered as well (creating a proper projection).
+        :type cut: boolean
+        '''
+        return objects.projection(cut)(self)
+
+
     def _repr_png_(self):
         '''
         Allow rich clients such as the IPython Notebook, to display the current
