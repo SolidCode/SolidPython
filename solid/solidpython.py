@@ -747,6 +747,22 @@ class OpenSCADObject(object):
         '''
         return objects.projection(cut)(self)
 
+    def debug(self):
+        self.set_modifier("#")
+        return self
+
+    def background(self):
+        self.set_modifier('%')
+        return self
+
+    def root(self):
+        self.set_modifier('!')
+        return self
+
+    def disable(self):
+        self.set_modifier('*')
+        return self
+
 
     def _repr_png_(self):
         '''

@@ -565,23 +565,19 @@ class assign(OpenSCADObject):
 # = Modifier Convenience Methods =
 # ================================
 def debug(openscad_obj):
-    openscad_obj.set_modifier("#")
-    return openscad_obj
+    return openscad_obj.debug()
 
 
 def background(openscad_obj):
-    openscad_obj.set_modifier("%")
-    return openscad_obj
+    return openscad_obj.background()
 
 
 def root(openscad_obj):
-    openscad_obj.set_modifier("!")
-    return openscad_obj
+    return openscad_obj.root()
 
 
 def disable(openscad_obj):
-    openscad_obj.set_modifier("*")
-    return openscad_obj
+    return openscad_obj.disable()
 
 
 # ===============
