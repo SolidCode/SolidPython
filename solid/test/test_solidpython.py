@@ -203,7 +203,7 @@ class TestSolidPython(DiffOutput):
         # Make two parts, a block with hole, and a cylinder that
         # fits inside it.  Make them separate parts, meaning
         # holes will be defined at the level of the part_root node,
-        # not the overall node.  This allows us to perve holes as
+        # not the overall node.  This allows us to preserve holes as
         # first class space, but then to actually fill them in with
         # the parts intended to fit in them.
         b = cube(10, center=True)
