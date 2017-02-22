@@ -253,9 +253,12 @@ class resize(OpenSCADObject):
 
     :param newsize: X, Y and Z values
     :type newsize: 3 value sequence
+    
+    :param auto: 3-tuple of booleans to specify which axes should be scaled
+    :type auto: 3 boolean sequence
     '''
-    def __init__(self, newsize):
-        OpenSCADObject.__init__(self, 'resize', {'newsize': newsize})
+    def __init__(self, newsize, auto=None):
+        OpenSCADObject.__init__(self, 'resize', {'newsize': newsize, 'auto': auto})
 
 
 class multmatrix(OpenSCADObject):
