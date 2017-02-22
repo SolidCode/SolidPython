@@ -27,6 +27,7 @@ scad_test_case_templates = [
 {'name': 'scale',       'kwargs': {'v': 0.5}, 'expected': '\n\nscale(v = 0.5000000000);', 'args': {}, },
 {'name': 'rotate',      'kwargs': {'a': 45, 'v': [0, 0, 1]}, 'expected': '\n\nrotate(a = 45, v = [0, 0, 1]);', 'args': {}, },
 {'name': 'mirror',      'kwargs': {}, 'expected': '\n\nmirror(v = [0, 0, 1]);', 'args': {'v': [0, 0, 1]}, },
+{'name': 'resize',      'kwargs': {'newsize':[5,5,5], 'auto':[True, True, False]}, 'expected': '\n\nresize(auto = [true, true, false], newsize = [5, 5, 5]);', 'args': {}, },
 {'name': 'multmatrix',  'kwargs': {}, 'expected': '\n\nmultmatrix(m = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);', 'args': {'m': [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]}, },
 {'name': 'color',       'kwargs': {}, 'expected': '\n\ncolor(c = [1, 0, 0]);', 'args': {'c': [1, 0, 0]}, },
 {'name': 'minkowski',   'kwargs': {}, 'expected': '\n\nminkowski();', 'args': {}, },
@@ -202,7 +203,7 @@ class TestSolidPython(DiffOutput):
         # Make two parts, a block with hole, and a cylinder that
         # fits inside it.  Make them separate parts, meaning
         # holes will be defined at the level of the part_root node,
-        # not the overall node.  This allows us to preserve holes as
+        # not the overall node.  This allows us to perve holes as
         # first class space, but then to actually fill them in with
         # the parts intended to fit in them.
         b = cube(10, center=True)
