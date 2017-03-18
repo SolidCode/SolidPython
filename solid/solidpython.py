@@ -8,7 +8,6 @@
 #   License: LGPL 2.1 or later
 #
 
-
 import os, sys, re
 import inspect
 import subprocess
@@ -570,6 +569,24 @@ class OpenSCADObject(object):
             os.unlink(tmp_png.name)
 
         return png_data
+
+    def get_part(self, part_id):
+        """ find child with id = part_id"""
+        if self.is_part_root:
+            if self.part_id == part_id:
+                return self
+        else:
+            for c in self.children:
+                p = c.get_part(part_id)
+                if p is not None:
+                    return p
+        return None
+
+    def get_part_dim(self, part_id,  dim_name):
+        """Find the value of var_name for part with id =  part_id
+        """
+        p = self.get_part(part_id)
+        return p.part_dims[dim_name]
 
 
 class IncludedOpenSCADObject(OpenSCADObject):

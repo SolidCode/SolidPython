@@ -7,6 +7,9 @@ import re
 import unittest
 import tempfile
 from solid.test.ExpandedTestCase import DiffOutput
+
+import os,sys,inspect
+
 from solid import *
 
 scad_test_case_templates = [
@@ -265,6 +268,40 @@ class TestSolidPython(DiffOutput):
 
         # TODO: test include_orig_code=True, but that would have to
         # be done from a separate file, or include everything in this one
+
+
+
+    def test_extended_part(self):        
+        # create part, __repr__ works as expected
+        part1 = make_a_part("part1")
+        actual = part1.__repr__()
+        expected = """make_a_part(partid='part1', width=20, length=40, depth=10)"""
+        self.assertEqual(expected, actual)
+        
+        test_sphere = sphere(1)
+        obj = union()(part1, test_sphere)
+        obj = translate([10,10,10])(obj)
+        obj = rotate([90,0,0])(obj)
+        
+        # get part correctly traverses object tree to find part1
+        part2 = obj.get_part("part1")
+        self.assertEqual(part1, part2)
+        
+        width = obj.get_part_dim("part1", "width")
+        self.assertEqual(width, 20)
+
+
+def make_a_part(partid, width=20,  length=40,  depth=10):
+    obj = cube([width,  length,  depth])
+
+    # additional locals that need to be not recorded in the part
+    half_width = width/2
+    half_length = length/2
+    half_depth = depth/2
+    obj = part(part_id="part1")(obj) 
+    
+    return obj
+
 
 
 def single_test(test_dict):

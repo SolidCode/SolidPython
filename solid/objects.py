@@ -3,6 +3,9 @@ Classes for OpenSCAD builtins
 """
 from .solidpython import OpenSCADObject
 from .solidpython import IncludedOpenSCADObject
+import inspect
+import uuid
+from collections import OrderedDict
 
 class polygon(OpenSCADObject):
     '''
@@ -193,10 +196,76 @@ class hole(OpenSCADObject):
 
 
 class part(OpenSCADObject):
-    def __init__(self):
+    """ 
+    Extended part object. 
+    Intended to be called from within a function dedicated to assembling the part. 
+    When the object assembly is completed, part is called on it. This creates a solid python "part"
+    - in effect holes created in the assembly can be filled by CSG operations with other objects. 
+    The part stores extra information about parameters used to create the part. This allows 
+    the object to be queried for the creation of, eg, mating parts.  For example, specifying an internal
+    screw thread might permit the on-the-fly calculation of a matching external thread. 
+    
+    Brendan Barnacle Duck, March 17
+    """
+    
+    def __init__(self,  part_id=None, dims_dict=None, function_name=None):
+        """
+        param part_id: unique identifier for this part
+        type part_id: string
+        param dims_dict: dictionary of measurements that define the part
+        type dims_dict: dictionary of float
+        param function_name: name of function used to assemble this part
+        type function_name: string
+        
+        Note on dimension guessing code:
+        Code to determine the arg values, function name is apparently implementation (CPython) dependent, so 
+        pass express values if that fails.   
+        The code also depnds on the function doing the assembly not accepting * or ** args 
+        The dimension values are taken from the function's arguments and their values as at the time of the call 
+        to part. So, better to not change their values before the call to part. 
+        
+        """
+        
         OpenSCADObject.__init__(self, 'part', {})
         self.set_part_root(True)
 
+        if function_name is None:
+            function_name = (inspect.stack()[1][3])
+
+        if part_id is None:
+            part_id = str(uuid.uuid4()) # random uuid
+            
+        # dimension guessing
+        if dims_dict is None:
+            # then try to grab them from what was provided to the calling function
+            #  - ie the function that assembled this part. 
+            args, varargs, keywords, _locals = inspect.getargvalues(inspect.stack()[1][0])            
+            # filter out non-parameter locals
+            dims_dict = OrderedDict() # preserve the order of mandatory/optional args for __repr__
+            for k in args:
+                dims_dict[k]=_locals[k]
+
+        self.part_id = part_id
+        self.part_dims = dims_dict
+        self.function_name = function_name
+        
+    @property
+    def part_signature(self):
+        return (self.function_name, self.part_dims)
+    
+    def __repr__(self):
+        args = []        
+        for k,v in self.part_dims.items():
+            try:
+                # it's a number
+                spam = float(v)
+                args.append((k,v))
+            except ValueError:
+                # its a string
+                args.append((k,"""'%s'"""%v))
+                
+        return "%s(%s)"%(self.function_name, ", ".join(["{d[0]}={d[1]}".format(d=a) for a in args]))
+    
 
 class translate(OpenSCADObject):
     '''
