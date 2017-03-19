@@ -272,23 +272,49 @@ class TestSolidPython(DiffOutput):
 
 
     def test_extended_part(self):        
-        # create part, __repr__ works as expected
+        # create part, does not interfere with rendering
         part1 = make_a_part("part1")
+        actual = scad_render(part1)
+        expected = """\n\ncube(size = [20, 40, 10]);"""
+        self.assertEqual(actual, expected)
+        
+        # __repr__ works
         actual = part1.__repr__()
         expected = """make_a_part(partid='part1', width=20, length=40, depth=10)"""
         self.assertEqual(expected, actual)
+
+        # get part signature
+        actual = part1.part_signature
+        expected = ('make_a_part', OrderedDict([('partid', 'part1'), ('width', 20), ('length', 40), ('depth', 10)]))
+        self.assertEqual(actual, expected)
         
+        # get part correctly traverses object tree to find part1        
         test_sphere = sphere(1)
         obj = union()(part1, test_sphere)
         obj = translate([10,10,10])(obj)
         obj = rotate([90,0,0])(obj)
         
-        # get part correctly traverses object tree to find part1
         part2 = obj.get_part("part1")
         self.assertEqual(part1, part2)
         
+        # correctly get part dimension
         width = obj.get_part_dim("part1", "width")
         self.assertEqual(width, 20)
+        
+        #creation of a part without arguments 
+        # will create default dimensions etc, which can't be relied on 
+        test_sphere = part()(test_sphere) # no failure on creation
+        actual = scad_render(test_sphere)
+        expected = "\n\nsphere(r = 1);"
+        self.assertEqual(actual, expected)
+        
+        actual = test_sphere.__repr__()
+        expected = """test_extended_part(self='test_extended_part (__main__.TestSolidPython)')"""
+        self.assertEqual(actual, expected)
+        
+        # this can't be tested from __main__ in this test rig, but manual testing doesn't fail 
+        # when parts are declared in __main__ rather than an explicit funciton as the class anticipates
+        
 
 
 def make_a_part(partid, width=20,  length=40,  depth=10):

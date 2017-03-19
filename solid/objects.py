@@ -203,7 +203,12 @@ class part(OpenSCADObject):
     - in effect holes created in the assembly can be filled by CSG operations with other objects. 
     The part stores extra information about parameters used to create the part. This allows 
     the object to be queried for the creation of, eg, mating parts.  For example, specifying an internal
-    screw thread might permit the on-the-fly calculation of a matching external thread. 
+    screw thread might permit the on-the-fly calculation of a matching external thread.
+    
+    [Once a part allows data storage and introspection, it will facilitate other uses - such as nominating 
+    part connectors, re-orienting parts to mate them together at specfied connectors, splitting out 
+    separate parts from an object and arranging them on a print bed for printing, in place rotation around
+    a nominated centre or rotation etc]
     
     Brendan Barnacle Duck, March 17
     """
@@ -235,7 +240,7 @@ class part(OpenSCADObject):
         if part_id is None:
             part_id = str(uuid.uuid4()) # random uuid
             
-        # dimension guessing
+        # if dimesions are not provided explicitly, try to deduce them from the calling function
         if dims_dict is None:
             # then try to grab them from what was provided to the calling function
             #  - ie the function that assembled this part. 
@@ -260,7 +265,7 @@ class part(OpenSCADObject):
                 # it's a number
                 spam = float(v)
                 args.append((k,v))
-            except ValueError:
+            except (ValueError, TypeError):
                 # its a string
                 args.append((k,"""'%s'"""%v))
                 
