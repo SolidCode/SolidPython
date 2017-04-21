@@ -195,7 +195,7 @@ class TestSolidPython(DiffOutput):
         )
 
         a = cube(10, center=True) + h + h_vert
-        expected = '\n\ndifference(){\n\tunion() {\n\t\tunion() {\n\t\t\tcube(center = true, size = 10);\n\t\t}\n\t\trotate(a = -90, v = [0, 1, 0]) {\n\t\t}\n\t}\n\t/* Holes Below*/\n\tunion(){\n\t\tunion(){\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(center = true, h = 20, r = 2);\n\t\t\t}\n\t\t}\n\t\trotate(a = -90, v = [0, 1, 0]){\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(center = true, h = 20, r = 2);\n\t\t\t}\n\t\t}\n\t} /* End Holes */ \n}'
+        expected = '\n\ndifference(){\n\tunion() {\n\t\tcube(center = true, size = 10);\n\t\trotate(a = -90, v = [0, 1, 0]) {\n\t\t}\n\t}\n\t/* Holes Below*/\n\tunion(){\n\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\tcylinder(center = true, h = 20, r = 2);\n\t\t}\n\t\trotate(a = -90, v = [0, 1, 0]){\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(center = true, h = 20, r = 2);\n\t\t\t}\n\t\t}\n\t} /* End Holes */ \n}'
         actual = scad_render(a)
         self.assertEqual(expected, actual)
 
