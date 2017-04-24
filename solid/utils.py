@@ -568,10 +568,10 @@ def bill_of_materials(csv=False):
                 unit_price = total_price = ""
             row = [desc, count, unit_price, total_price]
 
-        for key in g_bom_headers:
-            value = elements[key]
-            row.append(value)
-        rows.append(row)
+            for key in g_bom_headers:
+                value = elements[key]
+                row.append(value)
+            rows.append(row)
 
     # Add total costs if we have values to add
     if len(all_costs) > 0:
@@ -639,11 +639,11 @@ def bounding_box(points):
 # = Hardware dimensions =
 # =======================
 screw_dimensions = {
-    'm3': {'nut_thickness': 2.4, 'nut_inner_diam': 5.4, 'nut_outer_diam': 6.1, 'screw_outer_diam': 3.0, 'cap_diam': 5.5, 'cap_height': 3.0},
-    'm4': {'nut_thickness': 3.1, 'nut_inner_diam': 7.0, 'nut_outer_diam': 7.9, 'screw_outer_diam': 4.0, 'cap_diam': 6.9, 'cap_height': 3.9},
-    'm5': {'nut_thickness': 4.7, 'nut_inner_diam': 7.9, 'nut_outer_diam': 8.8, 'screw_outer_diam': 5.0, 'cap_diam': 8.7, 'cap_height': 5},
-
+    'm3': {'nut_thickness': 2.4, 'nut_diam': 5.5, 'screw_outer_diam': 3.0, 'cap_diam': 5.5, 'cap_height': 3.0},
+    'm4': {'nut_thickness': 3.2, 'nut_diam': 7.0, 'screw_outer_diam': 4.0, 'cap_diam': 6.9, 'cap_height': 3.9},
+    'm5': {'nut_thickness': 4, 'nut_diam': 8, 'screw_outer_diam': 5.0, 'cap_diam': 8.7, 'cap_height': 5},
 }
+
 bearing_dimensions = {
     '608': {'inner_d':8, 'outer_d':22, 'thickness':7},
     '688': {'inner_d':8, 'outer_d':16, 'thickness':5},
@@ -656,31 +656,6 @@ bearing_dimensions = {
     '633': {'inner_d':3, 'outer_d':13, 'thickness':5},
 }
 
-def screw(screw_type='m3', screw_length=16):
-    dims = screw_dimensions[screw_type.lower()]
-    shaft_rad = dims['screw_outer_diam'] / 2
-    cap_rad = dims['cap_diam'] / 2
-    cap_height = dims['cap_height']
-
-    ret = union()(
-        cylinder(shaft_rad, screw_length),
-        up(screw_length)(
-            cylinder(cap_rad, cap_height)
-        )
-    )
-    return ret
-
-def nut(screw_type='m3'):
-    dims = screw_dimensions[screw_type.lower()]
-    outer_rad = dims['nut_outer_diam']
-    inner_rad = dims['screw_outer_diam']
-
-    ret = difference()(
-        circle(outer_rad, segments=6),
-        circle(inner_rad)
-    )
-    return ret
-
 def bearing(bearing_type='624'):
     dims = bearing_dimensions[bearing_type.lower()]
     outerR = dims['outer_d']/2
@@ -691,10 +666,87 @@ def bearing(bearing_type='624'):
     hole = cylinder(innerR,thickness+2)
     hole.add_param('$fs', 1)
     bearing = difference()(
-        bearing,
-        translate([0,0,-1])(hole)
-    )
+                            bearing,
+                            translate([0,0,-1])(hole)
+                          )
     return bearing
+
+def screw(screw_type='m3', screw_length=16):
+    dims = screw_dimensions[screw_type.lower()]
+    shaft_rad = dims['screw_outer_diam'] / 2
+    cap_rad = dims['cap_diam'] / 2
+    cap_height = dims['cap_height']
+
+    shaft = cylinder(shaft_rad, screw_length)
+    shaft.add_param('$fs', 1)
+    cap = cylinder(cap_rad, cap_height)
+    cap.add_param('$fs', 1)
+
+    ret = union()(
+        shaft,
+        up(screw_length)(
+            cap
+        )
+    )
+    return ret
+
+
+def nut(screw_type='m3'):
+    dims = screw_dimensions[screw_type.lower()]
+    outer_rad = dims['nut_diam']/2
+    inner_rad = dims['screw_outer_diam']/2
+
+    ret = difference()(
+        cylinder(outer_rad, segments=6,h=dims['nut_thickness']),
+        translate([0,0,-1])(cylinder(inner_rad,h=dims['nut_thickness']+2)),
+    )
+    return ret
+
+def helix(rad=10, length=20,pitch=0.2,flatEnd=True):
+    outline = []
+    z = 0.0
+    segmentsPerTurn=140.0
+
+    #for i in range(segments):
+    #    angle = i * 360*10 / segments
+    i = 0
+    startAngleAtEnd = 0.0
+
+    while z <= length:
+        angle = i*360*10/segmentsPerTurn
+        x = rad * cos(radians(angle))
+        y = rad * sin(radians(angle))
+
+        if flatEnd:
+            if  angle > 180: # this makes start of helix flat
+                if z + pitch >= length and startAngleAtEnd == 0:
+                     startAngleAtEnd = angle
+                if startAngleAtEnd != 0: # this makes end of helix flat
+                     if startAngleAtEnd + 180 <= angle:
+                         break
+                else:
+                    z = z + pitch
+        else:
+             z = z + pitch
+        outline.append(Point3(x, y, z))
+        i+=1
+    return outline
+
+
+def circleShape(num_points=5, outer_rad=1.0):
+    circle_pts = []
+    for i in range(2 * num_points):
+        rad = outer_rad
+        angle = radians(360 / (2 * num_points) * i)
+        circle_pts.append(Point3(rad * cos(angle), rad * sin(angle), 0))
+    return circle_pts
+
+
+def springGenerator(length=32,wireRadius=1,pitch=0.4,SpringRadius=7.5,pointsInCircle=5):
+    shape = circleShape(num_points=5,outer_rad = wireRadius)
+    path = helix(rad=SpringRadius,length=length-wireRadius*2,pitch=pitch)
+    extruded = extrude_along_path(shape_pts=shape, path_pts=path)
+    return extruded
 
 # ==================
 # = PyEuclid Utils =
