@@ -169,6 +169,9 @@ class union(OpenSCADTransformation):
     def __init__(self):
         OpenSCADTransformation.__init__(self, 'union', {})
 
+    def __add__(self, x):
+        return self.add(x)
+
 
 class intersection(OpenSCADTransformation):
     '''
@@ -178,6 +181,9 @@ class intersection(OpenSCADTransformation):
     def __init__(self):
         OpenSCADTransformation.__init__(self, 'intersection', {})
 
+    def __mul__(self, x):
+        return self.add(x)
+
 
 class difference(OpenSCADTransformation):
     '''
@@ -185,6 +191,9 @@ class difference(OpenSCADTransformation):
     '''
     def __init__(self):
         OpenSCADTransformation.__init__(self, 'difference', {})
+
+    def __sub__(self,x):
+        return self.add(x)
 
 
 class hole(OpenSCADTransformation):
@@ -254,9 +263,12 @@ class resize(OpenSCADTransformation):
 
     :param newsize: X, Y and Z values
     :type newsize: 3 value sequence
+    
+    :param auto: 3-tuple of booleans to specify which axes should be scaled
+    :type auto: 3 boolean sequence
     '''
-    def __init__(self, newsize):
-        OpenSCADTransformation.__init__(self, 'resize', {'newsize': newsize})
+    def __init__(self, newsize, auto=None):
+        OpenSCADObject.__init__(self, 'resize', {'newsize': newsize, 'auto': auto})
 
 
 class multmatrix(OpenSCADTransformation):

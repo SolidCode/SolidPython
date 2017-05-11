@@ -27,6 +27,7 @@ scad_test_case_templates = [
 {'name': 'scale',       'kwargs': {'v': 0.5}, 'expected': '\n\nscale(v = 0.5000000000);', 'args': {}, },
 {'name': 'rotate',      'kwargs': {'a': 45, 'v': [0, 0, 1]}, 'expected': '\n\nrotate(a = 45, v = [0, 0, 1]);', 'args': {}, },
 {'name': 'mirror',      'kwargs': {}, 'expected': '\n\nmirror(v = [0, 0, 1]);', 'args': {'v': [0, 0, 1]}, },
+{'name': 'resize',      'kwargs': {'newsize':[5,5,5], 'auto':[True, True, False]}, 'expected': '\n\nresize(auto = [true, true, false], newsize = [5, 5, 5]);', 'args': {}, },
 {'name': 'multmatrix',  'kwargs': {}, 'expected': '\n\nmultmatrix(m = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);', 'args': {'m': [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]}, },
 {'name': 'color',       'kwargs': {}, 'expected': '\n\ncolor(c = [1, 0, 0]);', 'args': {'c': [1, 0, 0]}, },
 {'name': 'minkowski',   'kwargs': {}, 'expected': '\n\nminkowski();', 'args': {}, },
@@ -194,7 +195,7 @@ class TestSolidPython(DiffOutput):
         )
 
         a = cube(10, center=True) + h + h_vert
-        expected = '\n\ndifference(){\n\tunion() {\n\t\tunion() {\n\t\t\tcube(center = true, size = 10);\n\t\t}\n\t\trotate(a = -90, v = [0, 1, 0]) {\n\t\t}\n\t}\n\t/* Holes Below*/\n\tunion(){\n\t\tunion(){\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(center = true, h = 20, r = 2);\n\t\t\t}\n\t\t}\n\t\trotate(a = -90, v = [0, 1, 0]){\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(center = true, h = 20, r = 2);\n\t\t\t}\n\t\t}\n\t} /* End Holes */ \n}'
+        expected = '\n\ndifference(){\n\tunion() {\n\t\tcube(center = true, size = 10);\n\t\trotate(a = -90, v = [0, 1, 0]) {\n\t\t}\n\t}\n\t/* Holes Below*/\n\tunion(){\n\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\tcylinder(center = true, h = 20, r = 2);\n\t\t}\n\t\trotate(a = -90, v = [0, 1, 0]){\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(center = true, h = 20, r = 2);\n\t\t\t}\n\t\t}\n\t} /* End Holes */ \n}'
         actual = scad_render(a)
         self.assertEqual(expected, actual)
 
