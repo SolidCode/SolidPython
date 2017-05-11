@@ -543,7 +543,7 @@ class OpenSCADTransformation(OpenSCADObject):
         for child in self.children:
             if child.is_hole:
                 s += child._render(render_holes=True)
-            elif child.has_hole_children:
+            elif isinstance(child, OpenSCADTransformation) and child.has_hole_children:
                 # Holes exist in the compiled tree in two pieces:
                 # The shapes of the holes themselves, (an object for which
                 # obj.is_hole is True, and all its children) and the
