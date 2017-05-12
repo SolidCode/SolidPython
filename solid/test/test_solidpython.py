@@ -20,29 +20,28 @@ scad_test_case_templates = [
 {'name': 'cylinder',    'kwargs': {'r1': None, 'r2': None, 'h': 1, 'segments': 12, 'r': 1, 'center': False}, 'expected': '\n\ncylinder($fn = 12, center = false, h = 1, r = 1);', 'args': {}, },
 {'name': 'cylinder',    'kwargs': {'d1': 4, 'd2': 2, 'h': 1, 'segments': 12, 'center': False}, 'expected': '\n\ncylinder($fn = 12, center = false, d1 = 4, d2 = 2, h = 1);', 'args': {}, },
 {'name': 'polyhedron',  'kwargs': {'convexity': None}, 'expected': '\n\npolyhedron(faces = [[0, 1, 2]], points = [[0, 0, 0], [1, 0, 0], [0, 1, 0]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]], 'faces': [[0, 1, 2]]}, },
-{'name': 'union',       'kwargs': {}, 'expected': '\n\nunion();', 'args': {}, },
-{'name': 'intersection','kwargs': {}, 'expected': '\n\nintersection();', 'args': {}, },
-{'name': 'difference',  'kwargs': {}, 'expected': '\n\ndifference();', 'args': {}, },
-{'name': 'translate',   'kwargs': {'v': [1, 0, 0]}, 'expected': '\n\ntranslate(v = [1, 0, 0]);', 'args': {}, },
-{'name': 'scale',       'kwargs': {'v': 0.5}, 'expected': '\n\nscale(v = 0.5000000000);', 'args': {}, },
-{'name': 'rotate',      'kwargs': {'a': 45, 'v': [0, 0, 1]}, 'expected': '\n\nrotate(a = 45, v = [0, 0, 1]);', 'args': {}, },
-{'name': 'mirror',      'kwargs': {}, 'expected': '\n\nmirror(v = [0, 0, 1]);', 'args': {'v': [0, 0, 1]}, },
-{'name': 'resize',      'kwargs': {'newsize':[5,5,5], 'auto':[True, True, False]}, 'expected': '\n\nresize(auto = [true, true, false], newsize = [5, 5, 5]);', 'args': {}, },
-{'name': 'multmatrix',  'kwargs': {}, 'expected': '\n\nmultmatrix(m = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);', 'args': {'m': [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]}, },
-{'name': 'color',       'kwargs': {}, 'expected': '\n\ncolor(c = [1, 0, 0]);', 'args': {'c': [1, 0, 0]}, },
-{'name': 'minkowski',   'kwargs': {}, 'expected': '\n\nminkowski();', 'args': {}, },
-{'name': 'offset',      'kwargs': {'r': 1}, 'expected': '\n\noffset(r = 1);', 'args': {}, },
-{'name': 'offset',      'kwargs': {'delta': 1}, 'expected': '\n\noffset(chamfer = false, delta = 1);', 'args': {}, },
-{'name': 'hull',        'kwargs': {}, 'expected': '\n\nhull();', 'args': {}, },
-{'name': 'render',      'kwargs': {'convexity': None}, 'expected': '\n\nrender();', 'args': {}, },
-{'name': 'projection',  'kwargs': {'cut': None}, 'expected': '\n\nprojection();', 'args': {}, },
+{'name': 'union',       'kwargs': {}, 'expected': '\n\nunion() {\n}', 'args': {}, },
+{'name': 'intersection','kwargs': {}, 'expected': '\n\nintersection() {\n}', 'args': {}, },
+{'name': 'difference',  'kwargs': {}, 'expected': '\n\ndifference() {\n}', 'args': {}, },
+{'name': 'translate',   'kwargs': {'v': [1, 0, 0]}, 'expected': '\n\ntranslate(v = [1, 0, 0]) {\n}', 'args': {}, },
+{'name': 'scale',       'kwargs': {'v': 0.5}, 'expected': '\n\nscale(v = 0.5000000000) {\n}', 'args': {}, },
+{'name': 'rotate',      'kwargs': {'a': 45, 'v': [0, 0, 1]}, 'expected': '\n\nrotate(a = 45, v = [0, 0, 1]) {\n}', 'args': {}, },
+{'name': 'mirror',      'kwargs': {}, 'expected': '\n\nmirror(v = [0, 0, 1]) {\n}', 'args': {'v': [0, 0, 1]}, },
+{'name': 'multmatrix',  'kwargs': {}, 'expected': '\n\nmultmatrix(m = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {\n}', 'args': {'m': [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]}, },
+{'name': 'color',       'kwargs': {}, 'expected': '\n\ncolor(c = [1, 0, 0]) {\n}', 'args': {'c': [1, 0, 0]}, },
+{'name': 'minkowski',   'kwargs': {}, 'expected': '\n\nminkowski() {\n}', 'args': {}, },
+{'name': 'offset',      'kwargs': {'r': 1}, 'expected': '\n\noffset(r = 1) {\n}', 'args': {}, },
+{'name': 'offset',      'kwargs': {'delta': 1}, 'expected': '\n\noffset(chamfer = false, delta = 1) {\n}', 'args': {}, },
+{'name': 'hull',        'kwargs': {}, 'expected': '\n\nhull() {\n}', 'args': {}, },
+{'name': 'render',      'kwargs': {'convexity': None}, 'expected': '\n\nrender() {\n}', 'args': {}, },
+{'name': 'projection',  'kwargs': {'cut': None}, 'expected': '\n\nprojection() {\n}', 'args': {}, },
 {'name': 'surface',     'kwargs': {'center': False, 'convexity': None}, 'expected': '\n\nsurface(center = false, file = "/Path/to/dummy.dxf");', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
 {'name': 'import_stl',  'kwargs': {'layer': None, 'origin': (0,0)}, 'expected': '\n\nimport(file = "/Path/to/dummy.stl", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.stl'"}, },
 {'name': 'import_dxf',  'kwargs': {'layer': None, 'origin': (0,0)}, 'expected': '\n\nimport(file = "/Path/to/dummy.dxf", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
 {'name': 'import_',     'kwargs': {'layer': None, 'origin': (0,0)}, 'expected': '\n\nimport(file = "/Path/to/dummy.dxf", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
-{'name': 'linear_extrude',      'kwargs': {'twist': None, 'slices': None, 'center': False, 'convexity': None, 'height': 1, 'scale': 0.9}, 'expected': '\n\nlinear_extrude(center = false, height = 1, scale = 0.9000000000);', 'args': {}, },
-{'name': 'rotate_extrude',      'kwargs': {'convexity': None}, 'expected': '\n\nrotate_extrude();', 'args': {}, },
-{'name': 'intersection_for',    'kwargs': {}, 'expected': '\n\nintersection_for(n = [0, 1, 2]);', 'args': {'n': [0, 1, 2]}, },
+{'name': 'linear_extrude',      'kwargs': {'twist': None, 'slices': None, 'center': False, 'convexity': None, 'height': 1, 'scale': 0.9}, 'expected': '\n\nlinear_extrude(center = false, height = 1, scale = 0.9000000000) {\n}', 'args': {}, },
+{'name': 'rotate_extrude',      'kwargs': {'convexity': None}, 'expected': '\n\nrotate_extrude() {\n}', 'args': {}, },
+{'name': 'intersection_for',    'kwargs': {}, 'expected': '\n\nintersection_for(n = [0, 1, 2]) {\n}', 'args': {'n': [0, 1, 2]}, },
 ]
 
 class TemporaryFileBuffer(object):
@@ -176,7 +175,7 @@ class TestSolidPython(DiffOutput):
 
     def test_explicit_hole(self):
         a = cube(10, center=True) + hole()(cylinder(2, 20, center=True))
-        expected = '\n\ndifference(){\n\tunion() {\n\t\tcube(center = true, size = 10);\n\t}\n\t/* Holes Below*/\n\tunion(){\n\t\tcylinder(center = true, h = 20, r = 2);\n\t} /* End Holes */ \n}'
+        expected = '\n\ndifference() {\n\tunion() {\n\t\tcube(center = true, size = 10);\n\t}\n\t/* Holes Below*/\n\tunion() {\n\t\tcylinder(center = true, h = 20, r = 2);\n\t} /* End Holes */ \n}'
         actual = scad_render(a)
         self.assertEqual(expected, actual)
 
@@ -195,7 +194,7 @@ class TestSolidPython(DiffOutput):
         )
 
         a = cube(10, center=True) + h + h_vert
-        expected = '\n\ndifference(){\n\tunion() {\n\t\tcube(center = true, size = 10);\n\t\trotate(a = -90, v = [0, 1, 0]) {\n\t\t}\n\t}\n\t/* Holes Below*/\n\tunion(){\n\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\tcylinder(center = true, h = 20, r = 2);\n\t\t}\n\t\trotate(a = -90, v = [0, 1, 0]){\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(center = true, h = 20, r = 2);\n\t\t\t}\n\t\t}\n\t} /* End Holes */ \n}'
+        expected = '\n\ndifference() {\n\tunion() {\n\t\tunion() {\n\t\t\tcube(center = true, size = 10);\n\t\t}\n\t\trotate(a = -90, v = [0, 1, 0]) {\n\t\t}\n\t}\n\t/* Holes Below*/\n\tunion() {\n\t\tunion() {\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(center = true, h = 20, r = 2);\n\t\t\t}\n\t\t}\n\t\trotate(a = -90, v = [0, 1, 0]) {\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(center = true, h = 20, r = 2);\n\t\t\t}\n\t\t}\n\t} /* End Holes */ \n}'
         actual = scad_render(a)
         self.assertEqual(expected, actual)
 
@@ -220,7 +219,7 @@ class TestSolidPython(DiffOutput):
 
         a = p1 + p2
 
-        expected = '\n\nunion() {\n\tdifference(){\n\t\tdifference() {\n\t\t\tcube(center = true, size = 10);\n\t\t}\n\t\t/* Holes Below*/\n\t\tdifference(){\n\t\t\tcylinder(center = true, h = 12, r = 2);\n\t\t} /* End Holes */ \n\t}\n\tcylinder(center = true, h = 14, r = 1.5000000000);\n}'
+        expected = '\n\nunion() {\n\tdifference() {\n\t\tdifference() {\n\t\t\tcube(center = true, size = 10);\n\t\t}\n\t\t/* Holes Below*/\n\t\tdifference() {\n\t\t\tcylinder(center = true, h = 12, r = 2);\n\t\t} /* End Holes */ \n\t}\n\tcylinder(center = true, h = 14, r = 1.5000000000);\n}'
         actual = scad_render(a)
         self.assertEqual(expected, actual)
 
@@ -237,7 +236,7 @@ class TestSolidPython(DiffOutput):
                                       filepath=tmp.name, include_orig_code=False)
 
         actual = tmp.contents
-        expected = '\nif ($t >= 0.0 && $t < 0.5){   \n\ttranslate(v = [15.0000000000, 0.0000000000]) {\n\t\tsquare(size = 10);\n\t}\n}\nif ($t >= 0.5 && $t < 1.0){   \n\ttranslate(v = [-15.0000000000, 0.0000000000]) {\n\t\tsquare(size = 10);\n\t}\n}\n'
+        expected = '\nif ($t >= 0.0 && $t < 0.5) {   \n\ttranslate(v = [15.0000000000, 0.0000000000]) {\n\t\tsquare(size = 10);\n\t}\n}\nif ($t >= 0.5 && $t < 1.0) {   \n\ttranslate(v = [-15.0000000000, 0.0000000000]) {\n\t\tsquare(size = 10);\n\t}\n}\n'
 
         self.assertEqual(expected, actual)
 

@@ -15,12 +15,12 @@ from solid.test.ExpandedTestCase import DiffOutput
 
 tri = [Point3(0, 0, 0), Point3(10, 0, 0), Point3(0, 10, 0)]
 scad_test_cases = [
-    (                               up,                 [2],   '\n\ntranslate(v = [0, 0, 2]);'),
-    (                               down,               [2],   '\n\ntranslate(v = [0, 0, -2]);'),
-    (                               left,               [2],   '\n\ntranslate(v = [-2, 0, 0]);'),
-    (                               right,              [2],   '\n\ntranslate(v = [2, 0, 0]);'),
-    (                               forward,            [2],   '\n\ntranslate(v = [0, 2, 0]);'),
-    (                               back,               [2],   '\n\ntranslate(v = [0, -2, 0]);'),   
+    (                               up,                 [2],   '\n\ntranslate(v = [0, 0, 2]) {\n}'),
+    (                               down,               [2],   '\n\ntranslate(v = [0, 0, -2]) {\n}'),
+    (                               left,               [2],   '\n\ntranslate(v = [-2, 0, 0]) {\n}'),
+    (                               right,              [2],   '\n\ntranslate(v = [2, 0, 0]) {\n}'),
+    (                               forward,            [2],   '\n\ntranslate(v = [0, 2, 0]) {\n}'),
+    (                               back,               [2],   '\n\ntranslate(v = [0, -2, 0]) {\n}'),   
     (                               arc,                [10, 0, 90, 24], '\n\ndifference() {\n\tcircle($fn = 24, r = 10);\n\trotate(a = 0) {\n\t\ttranslate(v = [0, -10, 0]) {\n\t\t\tsquare(center = true, size = [30, 20]);\n\t\t}\n\t}\n\trotate(a = -90) {\n\t\ttranslate(v = [0, -10, 0]) {\n\t\t\tsquare(center = true, size = [30, 20]);\n\t\t}\n\t}\n}'),
     (                               arc_inverted,       [10, 0, 90, 24], '\n\ndifference() {\n\tintersection() {\n\t\trotate(a = 0) {\n\t\t\ttranslate(v = [-990, 0]) {\n\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t}\n\t\t}\n\t\trotate(a = 90) {\n\t\t\ttranslate(v = [-990, -1000]) {\n\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t}\n\t\t}\n\t}\n\tcircle($fn = 24, r = 10);\n}'),
     ( 'transform_to_point_scad',    transform_to_point, [cube(2), [2,2,2], [3,3,1]], '\n\nmultmatrix(m = [[0.7071067812, -0.1622214211, -0.6882472016, 2], [-0.7071067812, -0.1622214211, -0.6882472016, 2], [0.0000000000, 0.9733285268, -0.2294157339, 2], [0, 0, 0, 1.0000000000]]) {\n\tcube(size = 2);\n}'),
