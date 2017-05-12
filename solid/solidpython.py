@@ -99,7 +99,7 @@ def scad_render_animated(func_to_animate, steps=20, back_and_forth=True, filepat
         scad_obj = func_to_animate(_time=eval_time)
 
         scad_str = indent(scad_obj._render())
-        rendered_string += ("if ($t >= %(time)s && $t < %(end_time)s){"
+        rendered_string += ("if ($t >= %(time)s && $t < %(end_time)s) {"
                             "   %(scad_str)s\n"
                             "}\n" % vars())
     return rendered_string
@@ -531,7 +531,7 @@ class OpenSCADTransformation(OpenSCADObject):
                 s += self._render_hole_children()
 
                 # wrap everything in the difference
-                s = "\ndifference(){" + indent(s) + " /* End Holes */ \n}"
+                s = "\ndifference() {" + indent(s) + " /* End Holes */ \n}"
         return s
 
     def _render_hole_children(self):
@@ -568,7 +568,7 @@ class OpenSCADTransformation(OpenSCADObject):
         if self.name in non_rendered_classes:
             pass
         else:
-            s = self._render_str_no_children() + "{" + indent(s) + "\n}"
+            s = self._render_str_no_children() + " {" + indent(s) + "\n}"
         return s
 
     def find_hole_children(self, path=None):

@@ -331,7 +331,7 @@ class offset(OpenSCADTransformation):
             kwargs = {'delta':delta, 'chamfer':chamfer}
         else:
             raise ValueError("offset(): Must supply r or delta")
-            OpenSCADTransformation.__init__(self, 'offset', kwargs)
+        OpenSCADTransformation.__init__(self, 'offset', kwargs)
 
 class hull(OpenSCADTransformation):
     '''
@@ -436,7 +436,7 @@ class projection(OpenSCADTransformation):
         OpenSCADTransformation.__init__(self, 'projection', {'cut': cut})
 
 
-class surface(OpenSCADTransformation):
+class surface(OpenSCADObject):
     '''
     Surface reads information from text or image files.
 
@@ -453,7 +453,7 @@ class surface(OpenSCADTransformation):
     :type convexity: int
     '''
     def __init__(self, file, center=None, convexity=None, invert=None):
-        OpenSCADTransformation.__init__(self, 'surface',
+        OpenSCADObject.__init__(self, 'surface',
                                 {'file': file, 'center': center,
                                  'convexity': convexity, 'invert': invert})
 
