@@ -534,7 +534,13 @@ class OpenSCADObject(object):
         This makes u = a - b identical to:
         u = difference()(a, b )
         '''
-        return objects.difference()(self, x)
+        if not isinstance(x,list):
+            x = [x]
+        for xi in x:
+            if not xi.is_hole:
+                return objects.difference()(self, xi)
+            else:
+                return objects.union()(self, xi)
 
     def __mul__(self, x):
         '''
