@@ -527,21 +527,34 @@ class OpenSCADObject(object):
         This makes u = a+b identical to:
         u = union()(a, b )
         '''
-        return objects.union()(self, x)
+        if self.name == 'union':
+            return self.add(x)
+        elif isinstance(x, OpenSCADObject) and x.name == 'union':
+            return x.add(self)
+        else:
+            return objects.union()(self, x)
 
     def __sub__(self, x):
         '''
         This makes u = a - b identical to:
         u = difference()(a, b )
         '''
-        return objects.difference()(self, x)
+        if self.name == 'difference':
+            return self.add(x)
+        else:
+            return objects.difference()(self, x)
 
     def __mul__(self, x):
         '''
         This makes u = a * b identical to:
         u = intersection()(a, b )
         '''
-        return objects.intersection()(self, x)
+        if self.name == 'intersection':
+            return self.add(x)
+        elif isinstance(x, OpenSCADObject) and x.name == 'intersection':
+            return x.add(self)
+        else:
+            return objects.intersection()(self, x)
 
     def _repr_png_(self):
         '''
