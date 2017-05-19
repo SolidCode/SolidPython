@@ -247,15 +247,15 @@ def new_openscad_class_str(class_name, args=[], kwargs=[], include_file_path=Non
     args_pairs = ''
 
     for arg in args:
-        args_str += ', ' + arg
-        args_pairs += "'%(arg)s':%(arg)s, " % vars()
+        args_str += ', _' + arg
+        args_pairs += "'%(arg)s':_%(arg)s, " % vars()
 
     # kwargs have a default value defined in their SCAD versions.  We don't
     # care what that default value will be (SCAD will take care of that), just
     # that one is defined.
     for kwarg in kwargs:
         args_str += ', %(kwarg)s=None' % vars()
-        args_pairs += "'%(kwarg)s':%(kwarg)s, " % vars()
+        args_pairs += "'%(kwarg)s':_%(kwarg)s, " % vars()
 
     if include_file_path:
         # include_file_path may include backslashes on Windows; escape them
