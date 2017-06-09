@@ -408,9 +408,9 @@ class rotate_extrude(OpenSCADObject):
     :type segments: int
 
     '''
-    def __init__(self, convexity=None, segments=None):
+    def __init__(self, angle=None, convexity=None, segments=None):
         OpenSCADObject.__init__(self, 'rotate_extrude',
-                                {'convexity': convexity, 'segments': segments})
+                                {'angle':angle, 'convexity': convexity, 'segments': segments})
 
 
 class dxf_linear_extrude(OpenSCADObject):
