@@ -220,7 +220,7 @@ class TestSolidPython(DiffOutput):
 
         a = p1 + p2
 
-        expected = '\n\nunion() {\n\tdifference(){\n\t\tdifference() {\n\t\t\tcube(center = true, size = 10);\n\t\t}\n\t\t/* Holes Below*/\n\t\tdifference(){\n\t\t\tcylinder(center = true, h = 12, r = 2);\n\t\t} /* End Holes */ \n\t}\n\tcylinder(center = true, h = 14, r = 1.5000000000);\n}'
+        expected = '\n\nunion() {\n\tdifference(){\n\t\tdifference() {\n\t\t\tcube(center = true, size = 10);\n\t\t}\n\t\t/* Holes Below*/\n\t\tunion(){\n\t\t\tcylinder(center = true, h = 12, r = 2);\n\t\t} /* End Holes */ \n\t}\n\tcylinder(center = true, h = 14, r = 1.5000000000);\n}'
         actual = scad_render(a)
         self.assertEqual(expected, actual)
 
