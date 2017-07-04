@@ -168,8 +168,8 @@ class union(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'union', {})
 
-    def __add__(self, x):
-        return self.add(x)
+    #def __add__(self, x):
+        #return self.add(x)
 
 
 class intersection(OpenSCADObject):
@@ -180,8 +180,8 @@ class intersection(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'intersection', {})
 
-    def __mul__(self, x):
-        return self.add(x)
+    #def __mul__(self, x):
+        #return self.add(x)
 
 
 class difference(OpenSCADObject):
@@ -191,8 +191,8 @@ class difference(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'difference', {})
 
-    def __sub__(self,x):
-        return self.add(x)
+    #def __sub__(self,x):
+        #return self.add(x)
 
 
 class hole(OpenSCADObject):
