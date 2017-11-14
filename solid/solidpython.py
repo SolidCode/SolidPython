@@ -407,7 +407,7 @@ class OpenSCADObject(object):
 
         for k in all_params_sorted:
             v = self.params[k]
-            if v == None:
+            if v is None:
                 continue
 
             if not first:
@@ -629,6 +629,9 @@ def py2openscad(o):
         return s
     if type(o) == str:
         return '"' + o + '"'
+    if type(0).__name__ == "ndarray":
+        import numpy
+        return numpy.array2string(o, separator=",")
     return str(o)
 
 
