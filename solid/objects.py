@@ -15,7 +15,10 @@ class polygon(OpenSCADObject):
     '''
     def __init__(self, points, paths=None):
         if not paths:
-            paths = [list(range(len(points)))]
+            if isinstance(points, OpenSCADObject):
+                paths = []
+            else:
+                paths = [list(range(len(points)))]
         OpenSCADObject.__init__(self, 'polygon',
                                 {'points': points, 'paths': paths})
 
