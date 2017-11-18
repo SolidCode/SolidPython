@@ -1,6 +1,8 @@
 """
 Classes for OpenSCAD builtins
 """
+import sys
+
 from .solidpython import OpenSCADObject
 from .solidpython import IncludedOpenSCADObject
 
@@ -645,3 +647,35 @@ def use(scad_file_path, use_not_include=True):
 
 def include(scad_file_path):
     return use(scad_file_path, use_not_include=False)
+
+
+def save_python_wrapper(scad_file_path, use_not_include=True, py_file_path=None):
+    '''
+    Opens scad_file_path, parses it for all usable calls,
+    and saves them to the python file to be imported.
+    This is mainly useful for generating python interface for external libraries
+    which won't change too often, and include them statically to support IDE auto-completion.
+    '''
+    # These functions in solidpython are used here and only here; don't pollute
+    # the global namespace with them
+    from .solidpython import extract_callable_signatures
+    from .solidpython import new_openscad_class_str
+    from .solidpython import calling_module
+
+    try:
+        with open(scad_file_path) as module:
+            contents = module.read()
+    except Exception as e:
+        raise Exception("Failed to import SCAD module '%(scad_file_path)s' "
+                        "with error: %(e)s " % vars())
+
+    # Once we have a list of all callables and arguments, save them to a python file to be imported.
+    symbols_dicts = extract_callable_signatures(scad_file_path)
+
+    out = open(py_file_path, "w") if py_file_path else sys.stdout
+    out.write("import solid\n")
+    for sd in symbols_dicts:
+        class_str = new_openscad_class_str(sd['name'], sd['args'], sd['kwargs'],
+                                           scad_file_path, use_not_include)
+        out.write(class_str.replace("import solid\n", ""))
+    return True
