@@ -1126,6 +1126,8 @@ try:
                 v_prev = path_pt - prev_pt
                 v_next = next_pt - path_pt
                 tangent = v_prev + v_next
+            elif closed_path:
+                tangent = path_pts[(which_loop + 1) % len(path_pts)] - path_pts[(which_loop - 1) % len(path_pts)]
             elif which_loop == 0:
                 tangent = path_pts[which_loop + 1] - path_pt
             elif which_loop == len(path_pts) - 1:
