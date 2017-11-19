@@ -1111,6 +1111,9 @@ try:
 
         src_up = Vector3(*UP_VEC)
 
+        closed_path = path_pts[0] == path_pts[len(path_pts) - 1]
+        if closed_path:
+            path_pts = path_pts[:-1]
         for which_loop in range(len(path_pts)):
             path_pt = path_pts[which_loop]
             scale = scale_factors[which_loop]
@@ -1123,6 +1126,8 @@ try:
                 v_prev = path_pt - prev_pt
                 v_next = next_pt - path_pt
                 tangent = v_prev + v_next
+            elif closed_path:
+                tangent = path_pts[(which_loop + 1) % len(path_pts)] - path_pts[(which_loop - 1) % len(path_pts)]
             elif which_loop == 0:
                 tangent = path_pts[which_loop + 1] - path_pt
             elif which_loop == len(path_pts) - 1:
@@ -1153,17 +1158,25 @@ try:
                     facet_indices.append([i + 1, i + shape_pt_count, i + shape_pt_count + 1])
                 facet_indices.append([segment_start, segment_end, segment_end + shape_pt_count])
                 facet_indices.append([segment_start, segment_end + shape_pt_count, segment_start + shape_pt_count])
+            elif closed_path:
+                for i in range(shape_pt_count - 1):
+                    facet_indices.append([segment_start + i, i, segment_start + i + 1])
+                    facet_indices.append([segment_start + i + 1, i, i + 1])
+                facet_indices.append([segment_start, segment_end, shape_pt_count - 1])
+                facet_indices.append([segment_start, shape_pt_count - 1, 0])
 
-        # Cap the start of the polyhedron
-        for i in range(1, shape_pt_count - 1):
-            facet_indices.append([0, i, i + 1])
+        if not closed_path:
+            # only add caps for non-closed paths
+            # Cap the start of the polyhedron
+            for i in range(1, shape_pt_count - 1):
+                facet_indices.append([0, i, i + 1])
 
-        # And the end (could be rolled into the earlier loop)
-        # FIXME: concave cross-sections will cause this end-capping algorithm
-        # to fail
-        end_cap_base = len(polyhedron_pts) - shape_pt_count
-        for i in range(end_cap_base + 1, len(polyhedron_pts) - 1):
-            facet_indices.append([end_cap_base, i + 1, i])
+            # And the end (could be rolled into the earlier loop)
+            # FIXME: concave cross-sections will cause this end-capping algorithm
+            # to fail
+            end_cap_base = len(polyhedron_pts) - shape_pt_count
+            for i in range(end_cap_base + 1, len(polyhedron_pts) - 1):
+                facet_indices.append([end_cap_base, i + 1, i])
 
         return polyhedron(points=euc_to_arr(polyhedron_pts), faces=facet_indices)
 

@@ -613,6 +613,8 @@ class IncludedOpenSCADObject(OpenSCADObject):
 from . import objects
 
 def py2openscad(o):
+    if isinstance(o, OpenSCADObject):
+        return o._render()[:-1]
     if type(o) == bool:
         return str(o).lower()
     if type(o) == float:
