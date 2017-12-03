@@ -629,7 +629,7 @@ def py2openscad(o):
         return s
     if type(o) == str:
         return '"' + o + '"'
-    if type(0).__name__ == "ndarray":
+    if type(o).__name__ == "ndarray":
         import numpy
         return numpy.array2string(o, separator=",")
     return str(o)
