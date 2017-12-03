@@ -266,7 +266,16 @@ class TestSolidPython(DiffOutput):
         # TODO: test include_orig_code=True, but that would have to
         # be done from a separate file, or include everything in this one
 
-
+    def test_numpy_type(self):
+        try:
+            import numpy
+            numpy_cube = cube(size=numpy.array([1,2,3]))
+            expected ='\n\ncube(size = [1,2,3]);'
+            actual = scad_render(numpy_cube)
+            self.assertEqual(expected, actual, 'Numpy SolidPython not rendered correctly')
+        except ImportError:
+            pass
+            
 def single_test(test_dict):
     name, args, kwargs, expected = test_dict['name'], test_dict['args'], test_dict['kwargs'], test_dict['expected']
 
