@@ -168,8 +168,8 @@ class union(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'union', {})
 
-    def __add__(self, x):
-        return self.add(x)
+    #def __add__(self, x):
+        #return self.add(x)
 
 
 class intersection(OpenSCADObject):
@@ -180,8 +180,8 @@ class intersection(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'intersection', {})
 
-    def __mul__(self, x):
-        return self.add(x)
+    #def __mul__(self, x):
+        #return self.add(x)
 
 
 class difference(OpenSCADObject):
@@ -191,8 +191,8 @@ class difference(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'difference', {})
 
-    def __sub__(self,x):
-        return self.add(x)
+    #def __sub__(self,x):
+        #return self.add(x)
 
 
 class hole(OpenSCADObject):
@@ -408,9 +408,9 @@ class rotate_extrude(OpenSCADObject):
     :type segments: int
 
     '''
-    def __init__(self, convexity=None, segments=None):
+    def __init__(self, angle=None, convexity=None, segments=None):
         OpenSCADObject.__init__(self, 'rotate_extrude',
-                                {'convexity': convexity, 'segments': segments})
+                                {'angle':angle, 'convexity': convexity, 'segments': segments})
 
 
 class dxf_linear_extrude(OpenSCADObject):
