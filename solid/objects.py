@@ -124,7 +124,7 @@ class cylinder(OpenSCADObject):
     :param center: If True will center the height of the cone/cylinder around the origin. Default is False, placing the base of the cylinder or r1 radius of cone at the origin.
     :type center: boolean
 
-    :param segments: The fixed number of fragments to use.
+    :param segments: Number of fragments in 360 degrees.
     :type segments: int
     '''
     def __init__(self, r=None, h=None, r1=None, r2=None, d=None, d1=None,
@@ -404,7 +404,7 @@ class rotate_extrude(OpenSCADObject):
     :param angle: Defaults to 360. Specifies the number of degrees to sweep, starting at the positive X axis. The direction of the sweep follows the Right Hand Rule, hence a negative angle will sweep clockwise.
     :type angle: number
     
-    :param segments: The fixed number of fragments to use.
+    :param segments: Number of fragments in 360 degrees.
     :type segments: int
 
     :param convexity: The convexity parameter specifies the maximum number of front sides (back sides) a ray intersecting the object might penetrate. This parameter is only needed for correctly displaying the object in OpenCSG preview mode and has no effect on the polyhedron rendering.

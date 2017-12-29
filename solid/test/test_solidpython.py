@@ -41,7 +41,7 @@ scad_test_case_templates = [
 {'name': 'import_dxf',  'kwargs': {'layer': None, 'origin': (0,0)}, 'expected': '\n\nimport(file = "/Path/to/dummy.dxf", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
 {'name': 'import_',     'kwargs': {'layer': None, 'origin': (0,0)}, 'expected': '\n\nimport(file = "/Path/to/dummy.dxf", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
 {'name': 'linear_extrude',      'kwargs': {'twist': None, 'slices': None, 'center': False, 'convexity': None, 'height': 1, 'scale': 0.9}, 'expected': '\n\nlinear_extrude(center = false, height = 1, scale = 0.9000000000);', 'args': {}, },
-{'name': 'rotate_extrude',      'kwargs': {'convexity': None}, 'expected': '\n\nrotate_extrude();', 'args': {}, },
+{'name': 'rotate_extrude',      'kwargs': {'angle':90, 'segments': 4, 'convexity': None}, 'expected': '\n\nrotate_extrude($fn = 4, angle = 90);', 'args': {}, },
 {'name': 'intersection_for',    'kwargs': {}, 'expected': '\n\nintersection_for(n = [0, 1, 2]);', 'args': {'n': [0, 1, 2]}, },
 ]
 
