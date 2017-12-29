@@ -401,16 +401,20 @@ class rotate_extrude(OpenSCADObject):
     is in the negative axis the faces will be inside-out, you probably don't
     want to do that; it may be fixed in the future.
 
-    :param convexity: The convexity parameter specifies the maximum number of front sides (back sides) a ray intersecting the object might penetrate. This parameter is only needed for correctly displaying the object in OpenCSG preview mode and has no effect on the polyhedron rendering.
-    :type convexity: int
-
+    :param angle: Defaults to 360. Specifies the number of degrees to sweep, starting at the positive X axis. The direction of the sweep follows the Right Hand Rule, hence a negative angle will sweep clockwise.
+    :type angle: number
+    
     :param segments: The fixed number of fragments to use.
     :type segments: int
 
+    :param convexity: The convexity parameter specifies the maximum number of front sides (back sides) a ray intersecting the object might penetrate. This parameter is only needed for correctly displaying the object in OpenCSG preview mode and has no effect on the polyhedron rendering.
+    :type convexity: int
+
     '''
-    def __init__(self, convexity=None, segments=None):
+    def __init__(self, angle=360, convexity=None, segments=None):
         OpenSCADObject.__init__(self, 'rotate_extrude',
-                                {'convexity': convexity, 'segments': segments})
+                                {'angle': angle, 'segments': segments, 
+                                 'convexity': convexity})
 
 
 class dxf_linear_extrude(OpenSCADObject):
