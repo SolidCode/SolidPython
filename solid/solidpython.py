@@ -475,6 +475,10 @@ class OpenSCADObject(object):
             if len(child) == 1 and isinstance(child[0], (list, tuple)):
                 child = child[0]
             [self.add(c) for c in child]
+        elif isinstance(child, int):
+            # Allowing for creating object by adding to 0 (as in sum())
+            if child != 0:
+                raise ValueError
         else:
             self.children.append(child)
             child.set_parent(self)
@@ -525,6 +529,13 @@ class OpenSCADObject(object):
         return self.add(args)
 
     def __add__(self, x):
+        '''
+        This makes u = a+b identical to:
+        u = union()(a, b )
+        '''
+        return objects.union()(self, x)
+
+    def __radd__(self, x):
         '''
         This makes u = a+b identical to:
         u = union()(a, b )
