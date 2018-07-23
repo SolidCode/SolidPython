@@ -17,9 +17,13 @@ screw_height = 80
 
 def assembly():
     section = screw_thread.default_thread_section(tooth_height=10, tooth_depth=5)
-    s = screw_thread.thread(outline_pts=section, inner_rad=inner_rad,
-                            pitch=screw_height, length=screw_height, segments_per_rot=SEGMENTS)
-    #, neck_in_degrees=90, neck_out_degrees=90)
+    s = screw_thread.thread(outline_pts=section, 
+                            inner_rad=inner_rad,
+                            pitch=screw_height, 
+                            length=screw_height, 
+                            segments_per_rot=SEGMENTS, 
+                            neck_in_degrees=90, 
+                            neck_out_degrees=90)
 
     c = cylinder(r=inner_rad, h=screw_height)
     return s + c

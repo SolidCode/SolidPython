@@ -14,7 +14,8 @@ import solid.patch_euclid
 solid.patch_euclid.run_patch()
 
 
-def thread(outline_pts, inner_rad, pitch, length, external=True, segments_per_rot=32, neck_in_degrees=0, neck_out_degrees=0):
+def thread(outline_pts, inner_rad, pitch, length, external=True, 
+            segments_per_rot=32, neck_in_degrees=0, neck_out_degrees=0):
     '''Sweeps outline_pts (an array of points describing a closed polygon in XY)
     through a spiral. 
 
@@ -51,7 +52,7 @@ def thread(outline_pts, inner_rad, pitch, length, external=True, segments_per_ro
     doing to make the neck-in work as well.  Not sure how the two approaches 
     compare in terms of render-time. -ETJ 16 Mar 2011     
 
-    NOTE: if pitch is less than the or equal to the height of each tooth (outline_pts), 
+    NOTE: if pitch is less than or equal to the height of each tooth (outline_pts), 
     OpenSCAD will likely crash, since the resulting screw would self-intersect 
     all over the place.  For screws with essentially no space between 
     threads, (i.e., pitch=tooth_height), I use pitch= tooth_height+EPSILON, 
@@ -107,9 +108,9 @@ def thread(outline_pts, inner_rad, pitch, length, external=True, segments_per_ro
         int_ext_mult = 1 if external else -1
         neck_in_rad = min_rad if external else max_rad
 
-        if angle < neck_in_degrees:
+        if neck_in_degrees != 0 and angle < neck_in_degrees:
             rad = neck_in_rad + int_ext_mult * angle / neck_in_degrees * outline_w
-        elif angle > total_angle - neck_in_degrees:
+        elif neck_out_degrees != 0 and  angle > total_angle - neck_out_degrees:
             rad = neck_in_rad + int_ext_mult * (total_angle - angle) / neck_out_degrees * outline_w
 
         elev_vec = Vector3(rad, 0, elevation)
