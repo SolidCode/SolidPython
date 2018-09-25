@@ -1,9 +1,8 @@
 #! /usr/bin/env python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 from __future__ import division
 import os
 import sys
-import re
 
 # Assumes SolidPython is in site-packages or elsewhwere in sys.path
 import unittest

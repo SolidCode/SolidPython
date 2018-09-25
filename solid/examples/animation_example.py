@@ -1,9 +1,8 @@
 #! /usr/bin/env python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 from __future__ import division
 import os
 import sys
-import re
 
 from solid import *
 from solid.utils import *
