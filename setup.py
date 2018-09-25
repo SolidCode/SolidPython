@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='solidpython',
-    version='0.2.0',
+    version='0.3.0',
     description='Python interface to the OpenSCAD declarative geometry language',
     author='Evan Jones',
     author_email='evan_t_jones@mac.com',
@@ -21,5 +21,5 @@ setup(
         "Topic :: Scientific/Engineering :: Mathematics",
     ],
     packages=find_packages(),
-    install_requires=['euclid3', 'PyPNG', 'prettytable'],
+    install_requires=['euclid3', 'PyPNG', 'prettytable', 'regex'],
 )

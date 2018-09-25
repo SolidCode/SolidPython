@@ -1,8 +1,7 @@
 #! /usr/bin/env python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 import os
 import sys
-import re
 
 import unittest
 import tempfile
@@ -101,20 +100,69 @@ class TestSolidPython(DiffOutput):
         self.assertEqual(expected, actual)
 
     def test_parse_scad_callables(self):
-        test_str = (""
-                    "module hex (width=10, height=10,    \n"
-                    "            flats= true, center=false){}\n"
-                    "function righty (angle=90) = 1;\n"
-                    "function lefty(avar) = 2;\n"
-                    "module more(a=[something, other]) {}\n"
-                    "module pyramid(side=10, height=-1, square=false, centerHorizontal=true, centerVertical=false){}\n"
-                    "module no_comments(arg=10,   //test comment\n"
-                    "other_arg=2, /* some extra comments\n"
-                    "on empty lines */\n"
-                    "last_arg=4){}\n"
-                    "module float_arg(arg=1.0){}\n")
-        expected = [{'args': [], 'name': 'hex', 'kwargs': ['width', 'height', 'flats', 'center']}, {'args': [], 'name': 'righty', 'kwargs': ['angle']}, {'args': ['avar'], 'name': 'lefty', 'kwargs': []}, {'args': [], 'name': 'more', 'kwargs': ['a']}, {
-            'args': [], 'name': 'pyramid', 'kwargs': ['side', 'height', 'square', 'centerHorizontal', 'centerVertical']}, {'args': [], 'name': 'no_comments', 'kwargs': ['arg', 'other_arg', 'last_arg']}, {'args': [], 'name': 'float_arg', 'kwargs': ['arg']}]
+        test_str =  """
+                    module hex (width=10, height=10,    
+                                flats= true, center=false){}
+                    function righty (angle=90) = 1;
+                    function lefty(avar) = 2;
+                    module more(a=[something, other]) {}
+                    module pyramid(side=10, height=-1, square=false, centerHorizontal=true, centerVertical=false){}
+                    module no_comments(arg=10,   //test comment
+                    other_arg=2, /* some extra comments
+                    on empty lines */
+                    last_arg=4){}
+                    module float_arg(arg=1.0){}
+                    module arg_var(var5){}
+                    module kwarg_var(var2=78){}
+                    module var_true(var_true = true){}
+                    module var_false(var_false = false){}
+                    module var_int(var_int = 5){}
+                    module var_negative(var_negative = -5){}
+                    module var_float(var_float = 5.5){}
+                    module var_number(var_number = -5e89){}
+                    module var_empty_vector(var_empty_vector = []){}
+                    module var_simple_string(var_simple_string = "simple string"){}
+                    module var_complex_string(var_complex_string = "a \"complex\"\tstring with a\\"){}
+                    module var_vector(var_vector = [5454445, 565, [44545]]){}
+                    module var_complex_vector(var_complex_vector = [545 + 4445, 565, [cos(75) + len("yes", 45)]]){}
+                    module var_vector(var_vector = [5, 6, "string\twith\ttab"]){}
+                    module var_range(var_range = [0:10e10]){}
+                    module var_range_step(var_range_step = [-10:0.5:10]){}
+                    module var_with_arithmetic(var_with_arithmetic = 8 * 9 - 1 + 89 / 15){}
+                    module var_with_parentheses(var_with_parentheses = 8 * ((9 - 1) + 89) / 15){}
+                    module var_with_functions(var_with_functions = abs(min(chamferHeight2, 0)) */-+ 1){}
+                    module var_with_conditionnal_assignment(var_with_conditionnal_assignment = mytest ? 45 : yop){}
+                   """ 
+        expected = [
+            {'name': 'hex', 'args': [], 'kwargs': ['width', 'height', 'flats', 'center']}, 
+            {'name': 'righty', 'args': [], 'kwargs': ['angle']}, 
+            {'name': 'lefty', 'args': ['avar'], 'kwargs': []}, 
+            {'name': 'more', 'args': [], 'kwargs': ['a']}, 
+            {'name': 'pyramid', 'args': [], 'kwargs': ['side', 'height', 'square', 'centerHorizontal', 'centerVertical']}, 
+            {'name': 'no_comments', 'args': [], 'kwargs': ['arg', 'other_arg', 'last_arg']}, 
+            {'name': 'float_arg', 'args': [], 'kwargs': ['arg']}, 
+            {'name': 'arg_var', 'args': ['var5'], 'kwargs': []}, 
+            {'name': 'kwarg_var', 'args': [], 'kwargs': ['var2']}, 
+            {'name': 'var_true', 'args': [], 'kwargs': ['var_true']}, 
+            {'name': 'var_false', 'args': [],'kwargs': ['var_false']}, 
+            {'name': 'var_int', 'args': [], 'kwargs': ['var_int']}, 
+            {'name': 'var_negative', 'args': [], 'kwargs': ['var_negative']}, 
+            {'name': 'var_float', 'args': [], 'kwargs': ['var_float']}, 
+            {'name': 'var_number', 'args': [], 'kwargs': ['var_number']}, 
+            {'name': 'var_empty_vector', 'args': [], 'kwargs': ['var_empty_vector']}, 
+            {'name': 'var_simple_string', 'args': [], 'kwargs': ['var_simple_string']}, 
+            {'name': 'var_complex_string', 'args': [], 'kwargs': ['var_complex_string']}, 
+            {'name': 'var_vector', 'args': [], 'kwargs': ['var_vector']}, 
+            {'name': 'var_complex_vector', 'args': [], 'kwargs': ['var_complex_vector']}, 
+            {'name': 'var_vector', 'args': [], 'kwargs': ['var_vector']}, 
+            {'name': 'var_range', 'args': [], 'kwargs': ['var_range']}, 
+            {'name': 'var_range_step', 'args': [], 'kwargs': ['var_range_step']}, 
+            {'name': 'var_with_arithmetic', 'args': [], 'kwargs': ['var_with_arithmetic']}, 
+            {'name': 'var_with_parentheses', 'args': [], 'kwargs': ['var_with_parentheses']}, 
+            {'name': 'var_with_functions', 'args': [], 'kwargs': ['var_with_functions']}, 
+            {'name': 'var_with_conditionnal_assignment', 'args': [], 'kwargs': ['var_with_conditionnal_assignment']}
+        ]
+
         from solid.solidpython import parse_scad_callables
         actual = parse_scad_callables(test_str)
         self.assertEqual(expected, actual)
@@ -275,6 +323,7 @@ class TestSolidPython(DiffOutput):
             self.assertEqual(expected, actual, 'Numpy SolidPython not rendered correctly')
         except ImportError:
             pass
+
             
 def single_test(test_dict):
     name, args, kwargs, expected = test_dict['name'], test_dict['args'], test_dict['kwargs'], test_dict['expected']

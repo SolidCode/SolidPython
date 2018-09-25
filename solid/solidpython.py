@@ -9,7 +9,9 @@
 #
 
 
-import os, sys, re
+import os 
+import sys
+import regex as re
 import inspect
 import subprocess
 import tempfile
@@ -192,10 +194,8 @@ def parse_scad_callables(scad_code_str):
     # of which are incorrect syntax
     mod_re = r'(?mxs)^\s*(?:module|function)\s+(?P<callable_name>\w+)\s*\((?P<all_args>.*?)\)\s*(?:{|=)'
 
-    # This is brittle.  To get a generally applicable expression for all arguments,
-    # we'd need a real parser to handle nested-list default args or parenthesized statements.
-    # For the moment, assume a maximum of one square-bracket-delimited list
-    args_re = r'(?mxs)(?P<arg_name>\w+)(?:\s*=\s*(?P<default_val>[\w.-]+|\[.*\]))?(?:,|$)'
+    # See https://github.com/SolidCode/SolidPython/issues/95; Thanks to https://github.com/Torlos
+    args_re = r'(?mxs)(?P<arg_name>\w+)(?:\s*=\s*(?P<default_val>([\w.\"\s\?:\-+\\\/*]+|\((?>[^()]|(?2))*\)|\[(?>[^\[\]]|(?2))*\])+))?(?:,|$)'
 
     # remove all comments from SCAD code
     scad_code_str = re.sub(no_comments_re, '', scad_code_str)
