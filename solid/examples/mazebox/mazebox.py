@@ -53,12 +53,10 @@ def getPNG(fn):
 def build_depth_map(img_path):
     depth = []
     for i in range(0, hn):
-        depth.append([])
-        for j in range(0, rn):
-            depth[i].append(0.0)
+        depth.append([0.0] * rn)
 
     depth = getPNG(img_path)
-    depth = depth.reverse()
+    depth.reverse()
     return depth
 
 def getPx(depth_map, x, y, default):
