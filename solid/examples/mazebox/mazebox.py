@@ -1,19 +1,23 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
 #   A-Mazing Box, http://www.thingiverse.com/thing:1481
 #   Copyright (C) 2009    Philipp Tiefenbacher <wizards23@gmail.com>
 #   With very minor changes for SolidPython compatibility, 8 March 2011
+#   With further changes for clarity, 25 September 2018
 #
 
-# Make sure we can import the OpenScad translation module
 import sys
 import os
 
 from math import *
 from solid import *
-# Requires pypng module, which can be found with 'pip install pypng',
-# 'easy_install pypng', or at http://code.google.com/p/pypng/
-from testpng import *
+
+import png
 from inset import *
 from trianglemath import *
+
+SEGMENTS = 48
 
 rn = 3 * 64
 #r = 10
@@ -25,42 +29,47 @@ gripH = 9
 hn = 90
 s = 0.775
 
-
 h = hn * s
 hone = h / hn
 
 toph = (h - gripH) + 3
 
-depth = []
+def getPNG(fn):
+    with open(fn, 'rb') as f:
+        r = png.Reader(file=f)
+        data = r.read()
+        pixel = data[2]
+        raw = []
+        # print(data)
+        for row in pixel:
+            # print(row)
+            # exit()
+            r = []
+            raw.append(r)
+            for px in row:
+                r.append(px)
+        return raw
 
+def build_depth_map(img_path):
+    depth = []
+    for i in range(0, hn):
+        depth.append([])
+        for j in range(0, rn):
+            depth[i].append(0.0)
 
-def flip(img):
-    # for l in img:
-    #  l.reverse()
-    img.reverse()
-    return img
+    depth = getPNG(img_path)
+    depth = depth.reverse()
+    return depth
 
-
-for i in range(0, hn):
-    depth.append([])
-    for j in range(0, rn):
-        depth[i].append(0.0)
-
-
-depth = getPNG('playground/maze7.png')
-depth = flip(depth)
-
-
-def getPx(x, y, default):
+def getPx(depth_map, x, y, default):
     x = int(x)
     y = int(y)
-    x = x % len(depth[0])
-    if (y >= len(depth)):
-        y = len(depth) - 1
-    if (x >= 0 and x < len(depth[0]) and y >= 0 and y < len(depth)):
-        return depth[y][x]
+    x = x % len(depth_map[0])
+    if (y >= len(depth_map)):
+        y = len(depth_map) - 1
+    if (x >= 0 and x < len(depth_map[0]) and y >= 0 and y < len(depth_map)):
+        return depth_map[y][x]
     return default
-
 
 def myComp(x, y):
     d = Tripple2Vec3D(y).angle2D() - Tripple2Vec3D(x).angle2D()
@@ -71,15 +80,15 @@ def myComp(x, y):
     else:
         return 1
 
+def bumpMapCylinder(depth_map, theR, hn, inset, default):
 
-def bumpMapCylinder(theR, hn, inset, default):
     pts = []
     trls = []
-    for i in xrange(0, hn):
+    for i in range(0, hn):
         circ = []
-        for j in xrange(0, rn):
+        for j in range(0, rn):
             a = j * 2 * pi / rn
-            r = theR - ((255 - getPx(j, i, default)) / 150.0)
+            r = theR - ((255 - getPx(depth_map, j, i, default)) / 150.0)
             p = [r * cos(a), r * sin(a), i * hone]
             circ.append(p)
         circ = insetPoly(circ, inset)
@@ -126,25 +135,28 @@ def bumpMapCylinder(theR, hn, inset, default):
 
     return polyhedron(pts, trls, 6)
 
-# to generate the top part
-part = 1
+def top_part():
+    maze_path = os.path.join(os.path.dirname(__file__), 'maze7.png')
 
-# to generate the bottom part
-# part = 2
+    depth_map = build_depth_map(maze_path)
 
-if part == 1:
     d = difference()
     u = union()
-    u.add(bumpMapCylinder(innerR, hn, 0, 255))
+    u.add(bumpMapCylinder(depth_map, innerR, hn, 0, 255))
     u.add(cylinder(r=innerR + wall + gap, h=gripH))
     d.add(u)
-    #u.add(translate([80,0,0]).add(bumpMapCylinder(innerR, wall)))
-    d.add(intersection().add(bumpMapCylinder(innerR, hn + 2, wall, 0).set_modifier("")
-                             ).add(translate([0, 0, baseH]).add(cylinder(r=innerR + 2 * wall, h=h * 1.1).set_modifier(""))))
+    #u.add(translate([80,0,0]).add(bumpMapCylinder(depth_map, innerR, wall)))
+    d.add(intersection()
+    .add(bumpMapCylinder(depth_map, innerR, hn + 2, wall, 0).set_modifier("") )
+    .add(translate([0, 0, baseH])
+    .add(cylinder(r=innerR + 2 * wall, h=h * 1.1).set_modifier(""))))
+
     # u.add()
-    print("$fa=2; $fs=0.5;\n")
-    print(d._render())
-elif part == 2:
+    # print("$fa=2; $fs=0.5;\n")
+    # print(d._render())
+    return d
+
+def bottom_part():
     top = difference()
     u = union()
     u2 = union()
@@ -159,24 +171,19 @@ elif part == 2:
         r = innerR + gap + wall / 2
         u.add(translate([(r - 0.3) * cos(a), (r - 0.3) * sin(a), toph - 6]).add(sphere(r=2.4)))
         u2.add(translate([(r + wall - 0.3) * cos(a), (r + wall - 0.3) * sin(a), toph - 6]).add(sphere(r=2.4)))
-    #top.add(cylinder(r = innerR+wall+gap, h=h))
-    print("$fa=2; $fs=0.5;\n")
-    print(top._render())
-else:
-    top = difference()
-    u = union()
-    u2 = union()
-    top.add(u)
-    d = difference()
-    d.add(cylinder(r=innerR + wall + gap, h=6))
-    d.add(translate([0, 0, -baseH]).add(cylinder(r=innerR + gap, h=h)))
-    u.add(d)
-    top.add(u2)
-    for i in range(0, 3):
-        a = i * 2 * pi / 3.0
-        r = innerR + gap + wall / 2
-        u.add(translate([r * cos(a), r * sin(a), 4]).add(sphere(r=2.3)))
-        u2.add(translate([(r + wall) * cos(a), (r + wall) * sin(a), 4]).add(sphere(r=2.3)))
-    #top.add(cylinder(r = innerR+wall+gap, h=h))
-    print("//$fn=20;\n")
-    print(top._render())
+
+    return top
+
+if __name__ == '__main__':
+    out_dir = sys.argv[1] if len(sys.argv) > 1 else os.curdir
+    file_out = os.path.join(out_dir, 'mazebox.scad')
+
+    assm = union()(
+        top_part(),
+        translate([3*innerR, 0,0])(
+            bottom_part()
+        )
+    )
+
+    print("%(__file__)s: SCAD file written to: \n%(file_out)s" % vars())
+    scad_render_to_file(assm, file_out, file_header='$fn = %s;' % SEGMENTS, include_orig_code=True)

@@ -1,3 +1,9 @@
+#!/usr/bin/env bash
+
+# Set CWD to this script's directory
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+cd $DIR
+
 COMPILED_EXAMPLES=${PWD}/Compiled_examples
 
 echo
@@ -6,16 +12,18 @@ if [ ! -e $COMPILED_EXAMPLES ];
      then mkdir $COMPILED_EXAMPLES;     
 fi    
  
+ function run_example {
+    echo "===================================================";
+    echo "python $1 $2";
+    python $1 $2;  
+    echo "===================================================";
+}
+
 for py in *.py;
-do 
-    echo "===================================================";
-    echo "python $py $COMPILED_EXAMPLES";
-    python $py $COMPILED_EXAMPLES;  
-    echo "===================================================";
-echo
+do run_example $py $COMPILED_EXAMPLES;
 done 
 
-# Note: mazebox example isn't included because it requires a 
-# significant python package (pypng) to be installed. 
-# Comments in examples/mazebox/mazebox_clean2_stable.py
-# explain how to install pypng
+run_example mazebox/mazebox.py $COMPILED_EXAMPLES;
+
+# revert to original dir
+cd -
