@@ -7,7 +7,7 @@ from ipywidgets import HTML, Text, Output, VBox
 from traitlets import link, dlink
 import math as pymath, os, time, subprocess
 from pythreejs import *
-from IPython.display import display
+from IPython.display import display, SVG
 
 
 OBJ_COLOR = '#f7d62c'
@@ -124,20 +124,20 @@ class JupyterRenderer:
                 start = pymath.floor(extents[axis1][0] / space) * space        
                 start2 = pymath.floor(extents[axis2][0] / space) * space 
                 end2 = start2 + (N - 1) * space
-                verts = self._get_grid_lines(axis1, start, space, N, axis2, start2, end2)
+                verts = self._get_grid_lines(axis1, start, space, N, axis2,
+                                             start2, end2)
                 grid_verts.extend(verts)
                 grid_cols.extend([axis_cols[axis3] for vert in verts])
 
             
         lines_geom = Geometry(vertices=grid_verts, colors =grid_cols)
         lines = LineSegments(geometry=lines_geom, 
-                 material=LineBasicMaterial(linewidth=5, transparent=True, \
-                 opacity=0.5, dashSize=10, \
+                 material=LineBasicMaterial(linewidth=5, transparent=True, 
+                 opacity=0.5, dashSize=10, 
                  gapSize=10, vertexColors='VertexColors'), 
-                 type='LinePieces',
-                )
+                 type='LinePieces')
         
-        return lines
+        return lines, space
 
     
     def render(self, py_scad_obj):
@@ -183,20 +183,22 @@ class JupyterRenderer:
         )        
         
         n_vert = len(vertices)
-        center = [sum([vertex[i] for vertex in vertices]) / float(n_vert) for i in range(3)]
+        center = [sum([vertex[i] for vertex in vertices]) / float(n_vert)
+                  for i in range(3)]
         extents = self._get_extents(vertices)
         max_delta = max([extent[1] - extent[0] for extent in extents])
         camPos = [center[i] + 4 * max_delta for i in range(3)]
         light_pos = [center[i] + (i+3)*max_delta for i in range(3)]
+
         # Set up a scene and render it:
         camera = PerspectiveCamera(position=camPos, fov=20,
-                                  children=[DirectionalLight(color='#ffffff', \
-                                 position=light_pos, intensity=0.5)])
+                                   children=[DirectionalLight(color='#ffffff',
+                                   position=light_pos, intensity=0.5)])
         camera.up = (0,0,1)
 
         scene_things = [my_object_mesh, camera, AmbientLight(color='#888888')]
         if self.draw_grids:
-            grids = self._get_grids(vertices)            
+            grids, space = self._get_grids(vertices)            
             scene_things.append(grids)
         
         scene = Scene(children=scene_things, background=BACKGROUND_COLOR)
@@ -207,5 +209,15 @@ class JupyterRenderer:
             width=self.width, \
             height=self.height)
 
-        display(renderer_obj)
+        display_things = [renderer_obj]
+        if self.draw_grids:
+            s = """
+<svg width="{}" height="30">
+<rect width="20" height="20" x="{}" y="0" style="fill:none;stroke-width:1;stroke:rgb(0,255,0)" />
+    <text x="{}" y="15">={:.1f}</text>
+  Sorry, your browser does not support inline SVG.
+</svg>""".format(self.width, self.width//2, self.width//2+25, space)
+            display_things.append(SVG(data=s))
+        
+        display(*display_things)
         
