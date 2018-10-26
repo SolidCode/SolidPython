@@ -140,13 +140,21 @@ class JupyterRenderer:
         return lines, space
 
     
-    def render(self, py_scad_obj):
+    def render(self, py_scad_obj, **kw):
         tmp_dir = tempfile.mkdtemp()
         saved_umask = os.umask(0o077)        
         scad_tmp_file = os.path.join(tmp_dir, 'tmp.scad')
-        stl_tmp_file = os.path.join(tmp_dir, 'tmp.stl')        
+        stl_tmp_file = os.path.join(tmp_dir, 'tmp.stl')
+        scad_prepend = ''
+        if 'dollar_sign_vars' in kw:
+            for var_name, value in kw['dollar_sign_vars'].items():
+                scad_prepend += '${}={};\n'.format(var_name, value)
         try:
-            solid.scad_render_to_file(py_scad_obj, scad_tmp_file)
+            of = open(scad_tmp_file, 'w')
+            of.write(scad_prepend)
+            of.write(solid.scad_render(py_scad_obj))
+            of.close()
+            
             # now run openscad to generate stl:
             cmd = [self.openscad_exec, '-o', stl_tmp_file, scad_tmp_file]
             return_code = subprocess.call(cmd)
