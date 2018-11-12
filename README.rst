@@ -31,6 +31,7 @@ SolidPython
    -  `Bill Of Materials <#bill-of-materials>`__
 
 -  `solid.screw\_thread <#solidscrew_thread>`__
+-  `solid.renderer <#solidrenderer>`__
 -  `Contact <#contact>`__
 -  `License <#license>`__
 
@@ -401,6 +402,16 @@ external screw threads.
 See
 `solid/examples/screw_thread_example.py <https://github.com/SolidCode/SolidPython/blob/master/solid/examples/screw_thread_example.py>`__
 for more details.
+
+solid.renderer
+--------------
+
+solid.renderer allows you to view your SolidPython object directly in a Jupyter notebook.
+You must have [pythreejs](https://github.com/jupyter-widgets/pythreejs) installed and working
+in a Jupyter notebook.  It also provides a method, `render_to_stl_file(sp_obj, fname)`, which
+directly creates an STL file from your SolidPython object, should that be your ultimate goal.
+
+![solid.renderer example](images/renderer.png?raw=true "solid.renderer") 
 
 Contact
 =======
