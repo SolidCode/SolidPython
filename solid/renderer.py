@@ -19,15 +19,18 @@ BACKGROUND_COLOR = '#ffffff'
 
 class JupyterRenderer:
     '''This class will render an OpenSCAD object within a jupyter notebook.
-    pythreejs must be installed (see directions a
+    The 'pythreejs' module must be installed (see directions a
     https://github.com/jupyter-widgets/pythreejs).
-    This will try to guess the location of the openscad command-line executable,
-    but you may optionally specify the path of the executable with the
-    openscad_executable keyword.
 
-    This class needs to know the path to the openscad command-line tool, and a path of a temp directory.
-    You can set these locations with the OPENSCAD_EXEC and OPENSCAD_TMP_DIR environment variables,
-    or you can set the "openscad_exec" and openscad_mpDir keyword options in the constructor.
+    This class needs to know the path to the openscad command-line tool.
+    You can set the path with the OPENSCAD_EXEC environment variable, or with the 'openscad_exec'
+    keyword in the constructor.  If these are omitted, the class makes an attempt at
+    finding the executable itself.
+    other keyword arguments: 'width', 'height', and 'draw_grids' (True/False)
+    Primarily this class is used to render a SolidPython object in a Jupyter window, but it
+    also provides a method, render_to_stl_file(obj, fname), which creates an STL file
+    directly, allowing one to bypass OpenSCAD altogether, if the end goal is the creation of an
+    STL file.
     '''
     def __init__(self, **kw):
         self.openscad_exec = None
