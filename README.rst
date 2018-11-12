@@ -411,7 +411,7 @@ You must have `pythreejs <https://github.com/jupyter-widgets/pythreejs>`__ insta
 in a Jupyter notebook.  It also provides a method, ``render_to_stl_file(sp_obj, fname)``, which
 directly creates an STL file from your SolidPython object, should that be your ultimate goal.
 
-`solid.renderer example <images/renderer.png>`__
+.. image:: images/renderer.png
 
 Contact
 =======
