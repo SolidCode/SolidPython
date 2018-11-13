@@ -408,7 +408,24 @@ solid.renderer
 
 solid.renderer allows you to view your SolidPython object directly in a Jupyter notebook.
 You must have `pythreejs <https://github.com/jupyter-widgets/pythreejs>`__ installed and working
-in a Jupyter notebook.  It also provides a method, ``render_to_stl_file(sp_obj, fname)``, which
+in a Jupyter notebook:
+- Install ipywidgets:
+  ``pip install ipywidgets
+    jupyter nbextension enable --py widgetsnbextension``
+- If using Jupyter lab:
+  - install `npm and nodejs <https://www.npmjs.com/get-npm>`__
+  - install the Jupyter lab extension:
+    ``jupyter labextension install @jupyter-widgets/jupyterlab-manager``
+- Install pythreejs:
+  ``pip install pythreejs
+    jupyter nbextension install --py --symlink --sys-prefix pythreejs
+    jupyter nbextension enable --py --sys-prefix pythreejs``
+- Jupyter lab build:
+  ``jupyter lab build``
+
+At this point, if all went well, you should be good to go.
+
+The renderer also provides a method, ``render_to_stl_file(sp_obj, fname)``, which
 directly creates an STL file from your SolidPython object, should that be your ultimate goal.
 
 .. image:: images/renderer.png
