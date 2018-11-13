@@ -409,15 +409,16 @@ solid.renderer
 solid.renderer allows you to view your SolidPython object directly in a Jupyter notebook.
 You must have `pythreejs <https://github.com/jupyter-widgets/pythreejs>`__ installed and working
 in a Jupyter notebook:
+
 - Install ipywidgets:
 ::
 
    pip install ipywidgets
-   jupyter nbextension enable --py widgetsnbextension``
+   jupyter nbextension enable --py widgetsnbextension
    
 - If using Jupyter lab:
-  - install `npm and nodejs <https://www.npmjs.com/get-npm>`__
-  - install the Jupyter lab extension:
+  * install `npm and nodejs <https://www.npmjs.com/get-npm>`__
+  * install the Jupyter lab extension:
 ::
    
     jupyter labextension install @jupyter-widgets/jupyterlab-manager
