@@ -423,13 +423,15 @@ in a Jupyter notebook:
     jupyter labextension install @jupyter-widgets/jupyterlab-manager
 - Install pythreejs:
 ::
+
     pip install pythreejs
     jupyter nbextension install --py --symlink --sys-prefix pythreejs
     jupyter nbextension enable --py --sys-prefix pythreejs``
     
 - Jupyter lab build:
 ::
-   jupyter lab build
+
+    jupyter lab build
 
 At this point, if all went well, you should be good to go.
 
