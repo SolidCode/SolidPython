@@ -417,8 +417,9 @@ in a Jupyter notebook:
    jupyter nbextension enable --py widgetsnbextension
    
 - If using Jupyter lab:
-  * install `npm and nodejs <https://www.npmjs.com/get-npm>`__
-  * install the Jupyter lab extension:
+
+  - install `npm and nodejs <https://www.npmjs.com/get-npm>`__
+  - install the Jupyter lab extension:
 ::
    
     jupyter labextension install @jupyter-widgets/jupyterlab-manager
