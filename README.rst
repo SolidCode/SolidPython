@@ -428,7 +428,7 @@ in a Jupyter notebook:
 
     pip install pythreejs
     jupyter nbextension install --py --symlink --sys-prefix pythreejs
-    jupyter nbextension enable --py --sys-prefix pythreejs``
+    jupyter nbextension enable --py --sys-prefix pythreejs
     
 - Jupyter lab build:
 ::
