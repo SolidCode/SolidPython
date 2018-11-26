@@ -114,7 +114,10 @@ class JupyterRenderer:
         grid_verts = []
         deltas = [extent[1] - extent[0] for extent in extents]
         max_extent = max(deltas)
-        space = 10.0**pymath.floor(pymath.log(max_extent) / pymath.log(10.0) - 0.5)
+        space1 = 10.0**pymath.floor(pymath.log(max_extent) / pymath.log(10.0) - 0.5)
+        space2 = 2 * 10.0**pymath.floor(pymath.log(max_extent / 2.0) / pymath.log(10.0) - 0.5)
+        space = space2
+        if max_extent / space2 < 7: space = space1
         N = int(pymath.floor(max_extent / space + 2.0))
         grid_cols = []
         axis_cols = ['#ff3333', '#33ff33', '#3333ff']
@@ -243,7 +246,7 @@ class JupyterRenderer:
     <text x="{}" y="15">={:.1f}</text>
   Sorry, your browser does not support inline SVG.
 </svg>""".format(self.width, self.width//2, self.width//2+25, space)
-            display_things.append(SVG(data=s))
+            display_things.append(HTML(s))
 
         display(*display_things)
 
