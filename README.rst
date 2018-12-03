@@ -31,7 +31,7 @@ SolidPython
    -  `Bill Of Materials <#bill-of-materials>`__
 
 -  `solid.screw\_thread <#solidscrew_thread>`__
--  `Jupyter Renderer <#jupyter_renderer>`__
+-  `Jupyter Renderer <#jupyter-renderer>`__
 -  `Contact <#contact>`__
 -  `License <#license>`__
 
@@ -405,9 +405,11 @@ for more details.
 
 Jupyter Renderer
 ----------------
-Render SolidPython or OpenSCAD code in Jupyter notebooks using `ViewSCAD <https://github.com/nickc92/ViewSCAD>`__, or install directly via:
 
-`pip install viewscad`.
+Render SolidPython or OpenSCAD code in Jupyter notebooks using `ViewSCAD <https://github.com/nickc92/ViewSCAD>`__, or install directly via:
+:: 
+
+    pip install viewscad
 
 Contact
 =======
