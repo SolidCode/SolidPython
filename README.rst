@@ -411,6 +411,8 @@ Render SolidPython or OpenSCAD code in Jupyter notebooks using `ViewSCAD <https:
 
     pip install viewscad
 
+(Take a look at the `repo page <https://github.com/nickc92/ViewSCAD>`__, though, since there's a tiny bit more installation required)
+
 Contact
 =======
 
