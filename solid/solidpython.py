@@ -299,7 +299,12 @@ def new_openscad_class_str(class_name, args=[], kwargs=[], include_file_path=Non
 def _subbed_keyword(keyword):
     # Append an underscore to any python reserved word. 
     # No-op for all other strings, e.g. 'or' => 'or_', 'other' => 'other'
-    return keyword + '_' if keyword in PYTHON_ONLY_RESERVED_WORDS else keyword
+    new_key = keyword + '_' if keyword in PYTHON_ONLY_RESERVED_WORDS else keyword
+    if new_key != keyword:
+        print("\nFound OpenSCAD code that's not compatible with Python. \n"
+              "Imported OpenSCAD code using `%s` \n"
+              "can be accessed with `%s` in SolidPython\n"%(keyword, new_key))
+    return new_key
 
 def _unsubbed_keyword(subbed_keyword):
     # Remove trailing underscore for already-subbed python reserved words. 
