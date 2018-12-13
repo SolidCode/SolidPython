@@ -20,6 +20,15 @@ import tempfile
 # Mark them for special treatment
 non_rendered_classes = ['hole', 'part']
 
+# Words reserved in Python but not OpenSCAD
+# Re: https://github.com/SolidCode/SolidPython/issues/99
+PYTHON_ONLY_RESERVED_WORDS = [
+    'False','class','finally','is','return','None','continue','lambda',
+    'try','True','def','from','nonlocal','while','and','del','global','not',
+    'with','as','elif','or','yield','assert','pass', 'break','except','in','raise',
+]
+
+
 # =========================================
 # = Rendering Python code to OpenSCAD code=
 # =========================================
@@ -246,6 +255,12 @@ def new_openscad_class_str(class_name, args=[], kwargs=[], include_file_path=Non
     args_str = ''
     args_pairs = ''
 
+    # Re: https://github.com/SolidCode/SolidPython/issues/99
+    # Don't allow any reserved words as argument names or module names
+    # (They might be valid OpenSCAD argument names, but not in Python)
+    class_name = _subbed_keyword(class_name)
+
+    args = map(_subbed_keyword, args)
     for arg in args:
         args_str += ', ' + arg
         args_pairs += "'%(arg)s':%(arg)s, " % vars()
@@ -253,6 +268,7 @@ def new_openscad_class_str(class_name, args=[], kwargs=[], include_file_path=Non
     # kwargs have a default value defined in their SCAD versions.  We don't
     # care what that default value will be (SCAD will take care of that), just
     # that one is defined.
+    kwargs = map(_subbed_keyword, kwargs)
     for kwarg in kwargs:
         args_str += ', %(kwarg)s=None' % vars()
         args_pairs += "'%(kwarg)s':%(kwarg)s, " % vars()
@@ -279,6 +295,18 @@ def new_openscad_class_str(class_name, args=[], kwargs=[], include_file_path=Non
                   "\n" % vars())
 
     return result
+
+def _subbed_keyword(keyword):
+    # Append an underscore to any python reserved word. 
+    # No-op for all other strings, e.g. 'or' => 'or_', 'other' => 'other'
+    return keyword + '_' if keyword in PYTHON_ONLY_RESERVED_WORDS else keyword
+
+def _unsubbed_keyword(subbed_keyword):
+    # Remove trailing underscore for already-subbed python reserved words. 
+    # No-op for all other strings: e.g. 'or_' => 'or', 'other_' => 'other_'
+    shortened = subbed_keyword[:-1]
+    return shortened if shortened in PYTHON_ONLY_RESERVED_WORDS else subbed_keyword
+
 
 # =========================
 # = Internal Utilities    =
@@ -385,8 +413,15 @@ class OpenSCADObject(object):
         return s
 
     def _render_str_no_children(self):
-        s = "\n" + self.modifier + self.name + "("
+        callable_name = _unsubbed_keyword(self.name)
+        s = "\n" + self.modifier + callable_name + "("
         first = True
+
+        # Re: https://github.com/SolidCode/SolidPython/issues/99
+        # OpenSCAD will accept Python reserved words as callables or argument names,
+        # but they won't compile in Python. Those have already been substituted
+        # out (e.g 'or' => 'or_'). Sub them back here.
+        self.params = {_unsubbed_keyword(k):v for k, v in self.params.items()}
 
         # OpenSCAD doesn't have a 'segments' argument, but it does
         # have '$fn'.  Swap one for the other

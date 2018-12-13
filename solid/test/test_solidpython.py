@@ -177,6 +177,28 @@ class TestSolidPython(DiffOutput):
         expected = "use <%s>\n\n\nsteps(howmany = 3);" % abs_path
         self.assertEqual(expected, actual)
 
+    def test_use_reserved_words(self):
+        scad_str = '''module reserved_word_arg(or=3){\n\tcube(or);\n}\nmodule or(arg=3){\n\tcube(arg);\n}\n'''
+
+        fd, path = tempfile.mkstemp(text=True)
+        try:
+            os.close(fd)
+            with open(path, "w") as f:
+                f.write(scad_str)
+
+            use(path)
+            a = reserved_word_arg(or_=5)
+            actual = scad_render(a)
+            expected = "use <%s>\n\n\nreserved_word_arg(or = 5);"%path;
+            self.assertEqual(expected, actual)
+
+            b = or_(arg=5)
+            actual = scad_render(b)
+            expected = "use <%s>\n\n\nor(arg = 5);"%path;
+            self.assertEqual(expected, actual)
+        finally:
+            os.remove(path)
+
     def test_include(self):
         include_file = self.expand_scad_path("examples/scad_to_include.scad")
         self.assertIsNotNone(include_file, 'examples/scad_to_include.scad not found')
