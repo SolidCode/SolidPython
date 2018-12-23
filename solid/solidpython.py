@@ -309,6 +309,8 @@ def _subbed_keyword(keyword):
 def _unsubbed_keyword(subbed_keyword):
     # Remove trailing underscore for already-subbed python reserved words. 
     # No-op for all other strings: e.g. 'or_' => 'or', 'other_' => 'other_'
+    if subbed_keyword[-1:] != '_':
+        return subbed_keyword
     shortened = subbed_keyword[:-1]
     return shortened if shortened in PYTHON_ONLY_RESERVED_WORDS else subbed_keyword
 
