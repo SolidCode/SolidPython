@@ -682,7 +682,7 @@ def py2openscad(o):
         return '"' + o + '"'
     if type(o).__name__ == "ndarray":
         import numpy
-        return numpy.array2string(o, separator=",")
+        return numpy.array2string(o, separator=",", threshold=1000000000)
     return str(o)
 
 
