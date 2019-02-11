@@ -169,8 +169,12 @@ class union(OpenSCADObject):
         OpenSCADObject.__init__(self, 'union', {})
 
     def __add__(self, x):
-        return self.add(x)
-
+        new_union = union()
+        for child in self.children:
+            new_union.add(child)
+        new_union.add(x)
+        
+        return new_union
 
 class intersection(OpenSCADObject):
     '''
