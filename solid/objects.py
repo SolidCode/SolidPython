@@ -185,7 +185,12 @@ class intersection(OpenSCADObject):
         OpenSCADObject.__init__(self, 'intersection', {})
 
     def __mul__(self, x):
-        return self.add(x)
+        new_int = intersection()
+        for child in self.children:
+            new_int.add(child)
+        new_int.add(x)
+        
+        return new_int
 
 
 class difference(OpenSCADObject):
@@ -196,7 +201,12 @@ class difference(OpenSCADObject):
         OpenSCADObject.__init__(self, 'difference', {})
 
     def __sub__(self,x):
-        return self.add(x)
+        new_diff = difference()
+        for child in self.children:
+            new_diff.add(child)
+        new_diff.add(x)
+        
+        return new_diff
 
 
 class hole(OpenSCADObject):
