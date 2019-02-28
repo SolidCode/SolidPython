@@ -538,17 +538,17 @@ class children(OpenSCADObject):
 
 
 class import_stl(OpenSCADObject):
-    def __init__(self, file, origin=(0, 0), layer=None):
+    def __init__(self, file, origin=(0, 0), convexity=None,layer=None):
         OpenSCADObject.__init__(self, 'import',
-                                {'file': file, 'origin': origin,
-                                 'layer': layer})
+                                {'file': file, 'origin': origin, 
+                                'convexity': convexity, 'layer': layer})
 
 
 class import_dxf(OpenSCADObject):
-    def __init__(self, file, origin=(0, 0), layer=None):
+    def __init__(self, file, origin=(0, 0), convexity=None,layer=None):
         OpenSCADObject.__init__(self, 'import',
-                                {'file': file, 'origin': origin,
-                                 'layer': layer})
+                                {'file': file, 'origin': origin, 
+                                'convexity': convexity, 'layer': layer})
 
 
 class import_(OpenSCADObject):
@@ -562,10 +562,10 @@ class import_(OpenSCADObject):
     :param convexity: The convexity parameter specifies the maximum number of front sides (back sides) a ray intersecting the object might penetrate. This parameter is only needed for correctly displaying the object in OpenCSG preview mode and has no effect on the polyhedron rendering.
     :type convexity: int
     '''
-    def __init__(self, file, origin=(0, 0), layer=None):
+    def __init__(self, file, origin=(0, 0), convexity=None,layer=None):
         OpenSCADObject.__init__(self, 'import',
-                                {'file': file, 'origin': origin,
-                                 'layer': layer})
+                                {'file': file, 'origin': origin, 
+                                'convexity': convexity, 'layer': layer})
 
 
 class intersection_for(OpenSCADObject):
