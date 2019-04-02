@@ -668,7 +668,12 @@ def py2openscad(o):
         return str(o).lower()
     if type(o) == float:
         return "%.10f" % o
-    if type(o) == list or type(o) == tuple:
+    if type(o) == str:
+        return '"' + o + '"'
+    if type(o).__name__ == "ndarray":
+        import numpy
+        return numpy.array2string(o, separator=",", threshold=1000000000)
+    if hasattr(o, "__iter__"):
         s = "["
         first = True
         for i in o:
@@ -678,11 +683,6 @@ def py2openscad(o):
             s += py2openscad(i)
         s += "]"
         return s
-    if type(o) == str:
-        return '"' + o + '"'
-    if type(o).__name__ == "ndarray":
-        import numpy
-        return numpy.array2string(o, separator=",", threshold=1000000000)
     return str(o)
 
 

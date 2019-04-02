@@ -347,7 +347,27 @@ class TestSolidPython(DiffOutput):
         except ImportError:
             pass
 
-            
+    def test_custom_iterables(self):
+        from euclid3 import Vector3
+
+        class CustomIterable:
+            def __iter__(self):
+                return iter([1, 2, 3])
+
+        expected ='\n\ncube(size = [1, 2, 3]);'
+        iterables = [
+            [1, 2, 3],
+            (1, 2, 3),
+            Vector3(1, 2, 3),
+            CustomIterable(),
+        ]
+
+        for iterable in iterables:
+            name = type(iterable).__name__
+            actual = scad_render(cube(size=iterable))
+            self.assertEqual(expected, actual, '%s SolidPython not rendered correctly' % name)
+
+
 def single_test(test_dict):
     name, args, kwargs, expected = test_dict['name'], test_dict['args'], test_dict['kwargs'], test_dict['expected']
 
