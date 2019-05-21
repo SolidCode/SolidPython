@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='solidpython',
-    version='0.3.0',
+    version='0.3.2',
     description='Python interface to the OpenSCAD declarative geometry language',
     author='Evan Jones',
     author_email='evan_t_jones@mac.com',
