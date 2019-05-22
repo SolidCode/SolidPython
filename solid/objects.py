@@ -624,7 +624,7 @@ def disable(openscad_obj):
 # --include() makes those methods available AND executes all code in
 #   scad_file_path.scad, which may have side effects.
 #   Unless you have a specific need, call use().
-def use(scad_file_path, use_not_include=True):
+def use(scad_file_path, use_not_include=True, dest_namespace_dict=None):
     '''
     Opens scad_file_path, parses it for all usable calls,
     and adds them to caller's namespace.
@@ -652,8 +652,10 @@ def use(scad_file_path, use_not_include=True):
                                             scad_file_path, use_not_include)
         # If this is called from 'include', we have to look deeper in the stack
         # to find the right module to add the new class to.
-        stack_depth = 2 if use_not_include else 3
-        exec(class_str, calling_module(stack_depth).__dict__)
+        if dest_namespace_dict is None:
+            stack_depth = 2 if use_not_include else 3
+            dest_namespace_dict = calling_module(stack_depth).__dict__
+        exec(class_str, dest_namespace_dict)
 
     return True
 
