@@ -617,6 +617,42 @@ def disable(openscad_obj):
 # ===============
 # = Including OpenSCAD code =
 # ===============
+def _library_paths():
+	import platform
+	import os
+	import os.path as path
+	import re
+
+	paths = ['.']
+
+	userPath = os.environ.get('OPENSCADPATH')
+	if userPath:
+		paths += re.split(r'\s*[;:]\s*', userPath)
+
+	system = platform.system();
+	if system == 'Linux':
+		paths.append(path.expanduser('~/.local/share/OpenSCAD/libraries'))
+	elif system == 'Windows':
+		paths.append('My Documents\OpenSCAD\libraries')
+	elif system == 'Darwin': # Not tested on many macs
+		paths.append(path.expanduser('~/Documents/OpenSCAD/libraries'))
+
+	return paths
+
+def _find_library(library_name):
+	import os.path as path
+
+	if path.isabs(library_name):
+		return library_name
+
+	paths = _library_paths()
+	for p in paths:
+		f = path.join(p, library_name)
+		print('Checking %s -> %s' % (f, path.exists(f)))
+		if path.exists(f):
+			return f
+
+	return library_name
 
 # use() & include() mimic OpenSCAD's use/include mechanics.
 # -- use() makes methods in scad_file_path.scad available to
@@ -635,6 +671,8 @@ def use(scad_file_path, use_not_include=True, dest_namespace_dict=None):
     from .solidpython import new_openscad_class_str 
     from .solidpython import calling_module    
     
+    scad_file_path = _find_library(scad_file_path)
+
     try:
         with open(scad_file_path) as module:
             contents = module.read()
