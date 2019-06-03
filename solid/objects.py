@@ -631,10 +631,11 @@ def use(scad_file_path, use_not_include=True, dest_namespace_dict=None):
     '''
     # These functions in solidpython are used here and only here; don't pollute
     # the global namespace with them
-    from .solidpython import extract_callable_signatures
+    from .solidpython import parse_scad_callables
     from .solidpython import new_openscad_class_str 
     from .solidpython import calling_module    
     
+    contents = None
     try:
         with open(scad_file_path) as module:
             contents = module.read()
@@ -645,7 +646,7 @@ def use(scad_file_path, use_not_include=True, dest_namespace_dict=None):
     # Once we have a list of all callables and arguments, dynamically
     # add OpenSCADObject subclasses for all callables to the calling module's
     # namespace.
-    symbols_dicts = extract_callable_signatures(scad_file_path)
+    symbols_dicts = parse_scad_callables(contents)
 
     for sd in symbols_dicts:
         class_str = new_openscad_class_str(sd['name'], sd['args'], sd['kwargs'], 
