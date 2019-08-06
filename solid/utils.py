@@ -663,7 +663,7 @@ def screw(screw_type='m3', screw_length=16):
     cap_height = dims['cap_height']
 
     ret = union()(
-        cylinder(shaft_rad, screw_length),
+        cylinder(shaft_rad, screw_length + EPSILON),
         up(screw_length)(
             cylinder(cap_rad, cap_height)
         )

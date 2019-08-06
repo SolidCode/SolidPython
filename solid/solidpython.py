@@ -3,18 +3,20 @@
 
 #    Simple Python OpenSCAD Code Generator
 #    Copyright (C) 2009    Philipp Tiefenbacher <wizards23@gmail.com>
-#    Amendments & additions, (C) 2011 Evan Jones <evan_t_jones@mac.com>
+#    Amendments & additions, (C) 2011-2019 Evan Jones <evan_t_jones@mac.com>
 #
 #   License: LGPL 2.1 or later
 #
-
-
+from __future__ import annotations
 import os 
 import sys
 import regex as re
 import inspect
 import subprocess
 import tempfile
+
+from typing import Set, List, Callable
+from types import ModuleType
 
 # These are features added to SolidPython but NOT in OpenSCAD.
 # Mark them for special treatment
@@ -28,11 +30,10 @@ PYTHON_ONLY_RESERVED_WORDS = [
     'with','as','elif','or','yield','assert','pass', 'break','except','in','raise',
 ]
 
-
 # =========================================
 # = Rendering Python code to OpenSCAD code=
 # =========================================
-def _find_include_strings(obj):
+def _find_include_strings(obj: OpenSCADObject) -> Set(str): 
     include_strings = set()
     if isinstance(obj, IncludedOpenSCADObject):
         include_strings.add(obj.include_string)
@@ -40,8 +41,7 @@ def _find_include_strings(obj):
         include_strings.update(_find_include_strings(child))
     return include_strings
 
-
-def scad_render(scad_object, file_header=''):
+def scad_render(scad_object: OpenSCADObject, file_header: str='') -> str:
     # Make this object the root of the tree
     root = scad_object
 
@@ -54,8 +54,8 @@ def scad_render(scad_object, file_header=''):
     scad_body = root._render()
     return file_header + includes + scad_body
 
-
-def scad_render_animated(func_to_animate, steps=20, back_and_forth=True, filepath=None, file_header=''):
+def scad_render_animated(func_to_animate:Callable[[float], OpenSCADObject]
+ , steps:int =20, back_and_forth:bool=True, filepath:Optional[str]=None, file_header:str='') -> str:
     # func_to_animate takes a single float argument, _time in [0, 1), and
     # returns an OpenSCADObject instance.
     #
@@ -114,20 +114,18 @@ def scad_render_animated(func_to_animate, steps=20, back_and_forth=True, filepat
                             "}\n" % vars())
     return rendered_string
 
-
-def scad_render_animated_file(func_to_animate, steps=20, back_and_forth=True, 
-                              filepath=None, file_header='', include_orig_code=True):
+def scad_render_animated_file(func_to_animate:Callable[[float], OpenSCADObject]
+, steps:int=20, back_and_forth:bool=True, 
+                              filepath:Optional[str]=None, file_header:str='', include_orig_code:bool=True) -> None:
     rendered_string = scad_render_animated(func_to_animate, steps, 
                                             back_and_forth, file_header)
     return _write_code_to_file(rendered_string, filepath, include_orig_code)
 
-
-def scad_render_to_file(scad_object, filepath=None, file_header='', include_orig_code=True):
+def scad_render_to_file(scad_object: OpenSCADObject, filepath:Optional[str]=None, file_header:str='', include_orig_code:bool=True) -> None:
     rendered_string = scad_render(scad_object, file_header)
     return _write_code_to_file(rendered_string, filepath, include_orig_code)
 
-
-def _write_code_to_file(rendered_string, filepath=None, include_orig_code=True):
+def _write_code_to_file(rendered_string:str, filepath:Optional[str]=None, include_orig_code:bool=True) -> bool:
     try:
         calling_file = os.path.abspath(calling_module(stack_depth=3).__file__)
 
@@ -153,8 +151,7 @@ def _write_code_to_file(rendered_string, filepath=None, include_orig_code=True):
     f.close()
     return True
 
-
-def sp_code_in_scad_comment(calling_file):
+def sp_code_in_scad_comment(calling_file:str) -> str:
     # Once a SCAD file has been created, it's difficult to reconstruct
     # how it got there, since it has no variables, modules, etc.  So, include
     # the Python code that generated the scad code as comments at the end of
@@ -179,12 +176,12 @@ def sp_code_in_scad_comment(calling_file):
 # ===========
 # = Parsing =
 # ===========
-def extract_callable_signatures(scad_file_path):
+def extract_callable_signatures(scad_file_path:str) -> List[dict]:
     with open(scad_file_path) as f:
         scad_code_str = f.read()
     return parse_scad_callables(scad_code_str)
 
-def parse_scad_callables(scad_code_str):
+def parse_scad_callables(scad_code_str:str) -> List[dict]:
     callables = []
 
     # Note that this isn't comprehensive; tuples or nested data structures in
@@ -229,7 +226,7 @@ def parse_scad_callables(scad_code_str):
 
     return callables
 
-def calling_module(stack_depth=2):
+def calling_module(stack_depth:int=2) -> ModuleType:
     '''
     Returns the module *2* back in the frame stack.  That means:
     code in module A calls code in module B, which asks calling_module()
@@ -251,7 +248,8 @@ def calling_module(stack_depth=2):
         import __main__ as calling_mod
     return calling_mod
 
-def new_openscad_class_str(class_name, args=[], kwargs=[], include_file_path=None, use_not_include=True):
+# FIXME: Typing. Default empty lists are a foot-gun. Default to None, set to empty list inside function
+def new_openscad_class_str(class_name:str, args:List[str]=[], kwargs:List[str]=[], include_file_path:Optional[str]=None, use_not_include:bool=True) -> str:
     args_str = ''
     args_pairs = ''
 
@@ -296,7 +294,7 @@ def new_openscad_class_str(class_name, args=[], kwargs=[], include_file_path=Non
 
     return result
 
-def _subbed_keyword(keyword):
+def _subbed_keyword(keyword:str) -> str:
     # Append an underscore to any python reserved word. 
     # No-op for all other strings, e.g. 'or' => 'or_', 'other' => 'other'
     new_key = keyword + '_' if keyword in PYTHON_ONLY_RESERVED_WORDS else keyword
@@ -306,7 +304,7 @@ def _subbed_keyword(keyword):
               "can be accessed with `%s` in SolidPython\n"%(keyword, new_key))
     return new_key
 
-def _unsubbed_keyword(subbed_keyword):
+def _unsubbed_keyword(subbed_keyword:str) -> str:
     # Remove trailing underscore for already-subbed python reserved words. 
     # No-op for all other strings: e.g. 'or_' => 'or', 'other_' => 'other_'
     shortened = subbed_keyword[:-1]
@@ -318,7 +316,7 @@ def _unsubbed_keyword(subbed_keyword):
 # =========================
 class OpenSCADObject(object):
 
-    def __init__(self, name, params):
+    def __init__(self, name:str, params:dict):
         self.name = name
         self.params = params
         self.children = []
@@ -328,15 +326,15 @@ class OpenSCADObject(object):
         self.has_hole_children = False
         self.is_part_root = False
 
-    def set_hole(self, is_hole=True):
+    def set_hole(self, is_hole:bool=True) -> OpenSCADObject:
         self.is_hole = is_hole
         return self
 
-    def set_part_root(self, is_root=True):
+    def set_part_root(self, is_root:bool=True) -> OpenSCADObject:
         self.is_part_root = is_root
         return self
 
-    def find_hole_children(self, path=None):
+    def find_hole_children(self, path:Optional[str]=None) -> List[OpenSCADObject]:
         # Because we don't force a copy every time we re-use a node
         # (e.g a = cylinder(2, 6);  b = right(10) (a)
         #  the identical 'a' object appears in the tree twice),
@@ -362,7 +360,7 @@ class OpenSCADObject(object):
 
         return hole_kids
 
-    def set_modifier(self, m):
+    def set_modifier(self, m:str) -> OpenSCADObject:
         # Used to add one of the 4 single-character modifiers: 
         # #(debug) !(root) %(background) or *(disable)
         string_vals = {'disable':      '*',
@@ -377,7 +375,7 @@ class OpenSCADObject(object):
         self.modifier = string_vals.get(m.lower(), '')
         return self
 
-    def _render(self, render_holes=False):
+    def _render(self, render_holes:bool=False) -> str:
         '''
         NOTE: In general, you won't want to call this method. For most purposes,
         you really want scad_render(), 
@@ -417,7 +415,7 @@ class OpenSCADObject(object):
                 s = "\ndifference(){" + indent(s) + " /* End Holes */ \n}"
         return s
 
-    def _render_str_no_children(self):
+    def _render_str_no_children(self) -> str:
         callable_name = _unsubbed_keyword(self.name)
         s = "\n" + self.modifier + callable_name + "("
         first = True
@@ -462,7 +460,7 @@ class OpenSCADObject(object):
         s += ")"
         return s
 
-    def _render_hole_children(self):
+    def _render_hole_children(self) -> str:
         # Run down the tree, rendering only those nodes
         # that are holes or have holes beneath them
         if not self.has_hole_children:
@@ -501,7 +499,7 @@ class OpenSCADObject(object):
             
         return s
 
-    def add(self, child):
+    def add(self, child:OpenSCADObject) -> str:
         '''
         if child is a single object, assume it's an OpenSCADObject and 
         add it to self.children
@@ -524,16 +522,16 @@ class OpenSCADObject(object):
             child.set_parent(self)
         return self
 
-    def set_parent(self, parent):
+    def set_parent(self, parent:OpenSCADObject):
         self.parent = parent
 
-    def add_param(self, k, v):
+    def add_param(self, k:str, v:any) -> OpenSCADObject:
         if k == '$fn':
             k = 'segments'
         self.params[k] = v
         return self
 
-    def copy(self):
+    def copy(self) -> OpenSCADObject:
         '''
         Provides a copy of this object and all children,
         but doesn't copy self.parent, meaning the new object belongs
@@ -557,7 +555,7 @@ class OpenSCADObject(object):
             other.add(c.copy())
         return other
 
-    def __call__(self, *args):
+    def __call__(self, *args:OpenSCADObject) -> OpenSCADObject:
         '''
         Adds all objects in args to self.  This enables OpenSCAD-like syntax,
         e.g.:
@@ -568,35 +566,35 @@ class OpenSCADObject(object):
         '''
         return self.add(args)
 
-    def __add__(self, x):
+    def __add__(self, x:OpenSCADObject) -> OpenSCADObject:
         '''
         This makes u = a+b identical to:
         u = union()(a, b )
         '''
         return objects.union()(self, x)
 
-    def __radd__(self, x):
+    def __radd__(self, x:OpenSCADObject) -> OpenSCADObject:
         '''
         This makes u = a+b identical to:
         u = union()(a, b )
         '''
         return objects.union()(self, x)
 
-    def __sub__(self, x):
+    def __sub__(self, x:OpenSCADObject) -> OpenSCADObject:
         '''
         This makes u = a - b identical to:
         u = difference()(a, b )
         '''
         return objects.difference()(self, x)
 
-    def __mul__(self, x):
+    def __mul__(self, x:OpenSCADObject) -> OpenSCADObject:
         '''
         This makes u = a * b identical to:
         u = intersection()(a, b )
         '''
         return objects.intersection()(self, x)
 
-    def _repr_png_(self):
+    def _repr_png_(self) -> Optional[bytes]:
         '''
         Allow rich clients such as the IPython Notebook, to display the current
         OpenSCAD rendering of this object.
