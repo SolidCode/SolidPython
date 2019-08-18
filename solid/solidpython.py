@@ -17,6 +17,7 @@ import tempfile
 
 from typing import Set, Sequence, List, Callable, Optional, Union
 from types import ModuleType
+OScO = OpenSCADObject
 
 # These are features added to SolidPython but NOT in OpenSCAD.
 # Mark them for special treatment
@@ -33,7 +34,7 @@ PYTHON_ONLY_RESERVED_WORDS = [
 # =========================================
 # = Rendering Python code to OpenSCAD code=
 # =========================================
-def _find_include_strings(obj: OpenSCADObject) -> Set[str]: 
+def _find_include_strings(obj: OScO) -> Set[str]: 
     include_strings = set()
     if isinstance(obj, IncludedOpenSCADObject):
         include_strings.add(obj.include_string)
@@ -41,7 +42,7 @@ def _find_include_strings(obj: OpenSCADObject) -> Set[str]:
         include_strings.update(_find_include_strings(child))
     return include_strings
 
-def scad_render(scad_object: OpenSCADObject, file_header: str='') -> str:
+def scad_render(scad_object: OScO, file_header: str='') -> str:
     # Make this object the root of the tree
     root = scad_object
 
@@ -54,7 +55,7 @@ def scad_render(scad_object: OpenSCADObject, file_header: str='') -> str:
     scad_body = root._render()
     return file_header + includes + scad_body
 
-def scad_render_animated(func_to_animate:Callable[[Optional[float]], OpenSCADObject], 
+def scad_render_animated(func_to_animate:Callable[[Optional[float]], OScO], 
     steps:int =20, back_and_forth:bool=True, filepath:str=None, file_header:str='') -> str:
     # func_to_animate takes a single float argument, _time in [0, 1), and
     # returns an OpenSCADObject instance.
@@ -114,14 +115,14 @@ def scad_render_animated(func_to_animate:Callable[[Optional[float]], OpenSCADObj
                             "}\n" % vars())
     return rendered_string
 
-def scad_render_animated_file(func_to_animate:Callable[[Optional[float]], OpenSCADObject]
+def scad_render_animated_file(func_to_animate:Callable[[Optional[float]], OScO]
     , steps:int=20, back_and_forth:bool=True, 
     filepath:Optional[str]=None, file_header:str='', include_orig_code:bool=True) -> bool:
     rendered_string = scad_render_animated(func_to_animate, steps, 
                                             back_and_forth, file_header)
     return _write_code_to_file(rendered_string, filepath, include_orig_code)
 
-def scad_render_to_file(scad_object: OpenSCADObject, filepath:Optional[str]=None, 
+def scad_render_to_file(scad_object: OScO, filepath:Optional[str]=None, 
     file_header:str='', include_orig_code:bool=True) -> bool:
     rendered_string = scad_render(scad_object, file_header)
     return _write_code_to_file(rendered_string, filepath, include_orig_code)
@@ -331,15 +332,15 @@ class OpenSCADObject(object):
         self.has_hole_children = False
         self.is_part_root = False
 
-    def set_hole(self, is_hole:bool=True) -> OpenSCADObject:
+    def set_hole(self, is_hole:bool=True) -> OScO:
         self.is_hole = is_hole
         return self
 
-    def set_part_root(self, is_root:bool=True) -> OpenSCADObject:
+    def set_part_root(self, is_root:bool=True) -> OScO:
         self.is_part_root = is_root
         return self
 
-    def find_hole_children(self, path:List[OpenSCADObject]=None) -> List[OpenSCADObject]:
+    def find_hole_children(self, path:List[OScO]=None) -> List[OScO]:
         # Because we don't force a copy every time we re-use a node
         # (e.g a = cylinder(2, 6);  b = right(10) (a)
         #  the identical 'a' object appears in the tree twice),
@@ -365,7 +366,7 @@ class OpenSCADObject(object):
 
         return hole_kids
 
-    def set_modifier(self, m:str) -> OpenSCADObject:
+    def set_modifier(self, m:str) -> OScO:
         # Used to add one of the 4 single-character modifiers: 
         # #(debug) !(root) %(background) or *(disable)
         string_vals = {'disable':      '*',
@@ -504,9 +505,9 @@ class OpenSCADObject(object):
             
         return s
 
-    def add(self, child:Union[OpenSCADObject, Sequence[OpenSCADObject]]) -> OpenSCADObject:
+    def add(self, child:Union[OScO, Sequence[OScO]]) -> OScO:
         '''
-        if child is a single object, assume it's an OpenSCADObject and 
+        if child is a single object, assume it's an OpenSCADObjects and 
         add it to self.children
 
         if child is a list, assume its members are all OpenSCADObjects and
@@ -527,16 +528,16 @@ class OpenSCADObject(object):
             child.set_parent(self) # type: ignore
         return self
 
-    def set_parent(self, parent:OpenSCADObject):
+    def set_parent(self, parent:OScO):
         self.parent = parent
 
-    def add_param(self, k:str, v:float) -> OpenSCADObject:
+    def add_param(self, k:str, v:float) -> OScO:
         if k == '$fn':
             k = 'segments'
         self.params[k] = v
         return self
 
-    def copy(self) -> OpenSCADObject:
+    def copy(self) -> OScO:
         '''
         Provides a copy of this object and all children,
         but doesn't copy self.parent, meaning the new object belongs
@@ -560,7 +561,7 @@ class OpenSCADObject(object):
             other.add(c.copy())
         return other
 
-    def __call__(self, *args:OpenSCADObject) -> OpenSCADObject:
+    def __call__(self, *args:OScO) -> OScO:
         '''
         Adds all objects in args to self.  This enables OpenSCAD-like syntax,
         e.g.:
@@ -571,28 +572,28 @@ class OpenSCADObject(object):
         '''
         return self.add(args)
 
-    def __add__(self, x:Union[Sequence[OpenSCADObject], OpenSCADObject]) -> OpenSCADObject:
+    def __add__(self, x:Union[Sequence[OScO], OScO]) -> OScO:
         '''
         This makes u = a+b identical to:
         u = union()(a, b )
         '''
         return objects.union()(self, x)
 
-    def __radd__(self, x:OpenSCADObject) -> OpenSCADObject:
+    def __radd__(self, x:OScO) -> OScO:
         '''
         This makes u = a+b identical to:
         u = union()(a, b )
         '''
         return objects.union()(self, x)
 
-    def __sub__(self, x:OpenSCADObject) -> OpenSCADObject:
+    def __sub__(self, x:OScO) -> OScO:
         '''
         This makes u = a - b identical to:
         u = difference()(a, b )
         '''
         return objects.difference()(self, x)
 
-    def __mul__(self, x:OpenSCADObject) -> OpenSCADObject:
+    def __mul__(self, x:OScO) -> OScO:
         '''
         This makes u = a * b identical to:
         u = intersection()(a, b )
