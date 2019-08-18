@@ -15,7 +15,7 @@ import inspect
 import subprocess
 import tempfile
 
-from typing import Set, List, Callable
+from typing import Set, Sequence, List, Callable, Optional, Union
 from types import ModuleType
 
 # These are features added to SolidPython but NOT in OpenSCAD.
@@ -33,7 +33,7 @@ PYTHON_ONLY_RESERVED_WORDS = [
 # =========================================
 # = Rendering Python code to OpenSCAD code=
 # =========================================
-def _find_include_strings(obj: OpenSCADObject) -> Set(str): 
+def _find_include_strings(obj: OpenSCADObject) -> Set[str]: 
     include_strings = set()
     if isinstance(obj, IncludedOpenSCADObject):
         include_strings.add(obj.include_string)
@@ -54,8 +54,8 @@ def scad_render(scad_object: OpenSCADObject, file_header: str='') -> str:
     scad_body = root._render()
     return file_header + includes + scad_body
 
-def scad_render_animated(func_to_animate:Callable[[float], OpenSCADObject]
- , steps:int =20, back_and_forth:bool=True, filepath:Optional[str]=None, file_header:str='') -> str:
+def scad_render_animated(func_to_animate:Callable[[Optional[float]], OpenSCADObject], 
+    steps:int =20, back_and_forth:bool=True, filepath:str=None, file_header:str='') -> str:
     # func_to_animate takes a single float argument, _time in [0, 1), and
     # returns an OpenSCADObject instance.
     #
@@ -85,7 +85,7 @@ def scad_render_animated(func_to_animate:Callable[[float], OpenSCADObject]
     # should avoid any rounding error problems, and doesn't require the file
     # to be animated with an identical number of steps to the way it was
     # created. -ETJ 28 Mar 2013
-    scad_obj = func_to_animate()
+    scad_obj = func_to_animate(_time=0) # type: ignore
     include_strings = _find_include_strings(scad_obj)
     # and render the string
     includes = ''.join(include_strings) + "\n"
@@ -106,7 +106,7 @@ def scad_render_animated(func_to_animate:Callable[[float], OpenSCADObject]
                 eval_time = time * 2
             else:
                 eval_time = 2 - 2 * time
-        scad_obj = func_to_animate(_time=eval_time)
+        scad_obj = func_to_animate(_time=eval_time) # type: ignore
 
         scad_str = indent(scad_obj._render())
         rendered_string += ("if ($t >= %(time)s && $t < %(end_time)s){"
@@ -114,14 +114,15 @@ def scad_render_animated(func_to_animate:Callable[[float], OpenSCADObject]
                             "}\n" % vars())
     return rendered_string
 
-def scad_render_animated_file(func_to_animate:Callable[[float], OpenSCADObject]
-, steps:int=20, back_and_forth:bool=True, 
-                              filepath:Optional[str]=None, file_header:str='', include_orig_code:bool=True) -> None:
+def scad_render_animated_file(func_to_animate:Callable[[Optional[float]], OpenSCADObject]
+    , steps:int=20, back_and_forth:bool=True, 
+    filepath:Optional[str]=None, file_header:str='', include_orig_code:bool=True) -> bool:
     rendered_string = scad_render_animated(func_to_animate, steps, 
                                             back_and_forth, file_header)
     return _write_code_to_file(rendered_string, filepath, include_orig_code)
 
-def scad_render_to_file(scad_object: OpenSCADObject, filepath:Optional[str]=None, file_header:str='', include_orig_code:bool=True) -> None:
+def scad_render_to_file(scad_object: OpenSCADObject, filepath:Optional[str]=None, 
+    file_header:str='', include_orig_code:bool=True) -> bool:
     rendered_string = scad_render(scad_object, file_header)
     return _write_code_to_file(rendered_string, filepath, include_orig_code)
 
@@ -245,11 +246,15 @@ def calling_module(stack_depth:int=2) -> ModuleType:
     # Return that module.  (Note that __main__ doesn't have a __file__ attr,
     # but that's caught elsewhere.)
     if not calling_mod:
-        import __main__ as calling_mod
+        import __main__ as calling_mod # type: ignore
     return calling_mod
 
 # FIXME: Typing. Default empty lists are a foot-gun. Default to None, set to empty list inside function
-def new_openscad_class_str(class_name:str, args:List[str]=[], kwargs:List[str]=[], include_file_path:Optional[str]=None, use_not_include:bool=True) -> str:
+def new_openscad_class_str(class_name:str, 
+    args:Sequence[str]=[], 
+    kwargs:Sequence[str]=[], 
+    include_file_path:Optional[str]=None, 
+    use_not_include:bool=True) -> str:
     args_str = ''
     args_pairs = ''
 
@@ -258,7 +263,7 @@ def new_openscad_class_str(class_name:str, args:List[str]=[], kwargs:List[str]=[
     # (They might be valid OpenSCAD argument names, but not in Python)
     class_name = _subbed_keyword(class_name)
 
-    args = map(_subbed_keyword, args)
+    args = map(_subbed_keyword, args) # type: ignore
     for arg in args:
         args_str += ', ' + arg
         args_pairs += "'%(arg)s':%(arg)s, " % vars()
@@ -266,7 +271,7 @@ def new_openscad_class_str(class_name:str, args:List[str]=[], kwargs:List[str]=[
     # kwargs have a default value defined in their SCAD versions.  We don't
     # care what that default value will be (SCAD will take care of that), just
     # that one is defined.
-    kwargs = map(_subbed_keyword, kwargs)
+    kwargs = map(_subbed_keyword, kwargs) #type: ignore
     for kwarg in kwargs:
         args_str += ', %(kwarg)s=None' % vars()
         args_pairs += "'%(kwarg)s':%(kwarg)s, " % vars()
@@ -319,9 +324,9 @@ class OpenSCADObject(object):
     def __init__(self, name:str, params:dict):
         self.name = name
         self.params = params
-        self.children = []
+        self.children: List[OpenSCADObject] = []
         self.modifier = ""
-        self.parent = None
+        self.parent: Optional[OpenSCADObject] = None
         self.is_hole = False
         self.has_hole_children = False
         self.is_part_root = False
@@ -334,7 +339,7 @@ class OpenSCADObject(object):
         self.is_part_root = is_root
         return self
 
-    def find_hole_children(self, path:Optional[str]=None) -> List[OpenSCADObject]:
+    def find_hole_children(self, path:List[OpenSCADObject]=None) -> List[OpenSCADObject]:
         # Because we don't force a copy every time we re-use a node
         # (e.g a = cylinder(2, 6);  b = right(10) (a)
         #  the identical 'a' object appears in the tree twice),
@@ -499,7 +504,7 @@ class OpenSCADObject(object):
             
         return s
 
-    def add(self, child:OpenSCADObject) -> str:
+    def add(self, child:Union[OpenSCADObject, Sequence[OpenSCADObject]]) -> OpenSCADObject:
         '''
         if child is a single object, assume it's an OpenSCADObject and 
         add it to self.children
@@ -518,14 +523,14 @@ class OpenSCADObject(object):
             if child != 0:
                 raise ValueError
         else:
-            self.children.append(child)
-            child.set_parent(self)
+            self.children.append(child) # type: ignore
+            child.set_parent(self) # type: ignore
         return self
 
     def set_parent(self, parent:OpenSCADObject):
         self.parent = parent
 
-    def add_param(self, k:str, v:any) -> OpenSCADObject:
+    def add_param(self, k:str, v:float) -> OpenSCADObject:
         if k == '$fn':
             k = 'segments'
         self.params[k] = v
@@ -566,7 +571,7 @@ class OpenSCADObject(object):
         '''
         return self.add(args)
 
-    def __add__(self, x:OpenSCADObject) -> OpenSCADObject:
+    def __add__(self, x:Union[Sequence[OpenSCADObject], OpenSCADObject]) -> OpenSCADObject:
         '''
         This makes u = a+b identical to:
         u = union()(a, b )
@@ -669,7 +674,7 @@ def py2openscad(o):
     if type(o) == str:
         return '"' + o + '"'
     if type(o).__name__ == "ndarray":
-        import numpy
+        import numpy # type: ignore
         return numpy.array2string(o, separator=",", threshold=1000000000)
     if hasattr(o, "__iter__"):
         s = "["
