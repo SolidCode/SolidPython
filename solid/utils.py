@@ -4,14 +4,16 @@ from __future__ import division
 import sys
 import itertools
 if sys.version[0]=='2':
-    from itertools import izip_longest as zip_longest
+    from itertools import izip_longest as zip_longest # type: ignore
 else:
     from itertools import zip_longest
+from math import pi, ceil, floor, sqrt
 
 from solid import *
-from math import *
+from solid import OpenSCADObject
+OScO = OpenSCADObject
 
-
+from typing import Union, Tuple, Sequence, List, Optional
 
 RIGHT, TOP, LEFT, BOTTOM = range(4)
 EPSILON = 0.01
@@ -56,18 +58,18 @@ Transparent = (1,    1,    1,   0.2)
 # ========================
 
 
-def degrees(x_radians):
+def degrees(x_radians:float):
     return 360.0 * x_radians / TAU
 
 
-def radians(x_degrees):
+def radians(x_degrees:float):
     return x_degrees / 360.0 * TAU
 
 
 # ==============
 # = Grid Plane =
 # ==============
-def grid_plane(grid_unit=12, count=10, line_weight=0.1, plane='xz'):
+def grid_plane(grid_unit=12, count=10, line_weight=0.1, plane='xz') -> OScO:
 
     # Draws a grid of thin lines in the specified plane.  Helpful for
     # reference during debugging.
@@ -97,7 +99,8 @@ def grid_plane(grid_unit=12, count=10, line_weight=0.1, plane='xz'):
     return t
 
 
-def distribute_in_grid(objects, max_bounding_box, rows_and_cols=None):
+def distribute_in_grid(objects:Sequence[OScO], max_bounding_box:Tuple[float,float], 
+    rows_and_cols: Tuple[int,int]=None) -> OScO:
     # Translate each object in objects in a grid with each cell of size
     # max_bounding_box.
     #
@@ -113,16 +116,10 @@ def distribute_in_grid(objects, max_bounding_box, rows_and_cols=None):
     # with objects spaced max_bounding_box apart
     if isinstance(max_bounding_box, (list, tuple)):
         x_trans, y_trans = max_bounding_box[0:2]
-    elif isinstance(max_bounding_box, (int, long, float, complex)):
+    elif isinstance(max_bounding_box, (int, float, complex)):
         x_trans = y_trans = max_bounding_box
     else:
         pass  # TypeError
-
-    # If we only got passed one object, just return it
-    try:
-        l = len(objects)
-    except:
-        return objects
 
     ret = []
     if rows_and_cols:
@@ -139,34 +136,34 @@ def distribute_in_grid(objects, max_bounding_box, rows_and_cols=None):
                 objs_placed += 1
             else:
                 break
-    return union()(ret)
+    return union()(*ret)
 
 # ==============
 # = Directions =
 # ==============
 
 
-def up(z):
+def up(z:float):
     return translate([0, 0, z])
 
 
-def down(z):
+def down(z: float) -> OScO:
     return translate([0, 0, -z])
 
 
-def right(x):
+def right(x: float) -> OScO:
     return translate([x, 0, 0])
 
 
-def left(x):
+def left(x: float) -> OScO:
     return translate([-x, 0, 0])
 
 
-def forward(y):
+def forward(y: float) -> OScO:
     return translate([0, y, 0])
 
 
-def back(y):
+def back(y: float) -> OScO:
     return translate([0, -y, 0])
 
 
@@ -516,7 +513,7 @@ def section_cut_xz(body, y_cut_point=0):
 # keyworded arguments can be used in any order.
 
 g_parts_dict = {}
-g_bom_headers = []
+g_bom_headers: List[str] = []
 
 def set_bom_headers(*args):
     global g_bom_headers
