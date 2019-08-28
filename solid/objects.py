@@ -1,8 +1,13 @@
 """
 Classes for OpenSCAD builtins
 """
+from typing import Optional
+from types import SimpleNamespace
+from pathlib import Path
+
 from .solidpython import OpenSCADObject
 from .solidpython import IncludedOpenSCADObject
+
 
 class polygon(OpenSCADObject):
     '''
@@ -613,10 +618,52 @@ def disable(openscad_obj):
     openscad_obj.set_modifier("*")
     return openscad_obj
 
+# ===========================
+# = IMPORTING OPENSCAD CODE =
+# ===========================
+def import_scad(scad_filepath:str) -> Optional[SimpleNamespace]:
+    '''
+    import_scad() is the namespaced, more Pythonic way to import OpenSCAD code.
+    Return a python namespace containing all imported SCAD modules
 
-# ===============
-# = Including OpenSCAD code =
-# ===============
+    If scad_filepath is a single .scad file, all modules will be imported,
+        e.g. 
+        motors = solid.import_scad('<PATH_TO/MCAD/motors.scad')
+        print(dir(motors)) # => [_stepper_motor_mount', 'stepper_motor_mount']
+
+    If scad_filepath is a directory, recursively import all scad files below
+        the directory and subdirectories within it.
+        e.g. 
+        mcad = solid.import_scad('<PATH_TO/MCAD')
+        dir(mcad) # => ['bearing', 'boxes', 'constants', 'curves',...]
+        dir(mcad.bearing) # => ['bearing', 'bearingDimensions', ...]
+    '''
+    scad = Path(scad_filepath)
+
+    namespace = SimpleNamespace()
+    scad_found = False
+    
+    if scad.is_file():
+        scad_found = True
+        use(scad.absolute().as_posix(), dest_namespace_dict=namespace.__dict__)
+    elif scad.is_dir():
+        for f in scad.glob('*.scad'):
+            subspace = import_scad(f.absolute().as_posix())
+            setattr(namespace, f.stem, subspace)
+            scad_found = True
+        
+        # recurse through subdirectories, adding namespaces only if they have
+        # valid scad code under them.
+        subdirs = list([d for d in scad.iterdir() if d.is_dir()])
+        for subd in subdirs:
+            subspace = import_scad(subd.absolute().as_posix())
+            if subspace is not None:
+                setattr(namespace, subd.stem, subspace)
+                scad_found = True
+
+    namespace = namespace if scad_found else None
+    return namespace
+
 
 # use() & include() mimic OpenSCAD's use/include mechanics.
 # -- use() makes methods in scad_file_path.scad available to
@@ -631,6 +678,7 @@ def use(scad_file_path, use_not_include=True, dest_namespace_dict=None):
     '''
     # These functions in solidpython are used here and only here; don't pollute
     # the global namespace with them
+    import os
     from .solidpython import parse_scad_callables
     from .solidpython import new_openscad_class_str 
     from .solidpython import calling_module    
@@ -656,7 +704,16 @@ def use(scad_file_path, use_not_include=True, dest_namespace_dict=None):
         if dest_namespace_dict is None:
             stack_depth = 2 if use_not_include else 3
             dest_namespace_dict = calling_module(stack_depth).__dict__
-        exec(class_str, dest_namespace_dict)
+        try:
+            exec(class_str, dest_namespace_dict)
+        except Exception as e:
+            classname = sd['name']
+            scad_base = os.path.basename(scad_file_path)
+            msg = f"Unable to import SCAD module: `{classname}` from `{scad_base}`, with error: {e}"
+            print(msg)
+        
+        if 'solid' in dest_namespace_dict:
+            del dest_namespace_dict['solid']
 
     return True
 
