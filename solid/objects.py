@@ -2,23 +2,22 @@
 Classes for OpenSCAD builtins
 """
 from .solidpython import OpenSCADObject
-OScO = OpenSCADObject
 from .solidpython import IncludedOpenSCADObject
+OScO = OpenSCADObject
 
+from typing import Sequence, Tuple, Union, Optional, Dict
 
-from typing import Sequence, Tuple, Union, Optional
-
-Point2 = Tuple[float, float]
-Point3 = Tuple[float, float, float]
-Point4 = Tuple[float, float, float, float]
-Vec3 = Point3
-Vec4 = Point4
+P2 = Tuple[float, float]
+P3 = Tuple[float, float, float]
+P4 = Tuple[float, float, float, float]
+Vec3 = P3
+Vec4 = P4
 Vec34 = Union[Vec3, Vec4]
-Point3s = Sequence[Point3]
-Point23 = Union[Point2, Point3]
-Points = Sequence[Point23]
+P3s = Sequence[P3]
+P23 = Union[P2, P3]
+Points = Sequence[P23]
 Indexes = Union[Sequence[int], Sequence[Sequence[int]]]
-ScadSize = Union[int, Tuple[float, float, float]]
+ScadSize = Union[int, Sequence[float]]
 OScOPlus = Union[OScO, Sequence[OScO]]
 
 class polygon(OpenSCADObject):
@@ -197,7 +196,7 @@ class polyhedron(OpenSCADObject):
     preview mode and has no effect on the polyhedron rendering.
     :type convexity: int
     '''
-    def __init__(self, points:Point3s, faces:Indexes, convexity:int=None, triangles:Indexes=None):
+    def __init__(self, points:P3s, faces:Indexes, convexity:int=None, triangles:Indexes=None):
         OpenSCADObject.__init__(self, 'polyhedron',
                                 {'points': points, 'faces': faces,
                                  'convexity': convexity,
@@ -272,7 +271,7 @@ class translate(OpenSCADObject):
     :param v: X, Y and Z translation
     :type v: 3 value sequence
     '''
-    def __init__(self, v:Point3=None):
+    def __init__(self, v:P3=None):
         OpenSCADObject.__init__(self, 'translate', {'v': v})
 
 
@@ -283,7 +282,7 @@ class scale(OpenSCADObject):
     :param v: X, Y and Z scale factor
     :type v: 3 value sequence
     '''
-    def __init__(self, v:Point3=None):
+    def __init__(self, v:P3=None):
         OpenSCADObject.__init__(self, 'scale', {'v': v})
 
 
@@ -363,6 +362,7 @@ class minkowski(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'minkowski', {})
 
+
 class offset(OpenSCADObject):
     '''
     
@@ -389,6 +389,7 @@ class offset(OpenSCADObject):
         else:
             raise ValueError("offset(): Must supply r or delta")
         OpenSCADObject.__init__(self, 'offset', kwargs)
+
 
 class hull(OpenSCADObject):
     '''
@@ -621,14 +622,14 @@ class children(OpenSCADObject):
 
     :param range: [:] or [::]. select children between to , incremented by (default 1).
     '''
-    def __init__(self, index:int=None, vector:float = None, range:Point23=None):
+    def __init__(self, index:int=None, vector:float = None, range:P23=None):
         OpenSCADObject.__init__(self, 'children',
                                 {'index': index, 'vector': vector,
                                  'range': range})
 
 
 class import_stl(OpenSCADObject):
-    def __init__(self, file:str, origin:Point2=(0, 0), convexity:int=None,layer:int = None):
+    def __init__(self, file:str, origin:P2=(0, 0), convexity:int=None,layer:int = None):
         OpenSCADObject.__init__(self, 'import',
                                 {'file': file, 'origin': origin, 
                                 'convexity': convexity, 'layer': layer})
@@ -655,7 +656,7 @@ class import_(OpenSCADObject):
     preview mode and has no effect on the polyhedron rendering.
     :type convexity: int
     '''
-    def __init__(self, file:str, origin:Point2=(0, 0), convexity:int = None, layer:int = None):
+    def __init__(self, file:str, origin:P2=(0, 0), convexity:int = None, layer:int = None):
         OpenSCADObject.__init__(self, 'import',
                                 {'file': file, 'origin': origin, 
                                 'convexity': convexity, 'layer': layer})
@@ -681,21 +682,17 @@ def debug(openscad_obj:OScO) -> OScO:
     openscad_obj.set_modifier("#")
     return openscad_obj
 
-
 def background(openscad_obj:OScO) -> OScO:
     openscad_obj.set_modifier("%")
     return openscad_obj
-
 
 def root(openscad_obj:OScO) -> OScO:
     openscad_obj.set_modifier("!")
     return openscad_obj
 
-
 def disable(openscad_obj:OScO) -> OScO:
     openscad_obj.set_modifier("*")
     return openscad_obj
-
 
 # ===============
 # = Including OpenSCAD code =
@@ -742,7 +739,6 @@ def use(scad_file_path:str, use_not_include:bool=True, dest_namespace_dict:Dict=
         exec(class_str, dest_namespace_dict)
 
     return True
-
 
 def include(scad_file_path:str) -> bool:
     return use(scad_file_path, use_not_include=False)

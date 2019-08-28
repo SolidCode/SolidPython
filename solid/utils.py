@@ -7,13 +7,15 @@ if sys.version[0]=='2':
     from itertools import izip_longest as zip_longest # type: ignore
 else:
     from itertools import zip_longest
-from math import pi, ceil, floor, sqrt
+from math import pi, ceil, floor, sqrt, atan2
 
-from solid import *
-from solid import OpenSCADObject
+# from solid import *
+from solid import union, cube, translate, rotate, square, circle, polyhedron, difference, intersection
+
+from solid import OpenSCADObject, P2, P3, P4, Vec3 , Vec4, Vec34, P3s, P23, Points, Indexes, ScadSize, OScOPlus
 OScO = OpenSCADObject
 
-from typing import Union, Tuple, Sequence, List, Optional
+from typing import Union, Tuple, Sequence, List, Optional, Callable
 
 RIGHT, TOP, LEFT, BOTTOM = range(4)
 EPSILON = 0.01
@@ -69,14 +71,14 @@ def radians(x_degrees:float):
 # ==============
 # = Grid Plane =
 # ==============
-def grid_plane(grid_unit=12, count=10, line_weight=0.1, plane='xz') -> OScO:
+def grid_plane(grid_unit:int=12, count:int=10, line_weight:float=0.1, plane:str='xz') -> OScO:
 
     # Draws a grid of thin lines in the specified plane.  Helpful for
     # reference during debugging.
     l = count * grid_unit
     t = union()
     t.set_modifier('background')
-    for i in range(-count / 2, count / 2 + 1):
+    for i in range(int(-count / 2), int(count / 2 + 1)):
         if 'xz' in plane:
             # xz-plane
             h = up(i * grid_unit)(cube([l, line_weight, line_weight], center=True))
@@ -132,7 +134,7 @@ def distribute_in_grid(objects:Sequence[OScO], max_bounding_box:Tuple[float,floa
         for x in range(grid_w):
             if objs_placed < len(objects):
                 ret.append(
-                    translate([x * x_trans, y * y_trans])(objects[objs_placed]))
+                    translate((x * x_trans, y * y_trans, 0))(objects[objs_placed]))
                 objs_placed += 1
             else:
                 break
@@ -143,62 +145,62 @@ def distribute_in_grid(objects:Sequence[OScO], max_bounding_box:Tuple[float,floa
 # ==============
 
 
-def up(z:float):
-    return translate([0, 0, z])
+def up(z:float) -> OScO:
+    return translate((0, 0, z))
 
 
 def down(z: float) -> OScO:
-    return translate([0, 0, -z])
+    return translate((0, 0, -z))
 
 
 def right(x: float) -> OScO:
-    return translate([x, 0, 0])
+    return translate((x, 0, 0))
 
 
 def left(x: float) -> OScO:
-    return translate([-x, 0, 0])
+    return translate((-x, 0, 0))
 
 
 def forward(y: float) -> OScO:
-    return translate([0, y, 0])
+    return translate((0, y, 0))
 
 
 def back(y: float) -> OScO:
-    return translate([0, -y, 0])
+    return translate((0, -y, 0))
 
 
 # ===========================
 # = Box-alignment rotations =
 # ===========================
-def rot_z_to_up(obj):
+def rot_z_to_up(obj:OScO) -> OScO:
     # NOTE: Null op
     return rotate(a=0, v=FORWARD_VEC)(obj)
 
 
-def rot_z_to_down(obj):
+def rot_z_to_down(obj:OScO) -> OScO:
     return rotate(a=180, v=FORWARD_VEC)(obj)
 
 
-def rot_z_to_right(obj):
+def rot_z_to_right(obj:OScO) -> OScO:
     return rotate(a=90, v=FORWARD_VEC)(obj)
 
 
-def rot_z_to_left(obj):
+def rot_z_to_left(obj:OScO) -> OScO:
     return rotate(a=-90, v=FORWARD_VEC)(obj)
 
 
-def rot_z_to_forward(obj):
+def rot_z_to_forward(obj:OScO) -> OScO:
     return rotate(a=-90, v=RIGHT_VEC)(obj)
 
 
-def rot_z_to_back(obj):
+def rot_z_to_back(obj:OScO) -> OScO:
     return rotate(a=90, v=RIGHT_VEC)(obj)
 
 
 # ================================
 # = Box-aligment and translation =
 # ================================
-def box_align(obj, direction_func=up, distance=0):
+def box_align(obj:OScO, direction_func:Callable[[float], OScO]=up, distance:float=0) -> OScO:
     # Given a box side (up, left, etc) and a distance,
     # rotate obj (assumed to be facing up) in the
     # correct direction and move it distance in that
@@ -221,27 +223,27 @@ def box_align(obj, direction_func=up, distance=0):
 # =======================
 
 
-def rot_z_to_x(obj):
+def rot_z_to_x(obj:OScO) -> OScO:
     return rotate(a=90, v=FORWARD_VEC)(obj)
 
 
-def rot_z_to_neg_x(obj):
+def rot_z_to_neg_x(obj:OScO) -> OScO:
     return rotate(a=-90, v=FORWARD_VEC)(obj)
 
 
-def rot_z_to_neg_y(obj):
+def rot_z_to_neg_y(obj:OScO) -> OScO:
     return rotate(a=90, v=RIGHT_VEC)(obj)
 
 
-def rot_z_to_y(obj):
+def rot_z_to_y(obj:OScO) -> OScO:
     return rotate(a=-90, v=RIGHT_VEC)(obj)
 
 
-def rot_x_to_y(obj):
+def rot_x_to_y(obj:OScO) -> OScO:
     return rotate(a=90, v=UP_VEC)(obj)
 
 
-def rot_x_to_neg_y(obj):
+def rot_x_to_neg_y(obj:OScO) -> OScO:
     return rotate(a=-90, v=UP_VEC)(obj)
 
 # =======
@@ -249,7 +251,7 @@ def rot_x_to_neg_y(obj):
 # =======
 
 
-def arc(rad, start_degrees, end_degrees, segments=None):
+def arc(rad:float, start_degrees:float, end_degrees:float, segments:int=None) -> OScO:
     # Note: the circle that this arc is drawn from gets segments,
     # not the arc itself.  That means a quarter-circle arc will
     # have segments/4 segments.
@@ -278,7 +280,7 @@ def arc(rad, start_degrees, end_degrees, segments=None):
     return ret
 
 
-def arc_inverted(rad, start_degrees, end_degrees, segments=None):
+def arc_inverted(rad:float, start_degrees:float, end_degrees:float, segments:int=None) -> OScO:
     # Return the segment of an arc *outside* the circle of radius rad,
     # bounded by two tangents to the circle.  This is the shape
     # needed for fillets.
@@ -320,8 +322,8 @@ def arc_inverted(rad, start_degrees, end_degrees, segments=None):
     wide = 1000
     high = 1000
 
-    top_half_square = translate([-(wide - rad), 0])(square([wide, high], center=False))
-    bottom_half_square = translate([-(wide - rad), -high])(square([wide, high], center=False))
+    top_half_square = translate((-(wide - rad), 0, 0))(square([wide, high], center=False))
+    bottom_half_square = translate((-(wide - rad), -high, 0))(square([wide, high], center=False))
 
     a = rotate(start_degrees)(top_half_square)
     b = rotate(end_degrees)(bottom_half_square)
@@ -698,14 +700,24 @@ def bearing(bearing_type='624'):
 # = -------------- =
 try:
     import euclid3
-    from euclid3 import *
+    from euclid3 import Point2, Point3, Vector2, Vector3, Line2, Line3
+    from euclid3 import LineSegment2, LineSegment3, Matrix4
+
+    EucOrTuple = Union[Point3, 
+                    Vector3, 
+                    Tuple[float, float], 
+                    Tuple[float, float, float]
+                    ]
+
+
     # NOTE: The PyEuclid on PyPi doesn't include several elements added to
     # the module as of 13 Feb 2013.  Add them here until euclid supports them
     # TODO: when euclid updates, remove this cruft. -ETJ 13 Feb 2013
     import solid.patch_euclid
     solid.patch_euclid.run_patch()
 
-    def euclidify(an_obj, intended_class=Vector3):
+    def euclidify(an_obj:EucOrTuple, 
+                  intended_class=Vector3) -> Union[Point3, Vector3]:
         # If an_obj is an instance of the appropriate PyEuclid class,
         # return it.  Otherwise, try to turn an_obj into the appropriate
         # class and throw an exception on failure
@@ -736,22 +748,25 @@ try:
                 raise TypeError("Object: %s ought to be PyEuclid class %s or "
                                 "able to form one, but is not." 
                                 % (an_obj, intended_class.__name__))
-        return ret
+        return ret # type: ignore
 
-    def euc_to_arr(euc_obj_or_list):  # Inverse of euclidify()
+    def euc_to_arr(euc_obj_or_list: EucOrTuple) -> List[float]:  # Inverse of euclidify()
         # Call as_arr on euc_obj_or_list or on all its members if it's a list
+        result: List[float] = []
+
         if hasattr(euc_obj_or_list, "as_arr"):
-            return euc_obj_or_list.as_arr()
+            result = euc_obj_or_list.as_arr()   # type: ignore
         elif isinstance(euc_obj_or_list, (list, tuple)) and hasattr(euc_obj_or_list[0], 'as_arr'):
-            return [euc_to_arr(p) for p in euc_obj_or_list]
+            result = [euc_to_arr(p) for p in euc_obj_or_list] # type: ignore
         else:
             # euc_obj_or_list is neither an array-based PyEuclid object,
             # nor a list of them.  Assume it's a list of points or vectors,
             # and return the list unchanged.  We could be wrong about this,
             # though.
-            return euc_obj_or_list
+            result = euc_obj_or_list # type: ignore
+        return result
 
-    def is_scad(obj):
+    def is_scad(obj:OScO) -> bool:
         return isinstance(obj, OpenSCADObject)
 
     def scad_matrix(euclid_matrix4):
@@ -979,13 +994,13 @@ try:
         else:
             return RIGHT
 
-    def _other_dir(left_or_right):
+    def _other_dir(left_or_right:int) -> int:
         if left_or_right == LEFT:
             return RIGHT
         else:
             return LEFT
 
-    def _three_point_normal(a, b, c):
+    def _three_point_normal(a:Point3, b:Point3, c:Point3) -> Vector3:
         ab = b - a
         bc = c - b
 
@@ -997,7 +1012,7 @@ try:
     # =============
     # = 2D Fillet =
     # =============
-    def _widen_angle_for_fillet(start_degrees, end_degrees):
+    def _widen_angle_for_fillet(start_degrees:float, end_degrees:float) -> Tuple[float, float]:
         # Fix start/end degrees as needed; find a way to make an acute angle
         if end_degrees < start_degrees:
             end_degrees += 360
@@ -1008,7 +1023,8 @@ try:
         epsilon_degrees = 2
         return start_degrees - epsilon_degrees, end_degrees + epsilon_degrees
 
-    def fillet_2d(three_point_sets, orig_poly, fillet_rad, remove_material=True):
+    def fillet_2d(three_point_sets:Sequence[Tuple[Point2, Point2, Point2]], 
+                  orig_poly:OScO, fillet_rad:float, remove_material:bool=True) -> OScO:
         # NOTE: three_point_sets must be a list of sets of three points
         # (i.e., a list of 3-tuples of points), even if only one fillet is being done:
         # e.g.  [[a, b, c]]
@@ -1060,7 +1076,7 @@ try:
                 seg.p1 if seg.p1 != cp2 else seg.p2 for seg in (afs, cfs)]
 
             a_degs, c_degs = [
-                (degrees(math.atan2(seg.v.y, seg.v.x))) % 360 for seg in (afs, cfs)]
+                (degrees(atan2(seg.v.y, seg.v.x))) % 360 for seg in (afs, cfs)]
 
             start_degs = a_degs
             end_degs = c_degs
@@ -1087,7 +1103,7 @@ try:
     # = Extrusion along a path =
     # = ---------------------- =
     # Possible: twist
-    def extrude_along_path(shape_pts, path_pts, scale_factors=None):
+    def extrude_along_path(shape_pts:Points, path_pts:Points, scale_factors:Sequence[float]=None) -> OScO:
         # Extrude the convex curve defined by shape_pts along path_pts.
         # -- For predictable results, shape_pts must be planar, convex, and lie
         # in the XY plane centered around the origin.
@@ -1103,8 +1119,8 @@ try:
             scale_factors = [1.0] * len(path_pts)
 
         # Make sure we've got Euclid Point3's for all elements
-        shape_pts = euclidify(shape_pts, Point3)
-        path_pts = euclidify(path_pts, Point3)
+        shape_pts:Point3 = euclidify(shape_pts, Point3)
+        path_pts:Point3 = euclidify(path_pts, Point3)
 
         src_up = Vector3(*UP_VEC)
 
@@ -1126,13 +1142,13 @@ try:
                 tangent = path_pt - path_pts[which_loop - 1]
 
             # Scale points
+            this_loop:Point3 = []
             if scale != 1.0:
-                this_loop = [(scale * sh) for sh in shape_pts]
-                # Convert this_loop back to points; scaling changes them to
-                # Vectors
+                this_loop:List[Point3] = [(scale * sh) for sh in shape_pts]
+                # Convert this_loop back to points; scaling changes them to Vectors
                 this_loop = [Point3(v.x, v.y, v.z) for v in this_loop]
             else:
-                this_loop = shape_pts[:]
+                this_loop = shape_pts[:] # type: ignore
 
             # Rotate & translate
             this_loop = transform_to_point(this_loop, dest_point=path_pt, 
@@ -1236,7 +1252,7 @@ def frange(*args):
 # =====================
 
 
-def obj_tree_str(sp_obj, vars_to_print=None):
+def obj_tree_str(sp_obj:OScO, vars_to_print:Sequence[str]=None) -> str:
     # For debugging.  This prints a string of all of an object's
     # children, with whatever attributes are specified in vars_to_print
 
@@ -1258,6 +1274,6 @@ def obj_tree_str(sp_obj, vars_to_print=None):
 
     # Add all children
     for c in sp_obj.children:
-        s += indent(obj_tree_str(c, vars_to_print))
+        s += indent(obj_tree_str(c, vars_to_print)) # type: ignore
 
     return s

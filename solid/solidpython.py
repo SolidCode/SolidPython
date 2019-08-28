@@ -15,9 +15,11 @@ import inspect
 import subprocess
 import tempfile
 
-from typing import Set, Sequence, List, Callable, Optional, Union
+from typing import Set, Sequence, List, Callable, Optional, Union, Iterable
 from types import ModuleType
-OScO = OpenSCADObject
+from typing import TypeVar
+
+OScO = TypeVar('T', bound='OpenScadObject')
 
 # These are features added to SolidPython but NOT in OpenSCAD.
 # Mark them for special treatment
@@ -252,14 +254,17 @@ def calling_module(stack_depth:int=2) -> ModuleType:
         import __main__ as calling_mod # type: ignore
     return calling_mod
 
-# FIXME: Typing. Default empty lists are a foot-gun. Default to None, set to empty list inside function
 def new_openscad_class_str(class_name:str, 
-    args:Sequence[str]=[], 
-    kwargs:Sequence[str]=[], 
+    args:Sequence[str]=None, 
+    kwargs:Sequence[str]=None, 
     include_file_path:Optional[str]=None, 
     use_not_include:bool=True) -> str:
     args_str = ''
     args_pairs = ''
+
+    args = args or []
+    kwargs = kwargs or []
+
 
     # Re: https://github.com/SolidCode/SolidPython/issues/99
     # Don't allow any reserved words as argument names or module names
@@ -317,7 +322,6 @@ def _unsubbed_keyword(subbed_keyword:str) -> str:
     # No-op for all other strings: e.g. 'or_' => 'or', 'other_' => 'other_'
     shortened = subbed_keyword[:-1]
     return shortened if shortened in PYTHON_ONLY_RESERVED_WORDS else subbed_keyword
-
 
 # =========================
 # = Internal Utilities    =
@@ -630,7 +634,6 @@ class OpenSCADObject(object):
 
         return png_data
 
-
 class IncludedOpenSCADObject(OpenSCADObject):
     # Identical to OpenSCADObject, but each subclass of IncludedOpenSCADObject
     # represents imported scad code, so each instance needs to store the path
@@ -669,20 +672,20 @@ class IncludedOpenSCADObject(OpenSCADObject):
 # now that we have the base class defined, we can do a circular import
 from . import objects
 
-def py2openscad(o):
+def py2openscad(o:Union[bool, float, str, Iterable]) -> str:
     if type(o) == bool:
         return str(o).lower()
     if type(o) == float:
-        return "%.10f" % o
+        return "%.10f" % o # type: ignore
     if type(o) == str:
-        return '"' + o + '"'
+        return '"' + o + '"' # type: ignore
     if type(o).__name__ == "ndarray":
         import numpy # type: ignore
         return numpy.array2string(o, separator=",", threshold=1000000000)
     if hasattr(o, "__iter__"):
         s = "["
         first = True
-        for i in o:
+        for i in o: # type: ignore
             if not first:
                 s += ", "
             first = False
@@ -691,6 +694,5 @@ def py2openscad(o):
         return s
     return str(o)
 
-
-def indent(s):
+def indent(s:str) -> str:
     return s.replace("\n", "\n\t")
