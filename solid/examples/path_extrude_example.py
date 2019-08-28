@@ -7,6 +7,7 @@ import sys
 # Assumes SolidPython is in site-packages or elsewhwere in sys.path
 from solid import *
 from solid.utils import *
+from math import sin, cos, radians, degrees
 
 SEGMENTS = 48
 

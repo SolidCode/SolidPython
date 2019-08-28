@@ -6,7 +6,7 @@ import sys
 
 from solid import *
 from solid.utils import *
-
+from math import sin, cos, radians, degrees
 
 def my_animate(_time=0):
     # _time will range from 0 to 1, not including 1
