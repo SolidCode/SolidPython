@@ -195,7 +195,9 @@ def parse_scad_callables(scad_code_str:str) -> List[dict]:
 
     # TODO:  write a pyparsing grammar for OpenSCAD, or, even better, use the yacc parse grammar
     # used by the language itself.  -ETJ 06 Feb 2011
-
+    
+    # FIXME: OpenSCAD use/import includes top level variables. We should parse 
+    # those out (e.g. x = someValue;) as well -ETJ 21 May 2019
     no_comments_re = r'(?mxs)(//.*?\n|/\*.*?\*/)'
 
     # Also note: this accepts: 'module x(arg) =' and 'function y(arg) {', both

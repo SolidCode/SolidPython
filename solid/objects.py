@@ -707,17 +707,18 @@ def disable(openscad_obj:OScO) -> OScO:
 # --include() makes those methods available AND executes all code in
 #   scad_file_path.scad, which may have side effects.
 #   Unless you have a specific need, call use().
-def use(scad_file_path:str, use_not_include:bool=True) -> bool:
+def use(scad_file_path:str, use_not_include:bool=True, dest_namespace_dict:Dict=None):
     '''
     Opens scad_file_path, parses it for all usable calls,
     and adds them to caller's namespace.
     '''
     # These functions in solidpython are used here and only here; don't pollute
     # the global namespace with them
-    from .solidpython import extract_callable_signatures
+    from .solidpython import parse_scad_callables
     from .solidpython import new_openscad_class_str 
     from .solidpython import calling_module    
     
+    contents = None
     try:
         with open(scad_file_path) as module:
             contents = module.read()
@@ -728,15 +729,17 @@ def use(scad_file_path:str, use_not_include:bool=True) -> bool:
     # Once we have a list of all callables and arguments, dynamically
     # add OpenSCADObject subclasses for all callables to the calling module's
     # namespace.
-    symbols_dicts = extract_callable_signatures(scad_file_path)
+    symbols_dicts = parse_scad_callables(contents)
 
     for sd in symbols_dicts:
         class_str = new_openscad_class_str(sd['name'], sd['args'], sd['kwargs'], 
                                             scad_file_path, use_not_include)
         # If this is called from 'include', we have to look deeper in the stack
         # to find the right module to add the new class to.
-        stack_depth = 2 if use_not_include else 3
-        exec(class_str, calling_module(stack_depth).__dict__)
+        if dest_namespace_dict is None:
+            stack_depth = 2 if use_not_include else 3
+            dest_namespace_dict = calling_module(stack_depth).__dict__
+        exec(class_str, dest_namespace_dict)
 
     return True
 
