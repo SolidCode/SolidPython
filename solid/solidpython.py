@@ -17,9 +17,6 @@ import tempfile
 
 from typing import Set, Sequence, List, Callable, Optional, Union, Iterable
 from types import ModuleType
-from typing import TypeVar
-
-OScO = TypeVar('T', bound='OpenScadObject')
 
 # These are features added to SolidPython but NOT in OpenSCAD.
 # Mark them for special treatment
@@ -32,11 +29,357 @@ PYTHON_ONLY_RESERVED_WORDS = [
     'try','True','def','from','nonlocal','while','and','del','global','not',
     'with','as','elif','or','yield','assert','pass', 'break','except','in','raise',
 ]
+# =========================
+# = Internal Utilities    =
+# =========================
+class OpenSCADObject(object):
+
+    def __init__(self, name:str, params:dict):
+        self.name = name
+        self.params = params
+        self.children: List[OpenSCADObject] = []
+        self.modifier = ""
+        self.parent: Optional[OpenSCADObject] = None
+        self.is_hole = False
+        self.has_hole_children = False
+        self.is_part_root = False
+
+    def set_hole(self, is_hole:bool=True) -> OSC_OB:
+        self.is_hole = is_hole
+        return self
+
+    def set_part_root(self, is_root:bool=True) -> OSC_OB:
+        self.is_part_root = is_root
+        return self
+
+    def find_hole_children(self, path:List[OSC_OB]=None) -> List[OSC_OB]:
+        # Because we don't force a copy every time we re-use a node
+        # (e.g a = cylinder(2, 6);  b = right(10) (a)
+        #  the identical 'a' object appears in the tree twice),
+        # we can't count on an object's 'parent' field to trace its
+        # path to the root.  Instead, keep track explicitly
+        path = path if path else [self]
+        hole_kids = []
+
+        for child in self.children:
+            path.append(child)
+            if child.is_hole:
+                hole_kids.append(child)
+                # Mark all parents as having a hole child
+                for p in path:
+                    p.has_hole_children = True
+            # Don't append holes from separate parts below us
+            elif child.is_part_root:
+                continue
+            # Otherwise, look below us for children
+            else:
+                hole_kids += child.find_hole_children(path)
+            path.pop()
+
+        return hole_kids
+
+    def set_modifier(self, m:str) -> OSC_OB:
+        # Used to add one of the 4 single-character modifiers: 
+        # #(debug) !(root) %(background) or *(disable)
+        string_vals = {'disable':      '*',
+                       'debug':        '#',
+                       'background':   '%',
+                       'root':         '!',
+                       '*': '*',
+                       '#': '#',
+                       '%': '%',
+                       '!': '!'}
+
+        self.modifier = string_vals.get(m.lower(), '')
+        return self
+
+    def _render(self, render_holes:bool=False) -> str:
+        '''
+        NOTE: In general, you won't want to call this method. For most purposes,
+        you really want scad_render(), 
+        Calling obj._render won't include necessary 'use' or 'include' statements
+        '''
+        # First, render all children
+        s = ""
+        for child in self.children:
+            # Don't immediately render hole children.
+            # Add them to the parent's hole list,
+            # And render after everything else
+            if not render_holes and child.is_hole:
+                continue
+            s += child._render(render_holes)
+
+        # Then render self and prepend/wrap it around the children
+        # I've added designated parts and explicit holes to SolidPython.
+        # OpenSCAD has neither, so don't render anything from these objects
+        if self.name in non_rendered_classes:
+            pass
+        elif not self.children:
+            s = self._render_str_no_children() + ";"
+        else:
+            s = self._render_str_no_children() + " {" + indent(s) + "\n}"
+
+        # If this is the root object or the top of a separate part,
+        # find all holes and subtract them after all positive geometry
+        # is rendered
+        if (not self.parent) or self.is_part_root:
+            hole_children = self.find_hole_children()
+
+            if len(hole_children) > 0:
+                s += "\n/* Holes Below*/"
+                s += self._render_hole_children()
+
+                # wrap everything in the difference
+                s = "\ndifference(){" + indent(s) + " /* End Holes */ \n}"
+        return s
+
+    def _render_str_no_children(self) -> str:
+        callable_name = _unsubbed_keyword(self.name)
+        s = "\n" + self.modifier + callable_name + "("
+        first = True
+
+        # Re: https://github.com/SolidCode/SolidPython/issues/99
+        # OpenSCAD will accept Python reserved words as callables or argument names,
+        # but they won't compile in Python. Those have already been substituted
+        # out (e.g 'or' => 'or_'). Sub them back here.
+        self.params = {_unsubbed_keyword(k):v for k, v in self.params.items()}
+
+        # OpenSCAD doesn't have a 'segments' argument, but it does
+        # have '$fn'.  Swap one for the other
+        if 'segments' in self.params:
+            self.params['$fn'] = self.params.pop('segments')
+
+        valid_keys = self.params.keys()
+
+        # intkeys are the positional parameters
+        intkeys = list(filter(lambda x: type(x) == int, valid_keys))
+        intkeys.sort()
+
+        # named parameters
+        nonintkeys = list(filter(lambda x: not type(x) == int, valid_keys))
+        all_params_sorted = intkeys + nonintkeys
+        if all_params_sorted:
+            all_params_sorted = sorted(all_params_sorted)
+
+        for k in all_params_sorted:
+            v = self.params[k]
+            if v is None:
+                continue
+
+            if not first:
+                s += ", "
+            first = False
+
+            if type(k) == int:
+                s += py2openscad(v)
+            else:
+                s += k + " = " + py2openscad(v)
+
+        s += ")"
+        return s
+
+    def _render_hole_children(self) -> str:
+        # Run down the tree, rendering only those nodes
+        # that are holes or have holes beneath them
+        if not self.has_hole_children:
+            return ""
+        s = ""
+        for child in self.children:
+            if child.is_hole:
+                s += child._render(render_holes=True)
+            elif child.has_hole_children:
+                s += child._render_hole_children()
+        if self.name in non_rendered_classes:
+            pass
+        else:
+            s = self._render_str_no_children() + "{" + indent(s) + "\n}"
+            
+        # Holes exist in the compiled tree in two pieces:
+        # The shapes of the holes themselves, (an object for which
+        # obj.is_hole is True, and all its children) and the
+        # transforms necessary to put that hole in place, which
+        # are inherited from non-hole geometry.
+
+        # Non-hole Intersections & differences can change (shrink)
+        # the size of holes, and that shouldn't happen: an
+        # intersection/difference with an empty space should be the
+        # entirety of the empty space.
+        #  In fact, the intersection of two empty spaces should be
+        # everything contained in both of them:  their union.
+        # So... replace all super-hole intersection/diff transforms
+        # with union in the hole segment of the compiled tree.
+        # And if you figure out a better way to explain this,
+        # please, please do... because I think this works, but I
+        # also think my rationale is shaky and imprecise. 
+        # -ETJ 19 Feb 2013
+        s = s.replace("intersection", "union")
+        s = s.replace("difference", "union")
+            
+        return s
+
+    def add(self, child:Union[OSC_OB, Sequence[OSC_OB]]) -> OSC_OB:
+        '''
+        if child is a single object, assume it's an OpenSCADObjects and 
+        add it to self.children
+
+        if child is a list, assume its members are all OpenSCADObjects and
+        add them all to self.children
+        '''
+        if isinstance(child, (list, tuple)):
+            # __call__ passes us a list inside a tuple, but we only care
+            # about the list, so skip single-member tuples containing lists
+            if len(child) == 1 and isinstance(child[0], (list, tuple)):
+                child = child[0]
+            [self.add(c) for c in child]
+        elif isinstance(child, int):
+            # Allowing for creating object by adding to 0 (as in sum())
+            if child != 0:
+                raise ValueError
+        else:
+            self.children.append(child) # type: ignore
+            child.set_parent(self) # type: ignore
+        return self
+
+    def set_parent(self, parent:OSC_OB):
+        self.parent = parent
+
+    def add_param(self, k:str, v:float) -> OSC_OB:
+        if k == '$fn':
+            k = 'segments'
+        self.params[k] = v
+        return self
+
+    def copy(self) -> OSC_OB:
+        '''
+        Provides a copy of this object and all children,
+        but doesn't copy self.parent, meaning the new object belongs
+        to a different tree
+        Initialize an instance of this class with the same params
+        that created self, the object being copied.
+        '''
+
+        # Python can't handle an '$fn' argument, while openSCAD only wants
+        # '$fn'.  Swap back and forth as needed; the final renderer will
+        # sort this out.
+        if '$fn' in self.params:
+            self.params['segments'] = self.params.pop('$fn')
+
+        other = type(self)(**self.params)
+        other.set_modifier(self.modifier)
+        other.set_hole(self.is_hole)
+        other.set_part_root(self.is_part_root)
+        other.has_hole_children = self.has_hole_children
+        for c in self.children:
+            other.add(c.copy())
+        return other
+
+    def __call__(self, *args:OSC_OB) -> OSC_OB:
+        '''
+        Adds all objects in args to self.  This enables OpenSCAD-like syntax,
+        e.g.:
+        union()(
+            cube(),
+            sphere()
+        )
+        '''
+        return self.add(args)
+
+    def __add__(self, x:OSC_OB) -> OSC_OB:
+        '''
+        This makes u = a+b identical to:
+        u = union()(a, b )
+        '''
+        return objects.union()(self, x)
+
+    def __radd__(self, x:OSC_OB) -> OSC_OB:
+        '''
+        This makes u = a+b identical to:
+        u = union()(a, b )
+        '''
+        return objects.union()(self, x)
+
+    def __sub__(self, x:OSC_OB) -> OSC_OB:
+        '''
+        This makes u = a - b identical to:
+        u = difference()(a, b )
+        '''
+        return objects.difference()(self, x)
+
+    def __mul__(self, x:OSC_OB) -> OSC_OB:
+        '''
+        This makes u = a * b identical to:
+        u = intersection()(a, b )
+        '''
+        return objects.intersection()(self, x)
+
+    def _repr_png_(self) -> Optional[bytes]:
+        '''
+        Allow rich clients such as the IPython Notebook, to display the current
+        OpenSCAD rendering of this object.
+        '''
+        png_data = None
+        tmp = tempfile.NamedTemporaryFile(suffix=".scad", delete=False)
+        tmp_png = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+        try:
+            scad_text = scad_render(self).encode("utf-8")
+            tmp.write(scad_text)
+            tmp.close()
+            tmp_png.close()
+            subprocess.Popen([
+                "openscad",
+                "--preview",
+                "-o", tmp_png.name,
+                tmp.name
+            ]).communicate()
+
+            with open(tmp_png.name, "rb") as png:
+                png_data = png.read()
+        finally:
+            os.unlink(tmp.name)
+            os.unlink(tmp_png.name)
+
+        return png_data
+OSC_OB = OpenSCADObject
+
+class IncludedOpenSCADObject(OpenSCADObject):
+    # Identical to OpenSCADObject, but each subclass of IncludedOpenSCADObject
+    # represents imported scad code, so each instance needs to store the path
+    # to the scad file it's included from.
+
+    def __init__(self, name, params, include_file_path, use_not_include=False, **kwargs):
+        self.include_file_path = self._get_include_path(include_file_path)
+
+        if use_not_include:
+            self.include_string = 'use <%s>\n' % self.include_file_path
+        else:
+            self.include_string = 'include <%s>\n' % self.include_file_path
+
+        # Just pass any extra arguments straight on to OpenSCAD; it'll accept
+        # them
+        if kwargs:
+            params.update(kwargs)
+
+        OpenSCADObject.__init__(self, name, params)
+
+    def _get_include_path(self, include_file_path):
+        # Look through sys.path for anyplace we can find a valid file ending
+        # in include_file_path.  Return that absolute path
+        if os.path.isabs(include_file_path) and os.path.isfile(include_file_path):
+            return include_file_path
+        else:
+            for p in sys.path:
+                whole_path = os.path.join(p, include_file_path)
+                if os.path.isfile(whole_path):
+                    return os.path.abspath(whole_path)
+
+        # No loadable SCAD file was found in sys.path.  Raise an error
+        raise ValueError("Unable to find included SCAD file: "
+                         "%(include_file_path)s in sys.path" % vars())
 
 # =========================================
 # = Rendering Python code to OpenSCAD code=
 # =========================================
-def _find_include_strings(obj: OScO) -> Set[str]: 
+def _find_include_strings(obj: OSC_OB) -> Set[str]: 
     include_strings = set()
     if isinstance(obj, IncludedOpenSCADObject):
         include_strings.add(obj.include_string)
@@ -44,7 +387,7 @@ def _find_include_strings(obj: OScO) -> Set[str]:
         include_strings.update(_find_include_strings(child))
     return include_strings
 
-def scad_render(scad_object: OScO, file_header: str='') -> str:
+def scad_render(scad_object: OSC_OB, file_header: str='') -> str:
     # Make this object the root of the tree
     root = scad_object
 
@@ -57,7 +400,7 @@ def scad_render(scad_object: OScO, file_header: str='') -> str:
     scad_body = root._render()
     return file_header + includes + scad_body
 
-def scad_render_animated(func_to_animate:Callable[[Optional[float]], OScO], 
+def scad_render_animated(func_to_animate:Callable[[Optional[float]], OSC_OB], 
     steps:int =20, back_and_forth:bool=True, filepath:str=None, file_header:str='') -> str:
     # func_to_animate takes a single float argument, _time in [0, 1), and
     # returns an OpenSCADObject instance.
@@ -117,14 +460,14 @@ def scad_render_animated(func_to_animate:Callable[[Optional[float]], OScO],
                             "}\n" % vars())
     return rendered_string
 
-def scad_render_animated_file(func_to_animate:Callable[[Optional[float]], OScO]
+def scad_render_animated_file(func_to_animate:Callable[[Optional[float]], OSC_OB]
     , steps:int=20, back_and_forth:bool=True, 
     filepath:Optional[str]=None, file_header:str='', include_orig_code:bool=True) -> bool:
     rendered_string = scad_render_animated(func_to_animate, steps, 
                                             back_and_forth, file_header)
     return _write_code_to_file(rendered_string, filepath, include_orig_code)
 
-def scad_render_to_file(scad_object: OScO, filepath:Optional[str]=None, 
+def scad_render_to_file(scad_object: OSC_OB, filepath:Optional[str]=None, 
     file_header:str='', include_orig_code:bool=True) -> bool:
     rendered_string = scad_render(scad_object, file_header)
     return _write_code_to_file(rendered_string, filepath, include_orig_code)
@@ -322,352 +665,6 @@ def _unsubbed_keyword(subbed_keyword:str) -> str:
     # No-op for all other strings: e.g. 'or_' => 'or', 'other_' => 'other_'
     shortened = subbed_keyword[:-1]
     return shortened if shortened in PYTHON_ONLY_RESERVED_WORDS else subbed_keyword
-
-# =========================
-# = Internal Utilities    =
-# =========================
-class OpenSCADObject(object):
-
-    def __init__(self, name:str, params:dict):
-        self.name = name
-        self.params = params
-        self.children: List[OpenSCADObject] = []
-        self.modifier = ""
-        self.parent: Optional[OpenSCADObject] = None
-        self.is_hole = False
-        self.has_hole_children = False
-        self.is_part_root = False
-
-    def set_hole(self, is_hole:bool=True) -> OScO:
-        self.is_hole = is_hole
-        return self
-
-    def set_part_root(self, is_root:bool=True) -> OScO:
-        self.is_part_root = is_root
-        return self
-
-    def find_hole_children(self, path:List[OScO]=None) -> List[OScO]:
-        # Because we don't force a copy every time we re-use a node
-        # (e.g a = cylinder(2, 6);  b = right(10) (a)
-        #  the identical 'a' object appears in the tree twice),
-        # we can't count on an object's 'parent' field to trace its
-        # path to the root.  Instead, keep track explicitly
-        path = path if path else [self]
-        hole_kids = []
-
-        for child in self.children:
-            path.append(child)
-            if child.is_hole:
-                hole_kids.append(child)
-                # Mark all parents as having a hole child
-                for p in path:
-                    p.has_hole_children = True
-            # Don't append holes from separate parts below us
-            elif child.is_part_root:
-                continue
-            # Otherwise, look below us for children
-            else:
-                hole_kids += child.find_hole_children(path)
-            path.pop()
-
-        return hole_kids
-
-    def set_modifier(self, m:str) -> OScO:
-        # Used to add one of the 4 single-character modifiers: 
-        # #(debug) !(root) %(background) or *(disable)
-        string_vals = {'disable':      '*',
-                       'debug':        '#',
-                       'background':   '%',
-                       'root':         '!',
-                       '*': '*',
-                       '#': '#',
-                       '%': '%',
-                       '!': '!'}
-
-        self.modifier = string_vals.get(m.lower(), '')
-        return self
-
-    def _render(self, render_holes:bool=False) -> str:
-        '''
-        NOTE: In general, you won't want to call this method. For most purposes,
-        you really want scad_render(), 
-        Calling obj._render won't include necessary 'use' or 'include' statements
-        '''
-        # First, render all children
-        s = ""
-        for child in self.children:
-            # Don't immediately render hole children.
-            # Add them to the parent's hole list,
-            # And render after everything else
-            if not render_holes and child.is_hole:
-                continue
-            s += child._render(render_holes)
-
-        # Then render self and prepend/wrap it around the children
-        # I've added designated parts and explicit holes to SolidPython.
-        # OpenSCAD has neither, so don't render anything from these objects
-        if self.name in non_rendered_classes:
-            pass
-        elif not self.children:
-            s = self._render_str_no_children() + ";"
-        else:
-            s = self._render_str_no_children() + " {" + indent(s) + "\n}"
-
-        # If this is the root object or the top of a separate part,
-        # find all holes and subtract them after all positive geometry
-        # is rendered
-        if (not self.parent) or self.is_part_root:
-            hole_children = self.find_hole_children()
-
-            if len(hole_children) > 0:
-                s += "\n/* Holes Below*/"
-                s += self._render_hole_children()
-
-                # wrap everything in the difference
-                s = "\ndifference(){" + indent(s) + " /* End Holes */ \n}"
-        return s
-
-    def _render_str_no_children(self) -> str:
-        callable_name = _unsubbed_keyword(self.name)
-        s = "\n" + self.modifier + callable_name + "("
-        first = True
-
-        # Re: https://github.com/SolidCode/SolidPython/issues/99
-        # OpenSCAD will accept Python reserved words as callables or argument names,
-        # but they won't compile in Python. Those have already been substituted
-        # out (e.g 'or' => 'or_'). Sub them back here.
-        self.params = {_unsubbed_keyword(k):v for k, v in self.params.items()}
-
-        # OpenSCAD doesn't have a 'segments' argument, but it does
-        # have '$fn'.  Swap one for the other
-        if 'segments' in self.params:
-            self.params['$fn'] = self.params.pop('segments')
-
-        valid_keys = self.params.keys()
-
-        # intkeys are the positional parameters
-        intkeys = list(filter(lambda x: type(x) == int, valid_keys))
-        intkeys.sort()
-
-        # named parameters
-        nonintkeys = list(filter(lambda x: not type(x) == int, valid_keys))
-        all_params_sorted = intkeys + nonintkeys
-        if all_params_sorted:
-            all_params_sorted = sorted(all_params_sorted)
-
-        for k in all_params_sorted:
-            v = self.params[k]
-            if v is None:
-                continue
-
-            if not first:
-                s += ", "
-            first = False
-
-            if type(k) == int:
-                s += py2openscad(v)
-            else:
-                s += k + " = " + py2openscad(v)
-
-        s += ")"
-        return s
-
-    def _render_hole_children(self) -> str:
-        # Run down the tree, rendering only those nodes
-        # that are holes or have holes beneath them
-        if not self.has_hole_children:
-            return ""
-        s = ""
-        for child in self.children:
-            if child.is_hole:
-                s += child._render(render_holes=True)
-            elif child.has_hole_children:
-                s += child._render_hole_children()
-        if self.name in non_rendered_classes:
-            pass
-        else:
-            s = self._render_str_no_children() + "{" + indent(s) + "\n}"
-            
-        # Holes exist in the compiled tree in two pieces:
-        # The shapes of the holes themselves, (an object for which
-        # obj.is_hole is True, and all its children) and the
-        # transforms necessary to put that hole in place, which
-        # are inherited from non-hole geometry.
-
-        # Non-hole Intersections & differences can change (shrink)
-        # the size of holes, and that shouldn't happen: an
-        # intersection/difference with an empty space should be the
-        # entirety of the empty space.
-        #  In fact, the intersection of two empty spaces should be
-        # everything contained in both of them:  their union.
-        # So... replace all super-hole intersection/diff transforms
-        # with union in the hole segment of the compiled tree.
-        # And if you figure out a better way to explain this,
-        # please, please do... because I think this works, but I
-        # also think my rationale is shaky and imprecise. 
-        # -ETJ 19 Feb 2013
-        s = s.replace("intersection", "union")
-        s = s.replace("difference", "union")
-            
-        return s
-
-    def add(self, child:Union[OScO, Sequence[OScO]]) -> OScO:
-        '''
-        if child is a single object, assume it's an OpenSCADObjects and 
-        add it to self.children
-
-        if child is a list, assume its members are all OpenSCADObjects and
-        add them all to self.children
-        '''
-        if isinstance(child, (list, tuple)):
-            # __call__ passes us a list inside a tuple, but we only care
-            # about the list, so skip single-member tuples containing lists
-            if len(child) == 1 and isinstance(child[0], (list, tuple)):
-                child = child[0]
-            [self.add(c) for c in child]
-        elif isinstance(child, int):
-            # Allowing for creating object by adding to 0 (as in sum())
-            if child != 0:
-                raise ValueError
-        else:
-            self.children.append(child) # type: ignore
-            child.set_parent(self) # type: ignore
-        return self
-
-    def set_parent(self, parent:OScO):
-        self.parent = parent
-
-    def add_param(self, k:str, v:float) -> OScO:
-        if k == '$fn':
-            k = 'segments'
-        self.params[k] = v
-        return self
-
-    def copy(self) -> OScO:
-        '''
-        Provides a copy of this object and all children,
-        but doesn't copy self.parent, meaning the new object belongs
-        to a different tree
-        Initialize an instance of this class with the same params
-        that created self, the object being copied.
-        '''
-
-        # Python can't handle an '$fn' argument, while openSCAD only wants
-        # '$fn'.  Swap back and forth as needed; the final renderer will
-        # sort this out.
-        if '$fn' in self.params:
-            self.params['segments'] = self.params.pop('$fn')
-
-        other = type(self)(**self.params)
-        other.set_modifier(self.modifier)
-        other.set_hole(self.is_hole)
-        other.set_part_root(self.is_part_root)
-        other.has_hole_children = self.has_hole_children
-        for c in self.children:
-            other.add(c.copy())
-        return other
-
-    def __call__(self, *args:OScO) -> OScO:
-        '''
-        Adds all objects in args to self.  This enables OpenSCAD-like syntax,
-        e.g.:
-        union()(
-            cube(),
-            sphere()
-        )
-        '''
-        return self.add(args)
-
-    def __add__(self, x:Union[Sequence[OScO], OScO]) -> OScO:
-        '''
-        This makes u = a+b identical to:
-        u = union()(a, b )
-        '''
-        return objects.union()(self, x)
-
-    def __radd__(self, x:OScO) -> OScO:
-        '''
-        This makes u = a+b identical to:
-        u = union()(a, b )
-        '''
-        return objects.union()(self, x)
-
-    def __sub__(self, x:OScO) -> OScO:
-        '''
-        This makes u = a - b identical to:
-        u = difference()(a, b )
-        '''
-        return objects.difference()(self, x)
-
-    def __mul__(self, x:OScO) -> OScO:
-        '''
-        This makes u = a * b identical to:
-        u = intersection()(a, b )
-        '''
-        return objects.intersection()(self, x)
-
-    def _repr_png_(self) -> Optional[bytes]:
-        '''
-        Allow rich clients such as the IPython Notebook, to display the current
-        OpenSCAD rendering of this object.
-        '''
-        png_data = None
-        tmp = tempfile.NamedTemporaryFile(suffix=".scad", delete=False)
-        tmp_png = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
-        try:
-            scad_text = scad_render(self).encode("utf-8")
-            tmp.write(scad_text)
-            tmp.close()
-            tmp_png.close()
-            subprocess.Popen([
-                "openscad",
-                "--preview",
-                "-o", tmp_png.name,
-                tmp.name
-            ]).communicate()
-
-            with open(tmp_png.name, "rb") as png:
-                png_data = png.read()
-        finally:
-            os.unlink(tmp.name)
-            os.unlink(tmp_png.name)
-
-        return png_data
-
-class IncludedOpenSCADObject(OpenSCADObject):
-    # Identical to OpenSCADObject, but each subclass of IncludedOpenSCADObject
-    # represents imported scad code, so each instance needs to store the path
-    # to the scad file it's included from.
-
-    def __init__(self, name, params, include_file_path, use_not_include=False, **kwargs):
-        self.include_file_path = self._get_include_path(include_file_path)
-
-        if use_not_include:
-            self.include_string = 'use <%s>\n' % self.include_file_path
-        else:
-            self.include_string = 'include <%s>\n' % self.include_file_path
-
-        # Just pass any extra arguments straight on to OpenSCAD; it'll accept
-        # them
-        if kwargs:
-            params.update(kwargs)
-
-        OpenSCADObject.__init__(self, name, params)
-
-    def _get_include_path(self, include_file_path):
-        # Look through sys.path for anyplace we can find a valid file ending
-        # in include_file_path.  Return that absolute path
-        if os.path.isabs(include_file_path) and os.path.isfile(include_file_path):
-            return include_file_path
-        else:
-            for p in sys.path:
-                whole_path = os.path.join(p, include_file_path)
-                if os.path.isfile(whole_path):
-                    return os.path.abspath(whole_path)
-
-        # No loadable SCAD file was found in sys.path.  Raise an error
-        raise ValueError("Unable to find included SCAD file: "
-                         "%(include_file_path)s in sys.path" % vars())
 
 # now that we have the base class defined, we can do a circular import
 from . import objects

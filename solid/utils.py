@@ -10,10 +10,12 @@ else:
 from math import pi, ceil, floor, sqrt, atan2
 
 # from solid import *
-from solid import union, cube, translate, rotate, square, circle, polyhedron, difference, intersection
+from .solid import union, cube, translate, rotate, square, circle, polyhedron
+from .solid import difference, intersection
 
-from solid import OpenSCADObject, P2, P3, P4, Vec3 , Vec4, Vec34, P3s, P23, Points, Indexes, ScadSize, OScOPlus
-OScO = OpenSCADObject
+from .solid import OpenSCADObject, P2, P3, P4, Vec3 , Vec4, Vec34, P3s, P23
+from .solid import Points, Indexes, ScadSize, OScO, OScOPlus
+# OScO = OpenSCADObject
 
 from typing import Union, Tuple, Sequence, List, Optional, Callable
 
@@ -1048,7 +1050,7 @@ try:
         # each must be called separately.
 
         if len(three_point_sets) == 3 and isinstance(three_point_sets[0], (Vector2, Vector3)):
-            three_point_sets = [three_point_sets]
+            three_point_sets = [three_point_sets] # type: ignore
 
         arc_objs = []
         for three_points in three_point_sets:
@@ -1112,15 +1114,15 @@ try:
         #       will be assumed to be 1.0 for each point in path_pts
         # -- Future additions might include corner styles (sharp, flattened, round)
         #       or a twist factor
-        polyhedron_pts = []
-        facet_indices = []
+        polyhedron_pts:Points= []
+        facet_indices:List[Tuple[int, int, int]] = []
 
         if not scale_factors:
             scale_factors = [1.0] * len(path_pts)
 
         # Make sure we've got Euclid Point3's for all elements
-        shape_pts:Point3 = euclidify(shape_pts, Point3)
-        path_pts:Point3 = euclidify(path_pts, Point3)
+        shape_pts = euclidify(shape_pts, Point3)
+        path_pts = euclidify(path_pts, Point3)
 
         src_up = Vector3(*UP_VEC)
 
@@ -1144,7 +1146,7 @@ try:
             # Scale points
             this_loop:Point3 = []
             if scale != 1.0:
-                this_loop:List[Point3] = [(scale * sh) for sh in shape_pts]
+                this_loop = [(scale * sh) for sh in shape_pts]
                 # Convert this_loop back to points; scaling changes them to Vectors
                 this_loop = [Point3(v.x, v.y, v.z) for v in this_loop]
             else:
@@ -1162,21 +1164,21 @@ try:
             segment_end = segment_start + shape_pt_count - 1
             if which_loop < len(path_pts) - 1:
                 for i in range(segment_start, segment_end):
-                    facet_indices.append([i, i + shape_pt_count, i + 1])
-                    facet_indices.append([i + 1, i + shape_pt_count, i + shape_pt_count + 1])
-                facet_indices.append([segment_start, segment_end, segment_end + shape_pt_count])
-                facet_indices.append([segment_start, segment_end + shape_pt_count, segment_start + shape_pt_count])
+                    facet_indices.append( (i, i + shape_pt_count, i + 1) )
+                    facet_indices.append( (i + 1, i + shape_pt_count, i + shape_pt_count + 1) )
+                facet_indices.append( (segment_start, segment_end, segment_end + shape_pt_count) )
+                facet_indices.append( (segment_start, segment_end + shape_pt_count, segment_start + shape_pt_count) )
 
         # Cap the start of the polyhedron
         for i in range(1, shape_pt_count - 1):
-            facet_indices.append([0, i, i + 1])
+            facet_indices.append((0, i, i + 1))
 
         # And the end (could be rolled into the earlier loop)
         # FIXME: concave cross-sections will cause this end-capping algorithm
         # to fail
         end_cap_base = len(polyhedron_pts) - shape_pt_count
         for i in range(end_cap_base + 1, len(polyhedron_pts) - 1):
-            facet_indices.append([end_cap_base, i + 1, i])
+            facet_indices.append( (end_cap_base, i + 1, i) )
 
         return polyhedron(points=euc_to_arr(polyhedron_pts), faces=facet_indices)
 
