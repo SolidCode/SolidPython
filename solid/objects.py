@@ -1,10 +1,6 @@
 """
 Classes for OpenSCAD builtins
 """
-from typing import Optional
-from types import SimpleNamespace
-from pathlib import Path
-
 from .solidpython import OpenSCADObject
 from .solidpython import IncludedOpenSCADObject
 
@@ -621,7 +617,7 @@ def disable(openscad_obj):
 # ===========================
 # = IMPORTING OPENSCAD CODE =
 # ===========================
-def import_scad(scad_filepath:str) -> Optional[SimpleNamespace]:
+def import_scad(scad_filepath):
     '''
     import_scad() is the namespaced, more Pythonic way to import OpenSCAD code.
     Return a python namespace containing all imported SCAD modules
@@ -638,6 +634,9 @@ def import_scad(scad_filepath:str) -> Optional[SimpleNamespace]:
         dir(mcad) # => ['bearing', 'boxes', 'constants', 'curves',...]
         dir(mcad.bearing) # => ['bearing', 'bearingDimensions', ...]
     '''
+    from pathlib import Path
+    from types import SimpleNamespace
+
     scad = Path(scad_filepath)
 
     namespace = SimpleNamespace()
@@ -678,15 +677,16 @@ def use(scad_file_path, use_not_include=True, dest_namespace_dict=None):
     '''
     # These functions in solidpython are used here and only here; don't pollute
     # the global namespace with them
-    import os
+    from pathlib import Path
     from .solidpython import parse_scad_callables
     from .solidpython import new_openscad_class_str 
-    from .solidpython import calling_module    
+    from .solidpython import calling_module
+
+    scad_file_path = Path(scad_file_path)
     
     contents = None
     try:
-        with open(scad_file_path) as module:
-            contents = module.read()
+        contents = scad_file_path.read_text()
     except Exception as e:
         raise Exception("Failed to import SCAD module '%(scad_file_path)s' "
                         "with error: %(e)s " % vars())
@@ -708,8 +708,7 @@ def use(scad_file_path, use_not_include=True, dest_namespace_dict=None):
             exec(class_str, dest_namespace_dict)
         except Exception as e:
             classname = sd['name']
-            scad_base = os.path.basename(scad_file_path)
-            msg = f"Unable to import SCAD module: `{classname}` from `{scad_base}`, with error: {e}"
+            msg = f"Unable to import SCAD module: `{classname}` from `{scad_file_path.name}`, with error: {e}"
             print(msg)
         
         if 'solid' in dest_namespace_dict:
