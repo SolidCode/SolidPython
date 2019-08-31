@@ -333,7 +333,9 @@ class TestSolidPython(DiffOutput):
         actual = tmp.contents
         expected = '\n\ncircle(r = 10);'
 
-        self.assertEqual(expected, actual)
+        # scad_render_to_file also adds a date & version stamp before scad code;
+        # That won't match here, so just make sure the correct code is at the end
+        self.assertTrue(actual.endswith(expected))
 
         # Header
         with TemporaryFileBuffer() as tmp:
@@ -343,7 +345,7 @@ class TestSolidPython(DiffOutput):
         actual = tmp.contents
         expected = '$fn = 24;\n\ncircle(r = 10);'
 
-        self.assertEqual(expected, actual)
+        self.assertTrue(actual.endswith(expected))
 
         # TODO: test include_orig_code=True, but that would have to
         # be done from a separate file, or include everything in this one
