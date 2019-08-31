@@ -4,7 +4,6 @@ Classes for OpenSCAD builtins
 from .solidpython import OpenSCADObject
 from .solidpython import IncludedOpenSCADObject
 
-
 class polygon(OpenSCADObject):
     '''
     Create a polygon with the specified points and paths.
@@ -19,7 +18,6 @@ class polygon(OpenSCADObject):
             paths = [list(range(len(points)))]
         OpenSCADObject.__init__(self, 'polygon',
                                 {'points': points, 'paths': paths})
-
 
 class circle(OpenSCADObject):
     '''
@@ -39,7 +37,6 @@ class circle(OpenSCADObject):
         OpenSCADObject.__init__(self, 'circle',
                                 {'r': r, 'd': d, 'segments': segments})
 
-
 class square(OpenSCADObject):
     '''
     Creates a square at the origin of the coordinate system. When center is
@@ -56,7 +53,6 @@ class square(OpenSCADObject):
     def __init__(self, size=None, center=None):
         OpenSCADObject.__init__(self, 'square',
                                 {'size': size, 'center': center})
-
 
 class sphere(OpenSCADObject):
     '''
@@ -76,7 +72,6 @@ class sphere(OpenSCADObject):
         OpenSCADObject.__init__(self, 'sphere',
                                 {'r': r, 'd': d, 'segments': segments})
 
-
 class cube(OpenSCADObject):
     '''
     Creates a cube at the origin of the coordinate system. When center is
@@ -93,7 +88,6 @@ class cube(OpenSCADObject):
     def __init__(self, size=None, center=None):
         OpenSCADObject.__init__(self, 'cube',
                                 {'size': size, 'center': center})
-
 
 class cylinder(OpenSCADObject):
     '''
@@ -135,7 +129,6 @@ class cylinder(OpenSCADObject):
                                  'd1': d1, 'd2': d2, 'center': center,
                                  'segments': segments})
 
-
 class polyhedron(OpenSCADObject):
     '''
     Create a polyhedron with a list of points and a list of faces. The point
@@ -159,7 +152,6 @@ class polyhedron(OpenSCADObject):
                                 {'points': points, 'faces': faces,
                                  'convexity': convexity,
                                  'triangles': triangles})
-
 
 class union(OpenSCADObject):
     '''
@@ -193,7 +185,6 @@ class intersection(OpenSCADObject):
         
         return new_int
 
-
 class difference(OpenSCADObject):
     '''
     Subtracts the 2nd (and all further) child nodes from the first one.
@@ -209,18 +200,15 @@ class difference(OpenSCADObject):
         
         return new_diff
 
-
 class hole(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'hole', {})
         self.set_hole(True)
 
-
 class part(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'part', {})
         self.set_part_root(True)
-
 
 class translate(OpenSCADObject):
     '''
@@ -232,7 +220,6 @@ class translate(OpenSCADObject):
     def __init__(self, v=None):
         OpenSCADObject.__init__(self, 'translate', {'v': v})
 
-
 class scale(OpenSCADObject):
     '''
     Scales its child elements using the specified vector.
@@ -242,7 +229,6 @@ class scale(OpenSCADObject):
     '''
     def __init__(self, v=None):
         OpenSCADObject.__init__(self, 'scale', {'v': v})
-
 
 class rotate(OpenSCADObject):
     '''
@@ -258,7 +244,6 @@ class rotate(OpenSCADObject):
     def __init__(self, a=None, v=None):
         OpenSCADObject.__init__(self, 'rotate', {'a': a, 'v': v})
 
-
 class mirror(OpenSCADObject):
     '''
     Mirrors the child element on a plane through the origin.
@@ -269,7 +254,6 @@ class mirror(OpenSCADObject):
     '''
     def __init__(self, v):
         OpenSCADObject.__init__(self, 'mirror', {'v': v})
-
 
 class resize(OpenSCADObject):
     '''
@@ -284,7 +268,6 @@ class resize(OpenSCADObject):
     def __init__(self, newsize, auto=None):
         OpenSCADObject.__init__(self, 'resize', {'newsize': newsize, 'auto': auto})
 
-
 class multmatrix(OpenSCADObject):
     '''
     Multiplies the geometry of all child elements with the given 4x4
@@ -295,7 +278,6 @@ class multmatrix(OpenSCADObject):
     '''
     def __init__(self, m):
         OpenSCADObject.__init__(self, 'multmatrix', {'m': m})
-
 
 class color(OpenSCADObject):
     '''
@@ -309,7 +291,6 @@ class color(OpenSCADObject):
     '''
     def __init__(self, c):
         OpenSCADObject.__init__(self, 'color', {'c': c})
-
 
 class minkowski(OpenSCADObject):
     '''
@@ -356,7 +337,6 @@ class hull(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'hull', {})
 
-
 class render(OpenSCADObject):
     '''
     Always calculate the CSG model for this tree (even in OpenCSG preview
@@ -367,7 +347,6 @@ class render(OpenSCADObject):
     '''
     def __init__(self, convexity=None):
         OpenSCADObject.__init__(self, 'render', {'convexity': convexity})
-
 
 class linear_extrude(OpenSCADObject):
     '''
@@ -401,7 +380,6 @@ class linear_extrude(OpenSCADObject):
                                  'convexity': convexity, 'twist': twist,
                                  'slices': slices, 'scale':scale})
 
-
 class rotate_extrude(OpenSCADObject):
     '''
     A rotational extrusion is a Linear Extrusion with a twist, literally.
@@ -431,7 +409,6 @@ class rotate_extrude(OpenSCADObject):
                                 {'angle': angle, 'segments': segments, 
                                  'convexity': convexity})
 
-
 class dxf_linear_extrude(OpenSCADObject):
     def __init__(self, file, layer=None, height=None, center=None,
                  convexity=None, twist=None, slices=None):
@@ -440,7 +417,6 @@ class dxf_linear_extrude(OpenSCADObject):
                                  'height': height, 'center': center,
                                  'convexity': convexity, 'twist': twist,
                                  'slices': slices})
-
 
 class projection(OpenSCADObject):
     '''
@@ -452,7 +428,6 @@ class projection(OpenSCADObject):
     '''
     def __init__(self, cut=None):
         OpenSCADObject.__init__(self, 'projection', {'cut': cut})
-
 
 class surface(OpenSCADObject):
     '''
@@ -474,7 +449,6 @@ class surface(OpenSCADObject):
         OpenSCADObject.__init__(self, 'surface',
                                 {'file': file, 'center': center,
                                  'convexity': convexity, 'invert': invert})
-
 
 class text(OpenSCADObject):
     '''
@@ -520,13 +494,11 @@ class text(OpenSCADObject):
                                  'language': language, 'script': script,
                                  'segments': segments})
 
-
 class child(OpenSCADObject):
     def __init__(self, index=None, vector=None, range=None):
         OpenSCADObject.__init__(self, 'child',
                                 {'index': index, 'vector': vector,
                                  'range': range})
-
 
 class children(OpenSCADObject):
     '''
@@ -547,20 +519,17 @@ class children(OpenSCADObject):
                                 {'index': index, 'vector': vector,
                                  'range': range})
 
-
 class import_stl(OpenSCADObject):
     def __init__(self, file, origin=(0, 0), convexity=None,layer=None):
         OpenSCADObject.__init__(self, 'import',
                                 {'file': file, 'origin': origin, 
                                 'convexity': convexity, 'layer': layer})
 
-
 class import_dxf(OpenSCADObject):
     def __init__(self, file, origin=(0, 0), convexity=None,layer=None):
         OpenSCADObject.__init__(self, 'import',
                                 {'file': file, 'origin': origin, 
                                 'convexity': convexity, 'layer': layer})
-
 
 class import_(OpenSCADObject):
     '''
@@ -578,7 +547,6 @@ class import_(OpenSCADObject):
                                 {'file': file, 'origin': origin, 
                                 'convexity': convexity, 'layer': layer})
 
-
 class intersection_for(OpenSCADObject):
     '''
     Iterate over the values in a vector or range and take an
@@ -586,7 +554,6 @@ class intersection_for(OpenSCADObject):
     '''
     def __init__(self, n):
         OpenSCADObject.__init__(self, 'intersection_for', {'n': n})
-
 
 class assign(OpenSCADObject):
     def __init__(self):
@@ -599,16 +566,13 @@ def debug(openscad_obj):
     openscad_obj.set_modifier("#")
     return openscad_obj
 
-
 def background(openscad_obj):
     openscad_obj.set_modifier("%")
     return openscad_obj
 
-
 def root(openscad_obj):
     openscad_obj.set_modifier("!")
     return openscad_obj
-
 
 def disable(openscad_obj):
     openscad_obj.set_modifier("*")
@@ -663,7 +627,6 @@ def import_scad(scad_filepath):
     namespace = namespace if scad_found else None
     return namespace
 
-
 # use() & include() mimic OpenSCAD's use/include mechanics.
 # -- use() makes methods in scad_file_path.scad available to
 #   be called.
@@ -711,11 +674,7 @@ def use(scad_file_path, use_not_include=True, dest_namespace_dict=None):
             msg = f"Unable to import SCAD module: `{classname}` from `{scad_file_path.name}`, with error: {e}"
             print(msg)
         
-        if 'solid' in dest_namespace_dict:
-            del dest_namespace_dict['solid']
-
     return True
-
 
 def include(scad_file_path):
     return use(scad_file_path, use_not_include=False)
