@@ -1,29 +1,35 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 import sys
-import os
+from pathlib import Path
 
 from solid import *
 
 # Import OpenSCAD code and call it from Python code.
-# The path given to use() (or include()) must be absolute or findable in
-# sys.path
+# The path given to use() or import_scad() must be absolute or findable in sys.path
 
+def demo_import_scad():
+    scad_path = Path(__file__).parent / 'scad_to_include.scad'
+    scad_mod = import_scad(scad_path)
+    a = scad_mod.steps(5)
+    return a
 
-def demo_scad_include():
+# The `use()` function mimics the bahavior of OpenSCAD's use()`
+def demo_scad_use():
     # scad_to_include.scad includes a module called steps()
-    scad_path = os.path.join(os.path.dirname(__file__), "scad_to_include.scad")
-    use(scad_path)  # could also use 'include', but that has side-effects;
-    # 'use' just imports without executing any of the imported code
-    return steps(5)
+    scad_path = Path(__file__).parent / 'scad_to_include.scad'
+    # `This adds the SCAD module `steps()` to the global namespace
+    use(scad_path)  
 
+    a = steps(5)
+    return a
 
 if __name__ == '__main__':
-    out_dir = sys.argv[1] if len(sys.argv) > 1 else os.curdir
-    file_out = os.path.join(out_dir, 'scad_include_example.scad')
+    this_file = Path(__file__)
+    out_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else this_file.parent
+    file_out = out_dir / this_file.with_suffix('.scad').name
+    a = demo_import_scad()
 
-    a = demo_scad_include()
-
-    print("%(__file__)s: SCAD file written to: \n%(file_out)s" % vars())
+    print(f"{__file__}: SCAD file written to: \n{file_out}")
 
     scad_render_to_file(a, file_out)
