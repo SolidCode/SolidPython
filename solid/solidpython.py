@@ -15,6 +15,7 @@ import regex as re
 import inspect
 import subprocess
 import tempfile
+from pathlib import Path
 
 # These are features added to SolidPython but NOT in OpenSCAD.
 # Mark them for special treatment
@@ -129,7 +130,7 @@ def scad_render_to_file(scad_object, filepath=None, file_header='', include_orig
 
 def _write_code_to_file(rendered_string, filepath=None, include_orig_code=True):
     try:
-        calling_file = os.path.abspath(calling_module(stack_depth=3).__file__)
+        calling_file = Path(calling_module(stack_depth=3).__file__).absolute()
 
         if include_orig_code:
             rendered_string += sp_code_in_scad_comment(calling_file)
@@ -139,27 +140,24 @@ def _write_code_to_file(rendered_string, filepath=None, include_orig_code=True):
         # If filepath isn't supplied, place a .scad file with the same name
         # as the calling module next to it
         if not filepath:
-            filepath = os.path.splitext(calling_file)[0] + '.scad'
+            filepath = filepath.with_ext('.scad')
     except AttributeError as e:
         # If no calling_file was found, this is being called from the terminal.
         # We can't read original code from a file, so don't try,
         # and can't read filename from the calling file either, so just save to
         # solid.scad.
         if not filepath:
-            filepath = os.path.abspath('.') + "/solid.scad"
+            filepath = Path().absolute() / 'solid.scad'
 
-    f = open(filepath, "w")
-    f.write(rendered_string)
-    f.close()
+    Path(filepath).write_text(rendered_string)
     return True
-
 
 def sp_code_in_scad_comment(calling_file):
     # Once a SCAD file has been created, it's difficult to reconstruct
     # how it got there, since it has no variables, modules, etc.  So, include
     # the Python code that generated the scad code as comments at the end of
     # the SCAD code
-    pyopenscad_str = open(calling_file, 'r').read()
+    pyopenscad_str = Path(calling_file).read_text()
 
     # TODO: optimally, this would also include a version number and
     # git hash (& date & github URL?) for the version of solidpython used
@@ -180,8 +178,7 @@ def sp_code_in_scad_comment(calling_file):
 # = Parsing =
 # ===========
 def extract_callable_signatures(scad_file_path):
-    with open(scad_file_path) as f:
-        scad_code_str = f.read()
+    scad_code_str = Path(scad_file_path).read_text()
     return parse_scad_callables(scad_code_str)
 
 def parse_scad_callables(scad_code_str):
@@ -276,19 +273,17 @@ def new_openscad_class_str(class_name, args=[], kwargs=[], include_file_path=Non
         args_pairs += "'%(kwarg)s':%(kwarg)s, " % vars()
 
     if include_file_path:
-        # include_file_path may include backslashes on Windows; escape them
-        # again here so any backslashes don't get used as escape characters
-        # themselves
-        include_file_path = include_file_path.replace('\\', '\\\\')
+        include_file_str = Path(include_file_path).as_posix()
 
         # NOTE the explicit import of 'solid' below. This is a fix for:
         # https://github.com/SolidCode/SolidPython/issues/20 -ETJ 16 Jan 2014
         result = ("import solid\n"
                   "class %(class_name)s(solid.IncludedOpenSCADObject):\n"
                   "   def __init__(self%(args_str)s, **kwargs):\n"
-                  "       solid.IncludedOpenSCADObject.__init__(self, '%(class_name)s', {%(args_pairs)s }, include_file_path='%(include_file_path)s', use_not_include=%(use_not_include)s, **kwargs )\n"
+                  "       solid.IncludedOpenSCADObject.__init__(self, '%(class_name)s', {%(args_pairs)s }, include_file_path='%(include_file_str)s', use_not_include=%(use_not_include)s, **kwargs )\n"
                   "   \n"
                   "\n" % vars())
+
     else:
         result = ("class %(class_name)s(OpenSCADObject):\n"
                   "   def __init__(self%(args_str)s):\n"
@@ -635,10 +630,8 @@ class IncludedOpenSCADObject(OpenSCADObject):
     def __init__(self, name, params, include_file_path, use_not_include=False, **kwargs):
         self.include_file_path = self._get_include_path(include_file_path)
 
-        if use_not_include:
-            self.include_string = 'use <%s>\n' % self.include_file_path
-        else:
-            self.include_string = 'include <%s>\n' % self.include_file_path
+        use_str = 'use' if use_not_include else 'include'
+        self.include_string = f'{use_str} <{self.include_file_path}>\n'
 
         # Just pass any extra arguments straight on to OpenSCAD; it'll accept
         # them
@@ -650,17 +643,18 @@ class IncludedOpenSCADObject(OpenSCADObject):
     def _get_include_path(self, include_file_path):
         # Look through sys.path for anyplace we can find a valid file ending
         # in include_file_path.  Return that absolute path
-        if os.path.isabs(include_file_path) and os.path.isfile(include_file_path):
-            return include_file_path
+        ifp = Path(include_file_path)
+        if ifp.is_absolute() and ifp.is_file():
+            return ifp
         else:
             for p in sys.path:
-                whole_path = os.path.join(p, include_file_path)
-                if os.path.isfile(whole_path):
-                    return os.path.abspath(whole_path)
+                path = Path(p)
+                whole_path = path / ifp
+                if whole_path.is_file():
+                    return whole_path.absolute()
 
         # No loadable SCAD file was found in sys.path.  Raise an error
-        raise ValueError("Unable to find included SCAD file: "
-                         "%(include_file_path)s in sys.path" % vars())
+        raise ValueError(f"Unable to find included SCAD file: {include_file_path} in sys.path")
 
 # now that we have the base class defined, we can do a circular import
 from . import objects
