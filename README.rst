@@ -159,7 +159,7 @@ Using SolidPython
 -  Alternately, you could call OpenSCAD's command line and render
    straight to STL.
 
-Including OpenSCAD code
+Importing OpenSCAD code
 =======================
 - Use ``solid.import_scad(path)`` to import OpenSCAD code.
 
