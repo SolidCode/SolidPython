@@ -88,7 +88,7 @@ def scad_render_animated(func_to_animate, steps=20, back_and_forth=True, filepat
     # should avoid any rounding error problems, and doesn't require the file
     # to be animated with an identical number of steps to the way it was
     # created. -ETJ 28 Mar 2013
-    scad_obj = func_to_animate()
+    scad_obj = func_to_animate(0)
     include_strings = _find_include_strings(scad_obj)
     # and render the string
     includes = ''.join(include_strings) + "\n"
@@ -109,7 +109,7 @@ def scad_render_animated(func_to_animate, steps=20, back_and_forth=True, filepat
                 eval_time = time * 2
             else:
                 eval_time = 2 - 2 * time
-        scad_obj = func_to_animate(_time=eval_time)
+        scad_obj = func_to_animate(eval_time)
 
         scad_str = indent(scad_obj._render())
         rendered_string += ("if ($t >= %(time)s && $t < %(end_time)s){"
