@@ -1095,9 +1095,9 @@ try:
             arc_objs.append(arc_obj)
 
         if remove_material:
-            poly = orig_poly - arc_objs
+            poly = orig_poly - arc_objs # type: ignore
         else:
-            poly = orig_poly + arc_objs
+            poly = orig_poly + arc_objs # type: ignore
 
         return poly
 
@@ -1180,7 +1180,7 @@ try:
         for i in range(end_cap_base + 1, len(polyhedron_pts) - 1):
             facet_indices.append( (end_cap_base, i + 1, i) )
 
-        return polyhedron(points=euc_to_arr(polyhedron_pts), faces=facet_indices)
+        return polyhedron(points=euc_to_arr(polyhedron_pts), faces=facet_indices) # type: ignore
 
 
 except Exception as e:

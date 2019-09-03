@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+from pathlib import Path
 
 import unittest
 import tempfile
@@ -76,8 +77,8 @@ class TestSolidPython(DiffOutput):
     # test cases will be dynamically added to this instance
 
     def expand_scad_path(self, filename):
-        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../')
-        return os.path.join(path, filename)
+        path = Path(__file__).absolute().parent.parent / filename
+        return path
 
     def test_infix_union(self):
         a = cube(2)
@@ -178,6 +179,16 @@ class TestSolidPython(DiffOutput):
         expected = "use <%s>\n\n\nsteps(howmany = 3);" % abs_path
         self.assertEqual(expected, actual)
 
+    def test_import_scad(self):
+        include_file = self.expand_scad_path("examples/scad_to_include.scad")
+        mod = import_scad(include_file)
+        a = mod.steps(3)
+        actual = scad_render(a)
+
+        abs_path = a._get_include_path(include_file)
+        expected = "use <%s>\n\n\nsteps(howmany = 3);" % abs_path
+        self.assertEqual(expected, actual)        
+
     def test_use_reserved_words(self):
         scad_str = '''module reserved_word_arg(or=3){\n\tcube(or);\n}\nmodule or(arg=3){\n\tcube(arg);\n}\n'''
 
@@ -213,8 +224,8 @@ class TestSolidPython(DiffOutput):
 
     def test_extra_args_to_included_scad(self):
         include_file = self.expand_scad_path("examples/scad_to_include.scad")
-        use(include_file)
-        a = steps(3, external_var=True)
+        mod = import_scad(include_file)
+        a = mod.steps(3, external_var=True)
         actual = scad_render(a)
 
         abs_path = a._get_include_path(include_file)
@@ -322,7 +333,9 @@ class TestSolidPython(DiffOutput):
         actual = tmp.contents
         expected = '\n\ncircle(r = 10);'
 
-        self.assertEqual(expected, actual)
+        # scad_render_to_file also adds a date & version stamp before scad code;
+        # That won't match here, so just make sure the correct code is at the end
+        self.assertTrue(actual.endswith(expected))
 
         # Header
         with TemporaryFileBuffer() as tmp:
@@ -332,7 +345,7 @@ class TestSolidPython(DiffOutput):
         actual = tmp.contents
         expected = '$fn = 24;\n\ncircle(r = 10);'
 
-        self.assertEqual(expected, actual)
+        self.assertTrue(actual.endswith(expected))
 
         # TODO: test include_orig_code=True, but that would have to
         # be done from a separate file, or include everything in this one

@@ -4,8 +4,12 @@ Classes for OpenSCAD builtins
 from .solidpython import OpenSCADObject
 from .solidpython import IncludedOpenSCADObject
 OScO = OpenSCADObject
+from pathlib import Path
 
 from typing import Sequence, Tuple, Union, Optional, Dict
+from types import SimpleNamespace
+
+PathStr = Union[Path, str]
 
 P2 = Tuple[float, float]
 P3 = Tuple[float, float, float]
@@ -40,7 +44,6 @@ class polygon(OpenSCADObject):
         OpenSCADObject.__init__(self, 'polygon',
                                 {'points': points, 'paths': paths})
 
-
 class circle(OpenSCADObject):
     '''
     Creates a circle at the origin of the coordinate system. The argument
@@ -58,7 +61,6 @@ class circle(OpenSCADObject):
     def __init__(self, r:float=None, d:float=None, segments:int=None):
         OpenSCADObject.__init__(self, 'circle',
                                 {'r': r, 'd': d, 'segments': segments})
-
 
 class square(OpenSCADObject):
     '''
@@ -81,7 +83,6 @@ class square(OpenSCADObject):
         OpenSCADObject.__init__(self, 'square',
                                 {'size': size, 'center': center})
 
-
 class sphere(OpenSCADObject):
     '''
     Creates a sphere at the origin of the coordinate system. The argument
@@ -99,7 +100,6 @@ class sphere(OpenSCADObject):
     def __init__(self, r:float = None, d:float=None, segments:int=None):
         OpenSCADObject.__init__(self, 'sphere',
                                 {'r': r, 'd': d, 'segments': segments})
-
 
 class cube(OpenSCADObject):
     '''
@@ -121,7 +121,6 @@ class cube(OpenSCADObject):
     def __init__(self, size:ScadSize = None, center:bool = None):
         OpenSCADObject.__init__(self, 'cube',
                                 {'size': size, 'center': center})
-
 
 class cylinder(OpenSCADObject):
     '''
@@ -168,7 +167,6 @@ class cylinder(OpenSCADObject):
                                  'd1': d1, 'd2': d2, 'center': center,
                                  'segments': segments})
 
-
 class polyhedron(OpenSCADObject):
     '''
     Create a polyhedron with a list of points and a list of faces. The point
@@ -202,7 +200,6 @@ class polyhedron(OpenSCADObject):
                                  'convexity': convexity,
                                  'triangles': triangles})
 
-
 class union(OpenSCADObject):
     '''
     Creates a union of all its child nodes. This is the **sum** of all
@@ -235,7 +232,6 @@ class intersection(OpenSCADObject):
         
         return new_int
 
-
 class difference(OpenSCADObject):
     '''
     Subtracts the 2nd (and all further) child nodes from the first one.
@@ -251,18 +247,15 @@ class difference(OpenSCADObject):
         
         return new_diff
 
-
 class hole(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'hole', {})
         self.set_hole(True)
 
-
 class part(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'part', {})
         self.set_part_root(True)
-
 
 class translate(OpenSCADObject):
     '''
@@ -274,7 +267,6 @@ class translate(OpenSCADObject):
     def __init__(self, v:P3=None):
         OpenSCADObject.__init__(self, 'translate', {'v': v})
 
-
 class scale(OpenSCADObject):
     '''
     Scales its child elements using the specified vector.
@@ -284,7 +276,6 @@ class scale(OpenSCADObject):
     '''
     def __init__(self, v:P3=None):
         OpenSCADObject.__init__(self, 'scale', {'v': v})
-
 
 class rotate(OpenSCADObject):
     '''
@@ -300,7 +291,6 @@ class rotate(OpenSCADObject):
     def __init__(self, a:Union[float, Vec3]=None, v:Vec3=None):
         OpenSCADObject.__init__(self, 'rotate', {'a': a, 'v': v})
 
-
 class mirror(OpenSCADObject):
     '''
     Mirrors the child element on a plane through the origin.
@@ -311,7 +301,6 @@ class mirror(OpenSCADObject):
     '''
     def __init__(self, v:Vec3):
         OpenSCADObject.__init__(self, 'mirror', {'v': v})
-
 
 class resize(OpenSCADObject):
     '''
@@ -326,7 +315,6 @@ class resize(OpenSCADObject):
     def __init__(self, newsize:Vec3, auto:Tuple[bool,bool,bool]=None):
         OpenSCADObject.__init__(self, 'resize', {'newsize': newsize, 'auto': auto})
 
-
 class multmatrix(OpenSCADObject):
     '''
     Multiplies the geometry of all child elements with the given 4x4
@@ -337,7 +325,6 @@ class multmatrix(OpenSCADObject):
     '''
     def __init__(self, m:Tuple[Vec4, Vec4, Vec4, Vec4]):
         OpenSCADObject.__init__(self, 'multmatrix', {'m': m})
-
 
 class color(OpenSCADObject):
     '''
@@ -351,7 +338,6 @@ class color(OpenSCADObject):
     '''
     def __init__(self, c:Vec34):
         OpenSCADObject.__init__(self, 'color', {'c': c})
-
 
 class minkowski(OpenSCADObject):
     '''
@@ -400,7 +386,6 @@ class hull(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'hull', {})
 
-
 class render(OpenSCADObject):
     '''
     Always calculate the CSG model for this tree (even in OpenCSG preview
@@ -411,7 +396,6 @@ class render(OpenSCADObject):
     '''
     def __init__(self, convexity:int=None):
         OpenSCADObject.__init__(self, 'render', {'convexity': convexity})
-
 
 class linear_extrude(OpenSCADObject):
     '''
@@ -450,7 +434,6 @@ class linear_extrude(OpenSCADObject):
                                  'convexity': convexity, 'twist': twist,
                                  'slices': slices, 'scale':scale})
 
-
 class rotate_extrude(OpenSCADObject):
     '''
     A rotational extrusion is a Linear Extrusion with a twist, literally.
@@ -485,7 +468,6 @@ class rotate_extrude(OpenSCADObject):
                                 {'angle': angle, 'segments': segments, 
                                  'convexity': convexity})
 
-
 class dxf_linear_extrude(OpenSCADObject):
     def __init__(self, file:str, layer:float = None, height:float=None, 
                  center:bool = None, convexity:int=None, twist:float=None, 
@@ -495,7 +477,6 @@ class dxf_linear_extrude(OpenSCADObject):
                                  'height': height, 'center': center,
                                  'convexity': convexity, 'twist': twist,
                                  'slices': slices})
-
 
 class projection(OpenSCADObject):
     '''
@@ -509,7 +490,6 @@ class projection(OpenSCADObject):
     '''
     def __init__(self, cut:bool=None):
         OpenSCADObject.__init__(self, 'projection', {'cut': cut})
-
 
 class surface(OpenSCADObject):
     '''
@@ -538,7 +518,6 @@ class surface(OpenSCADObject):
         OpenSCADObject.__init__(self, 'surface',
                                 {'file': file, 'center': center,
                                  'convexity': convexity, 'invert': invert})
-
 
 class text(OpenSCADObject):
     '''
@@ -598,13 +577,11 @@ class text(OpenSCADObject):
                                  'language': language, 'script': script,
                                  'segments': segments})
 
-
 class child(OpenSCADObject):
     def __init__(self, index:int=None, vector:Sequence[int] = None, range=None):
         OpenSCADObject.__init__(self, 'child',
                                 {'index': index, 'vector': vector,
                                  'range': range})
-
 
 class children(OpenSCADObject):
     '''
@@ -627,20 +604,17 @@ class children(OpenSCADObject):
                                 {'index': index, 'vector': vector,
                                  'range': range})
 
-
 class import_stl(OpenSCADObject):
     def __init__(self, file:str, origin:P2=(0, 0), convexity:int=None,layer:int = None):
         OpenSCADObject.__init__(self, 'import',
                                 {'file': file, 'origin': origin, 
                                 'convexity': convexity, 'layer': layer})
 
-
 class import_dxf(OpenSCADObject):
     def __init__(self, file, origin=(0, 0), convexity:int = None,layer:int = None):
         OpenSCADObject.__init__(self, 'import',
                                 {'file': file, 'origin': origin, 
                                 'convexity': convexity, 'layer': layer})
-
 
 class import_(OpenSCADObject):
     '''
@@ -661,7 +635,6 @@ class import_(OpenSCADObject):
                                 {'file': file, 'origin': origin, 
                                 'convexity': convexity, 'layer': layer})
 
-
 class intersection_for(OpenSCADObject):
     '''
     Iterate over the values in a vector or range and take an
@@ -669,7 +642,6 @@ class intersection_for(OpenSCADObject):
     '''
     def __init__(self, n:int):
         OpenSCADObject.__init__(self, 'intersection_for', {'n': n})
-
 
 class assign(OpenSCADObject):
     def __init__(self):
@@ -694,9 +666,51 @@ def disable(openscad_obj:OScO) -> OScO:
     openscad_obj.set_modifier("*")
     return openscad_obj
 
-# ===============
-# = Including OpenSCAD code =
-# ===============
+# ===========================
+# = IMPORTING OPENSCAD CODE =
+# ===========================
+def import_scad(scad_filepath:PathStr) -> Optional[SimpleNamespace]:
+    '''
+    import_scad() is the namespaced, more Pythonic way to import OpenSCAD code.
+    Return a python namespace containing all imported SCAD modules
+
+    If scad_filepath is a single .scad file, all modules will be imported,
+        e.g. 
+        motors = solid.import_scad('<PATH_TO/MCAD/motors.scad')
+        print(dir(motors)) # => [_stepper_motor_mount', 'stepper_motor_mount']
+
+    If scad_filepath is a directory, recursively import all scad files below
+        the directory and subdirectories within it.
+        e.g. 
+        mcad = solid.import_scad('<PATH_TO/MCAD')
+        dir(mcad) # => ['bearing', 'boxes', 'constants', 'curves',...]
+        dir(mcad.bearing) # => ['bearing', 'bearingDimensions', ...]
+    '''
+    scad = Path(scad_filepath)
+
+    namespace:Optional[SimpleNamespace] = SimpleNamespace()
+    scad_found = False
+    
+    if scad.is_file():
+        scad_found = True
+        use(scad.absolute().as_posix(), dest_namespace_dict=namespace.__dict__)
+    elif scad.is_dir():
+        for f in scad.glob('*.scad'):
+            subspace = import_scad(f.absolute().as_posix())
+            setattr(namespace, f.stem, subspace)
+            scad_found = True
+        
+        # recurse through subdirectories, adding namespaces only if they have
+        # valid scad code under them.
+        subdirs = list([d for d in scad.iterdir() if d.is_dir()])
+        for subd in subdirs:
+            subspace = import_scad(subd.absolute().as_posix())
+            if subspace is not None:
+                setattr(namespace, subd.stem, subspace)
+                scad_found = True
+
+    namespace = namespace if scad_found else None
+    return namespace
 
 # use() & include() mimic OpenSCAD's use/include mechanics.
 # -- use() makes methods in scad_file_path.scad available to
@@ -704,21 +718,23 @@ def disable(openscad_obj:OScO) -> OScO:
 # --include() makes those methods available AND executes all code in
 #   scad_file_path.scad, which may have side effects.
 #   Unless you have a specific need, call use().
-def use(scad_file_path:str, use_not_include:bool=True, dest_namespace_dict:Dict=None):
+def use(scad_file_path:PathStr, use_not_include:bool=True, dest_namespace_dict:Dict=None):
     '''
     Opens scad_file_path, parses it for all usable calls,
     and adds them to caller's namespace.
     '''
     # These functions in solidpython are used here and only here; don't pollute
     # the global namespace with them
+    from pathlib import Path
     from .solidpython import parse_scad_callables
     from .solidpython import new_openscad_class_str 
-    from .solidpython import calling_module    
+    from .solidpython import calling_module
+
+    scad_file_path = Path(scad_file_path)
     
     contents = None
     try:
-        with open(scad_file_path) as module:
-            contents = module.read()
+        contents = scad_file_path.read_text()
     except Exception as e:
         raise Exception("Failed to import SCAD module '%(scad_file_path)s' "
                         "with error: %(e)s " % vars())
@@ -730,14 +746,19 @@ def use(scad_file_path:str, use_not_include:bool=True, dest_namespace_dict:Dict=
 
     for sd in symbols_dicts:
         class_str = new_openscad_class_str(sd['name'], sd['args'], sd['kwargs'], 
-                                            scad_file_path, use_not_include)
+                                            scad_file_path.as_posix(), use_not_include)
         # If this is called from 'include', we have to look deeper in the stack
         # to find the right module to add the new class to.
         if dest_namespace_dict is None:
             stack_depth = 2 if use_not_include else 3
             dest_namespace_dict = calling_module(stack_depth).__dict__
-        exec(class_str, dest_namespace_dict)
-
+        try:
+            exec(class_str, dest_namespace_dict)
+        except Exception as e:
+            classname = sd['name']
+            msg = f"Unable to import SCAD module: `{classname}` from `{scad_file_path.name}`, with error: {e}"
+            print(msg)
+        
     return True
 
 def include(scad_file_path:str) -> bool:

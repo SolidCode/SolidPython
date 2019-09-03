@@ -12,6 +12,7 @@ SolidPython
 -  `Advantages <#advantages>`__
 -  `Installing SolidPython <#installing-solidpython>`__
 -  `Using SolidPython <#using-solidpython>`__
+-  `Importing OpenSCAD Code <#importing-openscad-code>`__
 -  `Example Code <#example-code>`__
 -  `Extra syntactic sugar <#extra-syntactic-sugar>`__
 
@@ -25,7 +26,6 @@ SolidPython
    -  `Directions: (up, down, left, right, forward, back) for arranging
       things: <#directions-up-down-left-right-forward-back-for-arranging-things>`__
    -  `Arcs <#arcs>`__
-   -  `Offsets <#offsets>`__
    -  `Extrude Along Path <#extrude_along_path>`__
    -  `Basic color library <#basic-color-library>`__
    -  `Bill Of Materials <#bill-of-materials>`__
@@ -34,8 +34,6 @@ SolidPython
 -  `Jupyter Renderer <#jupyter-renderer>`__
 -  `Contact <#contact>`__
 -  `License <#license>`__
-
-**Table of Contents** generated with `DocToc <http://doctoc.herokuapp.com/>`__
 
 SolidPython: OpenSCAD for Python
 ================================
@@ -111,28 +109,10 @@ Installing SolidPython
        pip install solidpython
 
    (You may need to use ``sudo pip install solidpython``, depending on
-   your environment. This is commonly discouraged though.)
+   your environment. This is commonly discouraged though. You'll be happiest 
+   working in a `virtual environnment <https://docs.python.org/3/tutorial/venv.html>`__ 
+   where you can easily control dependencies for a given project)
 
--  **OR:** Download SolidPython (Click
-   `here <https://github.com/SolidCode/SolidPython/archive/master.zip>`__
-   to download directly, or use git to pull it all down)
-
-   (Note that SolidPython also depends on the
-   `PyEuclid <http://pypi.python.org/pypi/euclid3>`__ Vector math
-   library, installable via ``pip install euclid3``)
-
-   -  Unzip the file, probably in ~/Downloads/SolidPython-master
-   -  In a terminal, cd to location of file:
-
-      ::
-
-          cd ~/Downloads/SolidPython-master
-
-   -  Run the install script:
-
-      ::
-
-          python setup.py install
 
 Using SolidPython
 =================
@@ -141,14 +121,16 @@ Using SolidPython
 
    ::
 
-       from solid import *
-       from solid.utils import *  # Not required, but the utils module is useful
+        from solid import *
+        from solid.utils import *  # Not required, but the utils module is useful
 
--  To include other scad code, call ``use("/path/to/scadfile.scad")`` or
-   ``include("/path/to/scadfile.scad")``. This is identical to what you
-   would do in OpenSCAD.
+   (See `this issue <https://github.com/SolidCode/SolidPython/issues/114>`__ for 
+   a discussion of other import styles
+
 -  OpenSCAD uses curly-brace blocks ({}) to create its tree. SolidPython
-   uses parentheses with comma-delimited lists. **OpenSCAD:**
+   uses parentheses with comma-delimited lists. 
+   
+   **OpenSCAD:**
 
    ::
 
@@ -168,14 +150,71 @@ Using SolidPython
 
 -  Call ``scad_render(py_scad_obj)`` to generate SCAD code. This returns
    a string of valid OpenSCAD code.
--  *or*: call ``scad_render_to_file(py_scad_obj, filepath)`` to store
+-  *or*: call ``scad_render_to_file(py_scad_obj, filepath.scad)`` to store
    that code in a file.
--  If 'filepath' is open in the OpenSCAD IDE and Design => 'Automatic
-   Reload and Compile' is checked (in the OpenSCAD IDE), calling
+-  If ``filepath.scad`` is open in the OpenSCAD IDE and Design => 'Automatic
+   Reload and Compile' is checked in the OpenSCAD IDE, running
    ``scad_render_to_file()`` from Python will load the object in the
    IDE.
 -  Alternately, you could call OpenSCAD's command line and render
    straight to STL.
+
+Including OpenSCAD code
+=======================
+- Use ``solid.import_scad(path)`` to import OpenSCAD code.
+
+**Ex:** 
+
+``scadfile.scad``
+:: 
+
+    module box(w,h,d){
+        cube([w,h,d]);
+    }
+
+``your_file.py``
+::
+
+    from solid import *
+
+    scadfile = import_scad('/path/to/scadfile.scad') 
+    b = scadfile.box(2,4,6)
+    scad_render_to_file(b, 'out_file.scad')
+
+- Recursively import OpenSCAD code by calling ``import_scad()`` with a directory argument.
+
+::
+
+    from solid import *
+
+    # MCAD is OpenSCAD's most common utility library: https://github.com/openscad/MCAD
+    mcad = import_scad('/path/to/MCAD')
+
+    # MCAD contains about 15 separate packages, each included as its own namespace
+    print(dir(mcad)) # => ['bearing', 'bitmap', 'boxes', etc...]
+    mount = mcad.motors.stepper_motor_mount(nema_standard=17)
+    scad_render_to_file(mount, 'motor_mount_file.scad')
+
+- OpenSCAD has the ``use()`` and ``include()`` statements for importing SCAD code, and SolidPython has them, too. They pollute the global namespace, though, and you may have better luck with ``import_scad()``,
+
+**Ex:**
+``scadfile.scad``
+:: 
+
+    module box(w,h,d){
+        cube([w,h,d]);
+    }
+
+``your_file.py``
+::
+
+    from solid import *
+
+    # use() puts the module `box()` into the global namespace
+    use('/path/to/scadfile.scad') 
+    b = box(2,4,6)
+    scad_render_to_file(b, 'out_file.scad')
+
 
 Example Code
 ============
@@ -186,7 +225,7 @@ Python will print(the location of ) the examples directory:
 
 ::
 
-        import os, solid; print(os.path.dirname(solid.__file__) + '/examples')
+    import os, solid; print(os.path.dirname(solid.__file__) + '/examples')
         
 
 Or browse the example code on Github
@@ -324,21 +363,6 @@ draws an arc of radius 10 counterclockwise from 90 to 210 degrees.
 draws the portion of a 10x10 square NOT in a 90 degree circle of radius
 10. This is the shape you need to add to make fillets or remove to make
 rounds.
-
-Offsets
--------
-
-To offset a set of points in one direction or another (inside or outside
-a closed figure, for example) use
-``solid.utils.offset_points(point_arr, offset, inside=True)``
-
-Note that, for a non-convex figure, inside and outside may be
-non-intuitive. The simple solution is to manually check that your offset
-is going in the direction you intend, and change the boolean value of
-``inside`` if you're not happy.
-
-See the code for futher explanation. Improvements on the inside/outside
-algorithm would be welcome.
 
 Extrude Along Path
 ------------------
