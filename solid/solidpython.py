@@ -43,7 +43,6 @@ def _find_include_strings(obj):
         include_strings.update(_find_include_strings(child))
     return include_strings
 
-
 def scad_render(scad_object, file_header=''):
     # Make this object the root of the tree
     root = scad_object
@@ -56,7 +55,6 @@ def scad_render(scad_object, file_header=''):
     includes = ''.join(include_strings) + "\n"
     scad_body = root._render()
     return file_header + includes + scad_body
-
 
 def scad_render_animated(func_to_animate, steps=20, back_and_forth=True, filepath=None, file_header=''):
     # func_to_animate takes a single float argument, _time in [0, 1), and
@@ -117,13 +115,11 @@ def scad_render_animated(func_to_animate, steps=20, back_and_forth=True, filepat
                             "}\n" % vars())
     return rendered_string
 
-
 def scad_render_animated_file(func_to_animate, steps=20, back_and_forth=True, 
                               filepath=None, file_header='', include_orig_code=True):
     rendered_string = scad_render_animated(func_to_animate, steps, 
                                             back_and_forth, file_header)
     return _write_code_to_file(rendered_string, filepath, include_orig_code)
-
 
 def scad_render_to_file(scad_object, filepath=None, file_header='', include_orig_code=True):
 
@@ -134,7 +130,6 @@ def scad_render_to_file(scad_object, filepath=None, file_header='', include_orig
 
     rendered_string = scad_render(scad_object, header)
     return _write_code_to_file(rendered_string, filepath, include_orig_code)
-
 
 def _write_code_to_file(rendered_string, filepath=None, include_orig_code=True):
     try:
@@ -148,7 +143,7 @@ def _write_code_to_file(rendered_string, filepath=None, include_orig_code=True):
         # If filepath isn't supplied, place a .scad file with the same name
         # as the calling module next to it
         if not filepath:
-            filepath = filepath.with_ext('.scad')
+            filepath = calling_file.with_suffix('.scad')
     except AttributeError as e:
         # If no calling_file was found, this is being called from the terminal.
         # We can't read original code from a file, so don't try,
@@ -156,10 +151,8 @@ def _write_code_to_file(rendered_string, filepath=None, include_orig_code=True):
         # solid.scad.
         if not filepath:
             filepath = Path().absolute() / 'solid.scad'
-
     Path(filepath).write_text(rendered_string)
-    return True
-
+    return filepath
 
 def _get_version():
     # Returns SolidPython version
@@ -180,7 +173,6 @@ def _get_version():
             return version_match.group(1)
 
     raise RuntimeError("Unable to determine software version.")
-
 
 def sp_code_in_scad_comment(calling_file):
     # Once a SCAD file has been created, it's difficult to reconstruct
@@ -338,7 +330,6 @@ def _unsubbed_keyword(subbed_keyword):
     # No-op for all other strings: e.g. 'or_' => 'or', 'other_' => 'other_'
     shortened = subbed_keyword[:-1]
     return shortened if shortened in PYTHON_ONLY_RESERVED_WORDS else subbed_keyword
-
 
 # =========================
 # = Internal Utilities    =
@@ -710,7 +701,6 @@ def py2openscad(o):
         s += "]"
         return s
     return str(o)
-
 
 def indent(s):
     return s.replace("\n", "\n\t")
