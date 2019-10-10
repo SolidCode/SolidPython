@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "solidpython"
-version = "0.4.2"
+version = "0.4.3"
 description = "Python interface to the OpenSCAD declarative geometry language"
 authors = ["Evan Jones <evan_t_jones@mac.com>"]
 url="https://github.com/SolidCode/SolidPython"
@@ -9,7 +9,6 @@ license = "LGPL-2.1"
 
 classifiers=[
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Development Status :: 4 - Beta",
     "Environment :: Other Environment",
@@ -24,7 +23,7 @@ packages=[
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.6"
+python = ">=3.7"
 euclid3 = "^0.1.0"
 pypng = "^0.0.19"
 PrettyTable = "=0.7.2"
