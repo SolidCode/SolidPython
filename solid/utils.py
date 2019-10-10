@@ -15,7 +15,6 @@ from solid import difference, intersection, multmatrix
 
 from solid import OpenSCADObject, P2, P3, P4, Vec3 , Vec4, Vec34, P3s, P23
 from solid import Points, Indexes, ScadSize
-OSC_OB = OpenSCADObject
 
 from typing import Union, Tuple, Sequence, List, Optional, Callable
 
@@ -73,7 +72,7 @@ def radians(x_degrees:float):
 # ==============
 # = Grid Plane =
 # ==============
-def grid_plane(grid_unit:int=12, count:int=10, line_weight:float=0.1, plane:str='xz') -> OSC_OB:
+def grid_plane(grid_unit:int=12, count:int=10, line_weight:float=0.1, plane:str='xz') -> OpenSCADObject:
 
     # Draws a grid of thin lines in the specified plane.  Helpful for
     # reference during debugging.
@@ -103,8 +102,9 @@ def grid_plane(grid_unit:int=12, count:int=10, line_weight:float=0.1, plane:str=
     return t
 
 
-def distribute_in_grid(objects:Sequence[OSC_OB], max_bounding_box:Tuple[float,float], 
-    rows_and_cols: Tuple[int,int]=None) -> OSC_OB:
+def distribute_in_grid(objects:Sequence[OpenSCADObject], 
+                       max_bounding_box:Tuple[float,float], 
+                       rows_and_cols: Tuple[int,int]=None) -> OpenSCADObject:
     # Translate each object in objects in a grid with each cell of size
     # max_bounding_box.
     #
@@ -147,62 +147,64 @@ def distribute_in_grid(objects:Sequence[OSC_OB], max_bounding_box:Tuple[float,fl
 # ==============
 
 
-def up(z:float) -> OSC_OB:
+def up(z:float) -> OpenSCADObject:
     return translate((0, 0, z))
 
 
-def down(z: float) -> OSC_OB:
+def down(z: float) -> OpenSCADObject:
     return translate((0, 0, -z))
 
 
-def right(x: float) -> OSC_OB:
+def right(x: float) -> OpenSCADObject:
     return translate((x, 0, 0))
 
 
-def left(x: float) -> OSC_OB:
+def left(x: float) -> OpenSCADObject:
     return translate((-x, 0, 0))
 
 
-def forward(y: float) -> OSC_OB:
+def forward(y: float) -> OpenSCADObject:
     return translate((0, y, 0))
 
 
-def back(y: float) -> OSC_OB:
+def back(y: float) -> OpenSCADObject:
     return translate((0, -y, 0))
 
 
 # ===========================
 # = Box-alignment rotations =
 # ===========================
-def rot_z_to_up(obj:OSC_OB) -> OSC_OB:
+def rot_z_to_up(obj:OpenSCADObject) -> OpenSCADObject:
     # NOTE: Null op
     return rotate(a=0, v=FORWARD_VEC)(obj)
 
 
-def rot_z_to_down(obj:OSC_OB) -> OSC_OB:
+def rot_z_to_down(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=180, v=FORWARD_VEC)(obj)
 
 
-def rot_z_to_right(obj:OSC_OB) -> OSC_OB:
+def rot_z_to_right(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=90, v=FORWARD_VEC)(obj)
 
 
-def rot_z_to_left(obj:OSC_OB) -> OSC_OB:
+def rot_z_to_left(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=-90, v=FORWARD_VEC)(obj)
 
 
-def rot_z_to_forward(obj:OSC_OB) -> OSC_OB:
+def rot_z_to_forward(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=-90, v=RIGHT_VEC)(obj)
 
 
-def rot_z_to_back(obj:OSC_OB) -> OSC_OB:
+def rot_z_to_back(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=90, v=RIGHT_VEC)(obj)
 
 
 # ================================
 # = Box-aligment and translation =
 # ================================
-def box_align(obj:OSC_OB, direction_func:Callable[[float], OSC_OB]=up, distance:float=0) -> OSC_OB:
+def box_align(obj:OpenSCADObject, 
+              direction_func:Callable[[float], OpenSCADObject]=up, 
+              distance:float=0) -> OpenSCADObject:
     # Given a box side (up, left, etc) and a distance,
     # rotate obj (assumed to be facing up) in the
     # correct direction and move it distance in that
@@ -225,27 +227,27 @@ def box_align(obj:OSC_OB, direction_func:Callable[[float], OSC_OB]=up, distance:
 # =======================
 
 
-def rot_z_to_x(obj:OSC_OB) -> OSC_OB:
+def rot_z_to_x(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=90, v=FORWARD_VEC)(obj)
 
 
-def rot_z_to_neg_x(obj:OSC_OB) -> OSC_OB:
+def rot_z_to_neg_x(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=-90, v=FORWARD_VEC)(obj)
 
 
-def rot_z_to_neg_y(obj:OSC_OB) -> OSC_OB:
+def rot_z_to_neg_y(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=90, v=RIGHT_VEC)(obj)
 
 
-def rot_z_to_y(obj:OSC_OB) -> OSC_OB:
+def rot_z_to_y(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=-90, v=RIGHT_VEC)(obj)
 
 
-def rot_x_to_y(obj:OSC_OB) -> OSC_OB:
+def rot_x_to_y(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=90, v=UP_VEC)(obj)
 
 
-def rot_x_to_neg_y(obj:OSC_OB) -> OSC_OB:
+def rot_x_to_neg_y(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=-90, v=UP_VEC)(obj)
 
 # =======
@@ -253,7 +255,7 @@ def rot_x_to_neg_y(obj:OSC_OB) -> OSC_OB:
 # =======
 
 
-def arc(rad:float, start_degrees:float, end_degrees:float, segments:int=None) -> OSC_OB:
+def arc(rad:float, start_degrees:float, end_degrees:float, segments:int=None) -> OpenSCADObject:
     # Note: the circle that this arc is drawn from gets segments,
     # not the arc itself.  That means a quarter-circle arc will
     # have segments/4 segments.
@@ -282,7 +284,7 @@ def arc(rad:float, start_degrees:float, end_degrees:float, segments:int=None) ->
     return ret
 
 
-def arc_inverted(rad:float, start_degrees:float, end_degrees:float, segments:int=None) -> OSC_OB:
+def arc_inverted(rad:float, start_degrees:float, end_degrees:float, segments:int=None) -> OpenSCADObject:
     # Return the segment of an arc *outside* the circle of radius rad,
     # bounded by two tangents to the circle.  This is the shape
     # needed for fillets.
@@ -768,7 +770,7 @@ try:
             result = euc_obj_or_list # type: ignore
         return result
 
-    def is_scad(obj:OSC_OB) -> bool:
+    def is_scad(obj:OpenSCADObject) -> bool:
         return isinstance(obj, OpenSCADObject)
 
     def scad_matrix(euclid_matrix4):
@@ -1026,7 +1028,9 @@ try:
         return start_degrees - epsilon_degrees, end_degrees + epsilon_degrees
 
     def fillet_2d(three_point_sets:Sequence[Tuple[Point2, Point2, Point2]], 
-                  orig_poly:OSC_OB, fillet_rad:float, remove_material:bool=True) -> OSC_OB:
+                  orig_poly:OpenSCADObject, 
+                  fillet_rad:float, 
+                  remove_material:bool=True) -> OpenSCADObject:
         # NOTE: three_point_sets must be a list of sets of three points
         # (i.e., a list of 3-tuples of points), even if only one fillet is being done:
         # e.g.  [[a, b, c]]
@@ -1105,7 +1109,9 @@ try:
     # = Extrusion along a path =
     # = ---------------------- =
     # Possible: twist
-    def extrude_along_path(shape_pts:Points, path_pts:Points, scale_factors:Sequence[float]=None) -> OSC_OB:
+    def extrude_along_path(shape_pts:Points, 
+                           path_pts:Points, 
+                           scale_factors:Sequence[float]=None) -> OpenSCADObject:
         # Extrude the convex curve defined by shape_pts along path_pts.
         # -- For predictable results, shape_pts must be planar, convex, and lie
         # in the XY plane centered around the origin.
@@ -1254,7 +1260,7 @@ def frange(*args):
 # =====================
 
 
-def obj_tree_str(sp_obj:OSC_OB, vars_to_print:Sequence[str]=None) -> str:
+def obj_tree_str(sp_obj:OpenSCADObject, vars_to_print:Sequence[str]=None) -> str:
     # For debugging.  This prints a string of all of an object's
     # children, with whatever attributes are specified in vars_to_print
 

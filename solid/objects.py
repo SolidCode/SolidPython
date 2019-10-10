@@ -3,7 +3,6 @@ Classes for OpenSCAD builtins
 """
 from .solidpython import OpenSCADObject
 from .solidpython import IncludedOpenSCADObject
-OScO = OpenSCADObject
 from pathlib import Path
 
 from typing import Sequence, Tuple, Union, Optional, Dict
@@ -22,7 +21,7 @@ P23 = Union[P2, P3]
 Points = Sequence[P23]
 Indexes = Union[Sequence[int], Sequence[Sequence[int]]]
 ScadSize = Union[int, Sequence[float]]
-OScOPlus = Union[OScO, Sequence[OScO]]
+OpenSCADObjectPlus = Union[OpenSCADObject, Sequence[OpenSCADObject]]
 
 class polygon(OpenSCADObject):
     '''
@@ -208,7 +207,7 @@ class union(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'union', {})
 
-    def __add__(self, x:OScOPlus) -> OScO:
+    def __add__(self, x:OpenSCADObjectPlus) -> OpenSCADObject:
         new_union = union()
         for child in self.children:
             new_union.add(child)
@@ -224,7 +223,7 @@ class intersection(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'intersection', {})
 
-    def __mul__(self, x:OScOPlus) -> OScO:
+    def __mul__(self, x:OpenSCADObjectPlus) -> OpenSCADObject:
         new_int = intersection()
         for child in self.children:
             new_int.add(child)
@@ -239,7 +238,7 @@ class difference(OpenSCADObject):
     def __init__(self):
         OpenSCADObject.__init__(self, 'difference', {})
 
-    def __sub__(self,x:OScOPlus) -> OScO:
+    def __sub__(self,x:OpenSCADObjectPlus) -> OpenSCADObject:
         new_diff = difference()
         for child in self.children:
             new_diff.add(child)
@@ -650,19 +649,19 @@ class assign(OpenSCADObject):
 # ================================
 # = Modifier Convenience Methods =
 # ================================
-def debug(openscad_obj:OScO) -> OScO:
+def debug(openscad_obj:OpenSCADObject) -> OpenSCADObject:
     openscad_obj.set_modifier("#")
     return openscad_obj
 
-def background(openscad_obj:OScO) -> OScO:
+def background(openscad_obj:OpenSCADObject) -> OpenSCADObject:
     openscad_obj.set_modifier("%")
     return openscad_obj
 
-def root(openscad_obj:OScO) -> OScO:
+def root(openscad_obj:OpenSCADObject) -> OpenSCADObject:
     openscad_obj.set_modifier("!")
     return openscad_obj
 
-def disable(openscad_obj:OScO) -> OScO:
+def disable(openscad_obj:OpenSCADObject) -> OpenSCADObject:
     openscad_obj.set_modifier("*")
     return openscad_obj
 
