@@ -35,6 +35,7 @@ PYTHON_ONLY_RESERVED_WORDS = [
     'try','True','def','from','nonlocal','while','and','del','global','not',
     'with','as','elif','or','yield','assert','pass', 'break','except','in','raise',
 ]
+
 # =========================
 # = Internal Utilities    =
 # =========================
@@ -355,10 +356,8 @@ class IncludedOpenSCADObject(OpenSCADObject):
     def __init__(self, name, params, include_file_path, use_not_include=False, **kwargs):
         self.include_file_path = self._get_include_path(include_file_path)
 
-        if use_not_include:
-            self.include_string = 'use <%s>\n' % self.include_file_path
-        else:
-            self.include_string = 'include <%s>\n' % self.include_file_path
+        use_str = 'use' if use_not_include else 'include'
+        self.include_string = f'{use_str} <{self.include_file_path}>\n'
 
         # Just pass any extra arguments straight on to OpenSCAD; it'll accept
         # them
