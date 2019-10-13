@@ -1,13 +1,12 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
-from __future__ import division
 import os
 import sys
+from math import cos, radians, sin
 
-# Assumes SolidPython is in site-packages or elsewhwere in sys.path
-from solid import *
-from solid.utils import *
-from math import sin, cos, radians, degrees
+from euclid3 import Point3
+
+from solid import scad_render_to_file
+from solid.utils import extrude_along_path
 
 SEGMENTS = 48
 

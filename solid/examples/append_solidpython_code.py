@@ -3,8 +3,9 @@
 import os
 import sys
 
-from solid import *
-from solid.utils import *
+from solid import scad_render_to_file
+from solid.objects import cylinder
+from solid.utils import up
 
 SEGMENTS = 48
 

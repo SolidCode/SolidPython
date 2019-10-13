@@ -21,8 +21,10 @@
 import os
 import sys
 
-from solid import *
-from solid.utils import *
+from solid import scad_render_to_file
+from solid.objects import cube, cylinder, difference, translate, union
+from solid.utils import EPSILON
+from solid.utils import bill_of_materials, bom_part, set_bom_headers
 
 head_rad = 2.65
 head_height = 2.8

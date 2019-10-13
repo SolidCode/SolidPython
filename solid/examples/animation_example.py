@@ -1,12 +1,12 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
-from __future__ import division
+
 import os
 import sys
+from math import cos, sin
 
-from solid import *
-from solid.utils import *
-from math import sin, cos, radians, degrees
+from solid import scad_render_animated_file
+from solid.objects import square, translate
+
 
 def my_animate(_time=0):
     # _time will range from 0 to 1, not including 1

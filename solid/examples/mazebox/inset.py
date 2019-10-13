@@ -1,6 +1,4 @@
-from math import *
-from trianglemath import *
-
+from math import sqrt
 
 class Vec2D:
 

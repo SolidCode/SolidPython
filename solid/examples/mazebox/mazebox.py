@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 
 #   A-Mazing Box, http://www.thingiverse.com/thing:1481
 #   Copyright (C) 2009    Philipp Tiefenbacher <wizards23@gmail.com>
@@ -7,15 +6,16 @@
 #   With further changes for clarity, 25 September 2018
 #
 
-import sys
 import os
-
-from math import *
-from solid import *
+import sys
+from math import cos, pi, sin
 
 import png
-from inset import *
-from trianglemath import *
+
+from solid import scad_render_to_file
+from solid.objects import cylinder, difference, intersection, polyhedron, sphere, translate, union
+from .inset import insetPoly
+from .trianglemath import Tripple2Vec3D, angleBetweenPlanes
 
 SEGMENTS = 48
 

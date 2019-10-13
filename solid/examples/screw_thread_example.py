@@ -1,12 +1,11 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
-from __future__ import division
+
 import os
 import sys
 
-from solid import *
-from solid.utils import *
+from solid import scad_render_to_file
 from solid import screw_thread
+from solid.objects import cylinder
 
 SEGMENTS = 48
 

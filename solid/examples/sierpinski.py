@@ -1,13 +1,12 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
+import math
 import os
+import random
 import sys
 
-from solid import *
-from solid.utils import *
+from solid import scad_render_to_file
+from solid.objects import cube, polyhedron, translate, union
 
-import random
-import math
 
 # =========================================================
 # = A basic recursive Sierpinski's gasket implementation,

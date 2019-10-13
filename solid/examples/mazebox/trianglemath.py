@@ -1,4 +1,4 @@
-from math import *
+from math import acos, atan2, pi, sqrt
 
 
 def Tripple2Vec3D(t):
