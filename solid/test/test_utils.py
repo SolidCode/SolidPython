@@ -116,12 +116,12 @@ def read_test_tuple(test_tuple):
     if len(test_tuple) == 3:
         # If test name not supplied, create it programmatically
         func, args, expected = test_tuple
-        test_name = 'test_%s' % func.__name__
+        test_name = f'test_{func.__name__}'
     elif len(test_tuple) == 4:
         test_name, func, args, expected = test_tuple
-        test_name = 'test_%s' % test_name
+        test_name = f'test_{test_name}'
     else:
-        print("test_tuple has %d args :%s" % (len(test_tuple), test_tuple))
+        print(f"test_tuple has {len(test_tuple):d} args :{test_tuple}")
     return test_name, func, args, expected
 
 

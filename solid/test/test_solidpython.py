@@ -177,7 +177,7 @@ class TestSolidPython(DiffOutput):
         actual = scad_render(a)
 
         abs_path = a._get_include_path(include_file)
-        expected = "use <%s>\n\n\nsteps(howmany = 3);" % abs_path
+        expected = f"use <{abs_path}>\n\n\nsteps(howmany = 3);"
         self.assertEqual(expected, actual)
 
     def test_import_scad(self):
@@ -187,7 +187,7 @@ class TestSolidPython(DiffOutput):
         actual = scad_render(a)
 
         abs_path = a._get_include_path(include_file)
-        expected = "use <%s>\n\n\nsteps(howmany = 3);" % abs_path
+        expected = f"use <{abs_path}>\n\n\nsteps(howmany = 3);"
         self.assertEqual(expected, actual)
 
     def test_use_reserved_words(self):
@@ -202,12 +202,12 @@ class TestSolidPython(DiffOutput):
             use(path)
             a = reserved_word_arg(or_=5)
             actual = scad_render(a)
-            expected = "use <%s>\n\n\nreserved_word_arg(or = 5);" % path;
+            expected = f"use <{path}>\n\n\nreserved_word_arg(or = 5);"
             self.assertEqual(expected, actual)
 
             b = or_(arg=5)
             actual = scad_render(b)
-            expected = "use <%s>\n\n\nor(arg = 5);" % path;
+            expected = f"use <{path}>\n\n\nor(arg = 5);"
             self.assertEqual(expected, actual)
         finally:
             os.remove(path)
@@ -220,7 +220,7 @@ class TestSolidPython(DiffOutput):
 
         actual = scad_render(a)
         abs_path = a._get_include_path(include_file)
-        expected = "include <%s>\n\n\nsteps(howmany = 3);" % abs_path
+        expected = f"include <{abs_path}>\n\n\nsteps(howmany = 3);"
         self.assertEqual(expected, actual)
 
     def test_extra_args_to_included_scad(self):
@@ -230,7 +230,7 @@ class TestSolidPython(DiffOutput):
         actual = scad_render(a)
 
         abs_path = a._get_include_path(include_file)
-        expected = "use <%s>\n\n\nsteps(external_var = true, howmany = 3);" % abs_path
+        expected = f"use <{abs_path}>\n\n\nsteps(external_var = true, howmany = 3);"
         self.assertEqual(expected, actual)
 
     def test_background(self):
@@ -380,7 +380,7 @@ class TestSolidPython(DiffOutput):
         for iterable in iterables:
             name = type(iterable).__name__
             actual = scad_render(cube(size=iterable))
-            self.assertEqual(expected, actual, '%s SolidPython not rendered correctly' % name)
+            self.assertEqual(expected, actual, f'{name} SolidPython not rendered correctly')
 
 
 def single_test(test_dict):
@@ -389,9 +389,9 @@ def single_test(test_dict):
     def test(self):
         call_str = name + "("
         for k, v in args.items():
-            call_str += "%s=%s, " % (k, v)
+            call_str += f"{k}={v}, "
         for k, v in kwargs.items():
-            call_str += "%s=%s, " % (k, v)
+            call_str += f"{k}={v}, "
         call_str += ')'
 
         scad_obj = eval(call_str)
@@ -405,7 +405,7 @@ def single_test(test_dict):
 def generate_cases_from_templates():
     for test_dict in scad_test_case_templates:
         test = single_test(test_dict)
-        test_name = "test_%(name)s" % test_dict
+        test_name = "test_{name}".format(test_dict)
         setattr(TestSolidPython, test_name, test)
 
 
