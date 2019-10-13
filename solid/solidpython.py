@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 
 #    Simple Python OpenSCAD Code Generator
 #    Copyright (C) 2009    Philipp Tiefenbacher <wizards23@gmail.com>
@@ -7,7 +6,6 @@
 #
 #   License: LGPL 2.1 or later
 #
-from __future__ import annotations
 
 
 import datetime
