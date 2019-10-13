@@ -389,7 +389,7 @@ class IncludedOpenSCADObject(OpenSCADObject):
 # =========================================
 # = Rendering Python code to OpenSCAD code=
 # =========================================
-def _find_include_strings(obj: OpenSCADObject) -> Set[str]:
+def _find_include_strings(obj: Union[IncludedOpenSCADObject, OpenSCADObject]) -> Set[str]:
     include_strings = set()
     if isinstance(obj, IncludedOpenSCADObject):
         include_strings.add(obj.include_string)
