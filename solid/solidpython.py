@@ -383,8 +383,7 @@ class IncludedOpenSCADObject(OpenSCADObject):
                     return os.path.abspath(whole_path)
 
         # No loadable SCAD file was found in sys.path.  Raise an error
-        raise ValueError("Unable to find included SCAD file: "
-                         "%(include_file_path)s in sys.path" % vars())
+        raise ValueError(f"Unable to find included SCAD file: {include_file_path} in sys.path")
 
 
 # =========================================
@@ -468,9 +467,9 @@ def scad_render_animated(func_to_animate: Callable[[Optional[float]], OpenSCADOb
         scad_obj = func_to_animate(_time=eval_time)  # type: ignore
 
         scad_str = indent(scad_obj._render())
-        rendered_string += ("if ($t >= %(time)s && $t < %(end_time)s){"
-                            "   %(scad_str)s\n"
-                            "}\n" % vars())
+        rendered_string += f"if ($t >= {time} && $t < {end_time}){{" \
+                           f"   {scad_str}\n" \
+                           f"}}\n"
     return rendered_string
 
 
@@ -552,14 +551,14 @@ def sp_code_in_scad_comment(calling_file: PathStr) -> str:
     # to create a given file; That would future-proof any given SP-created
     # code because it would point to the relevant dependencies as well as
     # the actual code
-    pyopenscad_str = ("\n"
-                      "/***********************************************\n"
-                      "*********      SolidPython code:      **********\n"
-                      "************************************************\n"
-                      " \n"
-                      "%(pyopenscad_str)s \n"
-                      " \n"
-                      "************************************************/\n") % vars()
+    pyopenscad_str = (f"\n"
+                      f"/***********************************************\n"
+                      f"*********      SolidPython code:      **********\n"
+                      f"************************************************\n"
+                      f" \n"
+                      f"{pyopenscad_str} \n"
+                      f" \n"
+                      f"************************************************/\n")
     return pyopenscad_str
 
 
@@ -661,15 +660,15 @@ def new_openscad_class_str(class_name: str,
     args = map(_subbed_keyword, args)  # type: ignore
     for arg in args:
         args_str += ', ' + arg
-        args_pairs += "'%(arg)s':%(arg)s, " % vars()
+        args_pairs += f"'{arg}':{arg}, "
 
     # kwargs have a default value defined in their SCAD versions.  We don't
     # care what that default value will be (SCAD will take care of that), just
     # that one is defined.
     kwargs = map(_subbed_keyword, kwargs)  # type: ignore
     for kwarg in kwargs:
-        args_str += ', %(kwarg)s=None' % vars()
-        args_pairs += "'%(kwarg)s':%(kwarg)s, " % vars()
+        args_str += f', {kwarg}=None'
+        args_pairs += f"'{kwarg}':{kwarg}, "
 
     if include_file_path:
         # include_file_path may include backslashes on Windows; escape them
@@ -679,18 +678,18 @@ def new_openscad_class_str(class_name: str,
 
         # NOTE the explicit import of 'solid' below. This is a fix for:
         # https://github.com/SolidCode/SolidPython/issues/20 -ETJ 16 Jan 2014
-        result = ("import solid\n"
-                  "class %(class_name)s(solid.IncludedOpenSCADObject):\n"
-                  "   def __init__(self%(args_str)s, **kwargs):\n"
-                  "       solid.IncludedOpenSCADObject.__init__(self, '%(class_name)s', {%(args_pairs)s }, include_file_path='%(include_file_str)s', use_not_include=%(use_not_include)s, **kwargs )\n"
-                  "   \n"
-                  "\n" % vars())
+        result = (f"import solid\n"
+                  f"class {class_name}(solid.IncludedOpenSCADObject):\n"
+                  f"   def __init__(self{args_str}, **kwargs):\n"
+                  f"       solid.IncludedOpenSCADObject.__init__(self, '{class_name}', {{{args_pairs} }}, include_file_path='{include_file_str}', use_not_include={use_not_include}, **kwargs )\n"
+                  f"   \n"
+                  f"\n")
     else:
-        result = ("class %(class_name)s(OpenSCADObject):\n"
-                  "   def __init__(self%(args_str)s):\n"
-                  "       OpenSCADObject.__init__(self, '%(class_name)s', {%(args_pairs)s })\n"
-                  "   \n"
-                  "\n" % vars())
+        result = (f"class {class_name}(OpenSCADObject):\n"
+                  f"   def __init__(self{args_str}):\n"
+                  f"       OpenSCADObject.__init__(self, '{class_name}', {{{args_pairs }}})\n"
+                  f"   \n"
+                  f"\n")
 
     return result
 
@@ -702,9 +701,9 @@ def _subbed_keyword(keyword: str) -> str:
     """
     new_key = keyword + '_' if keyword in PYTHON_ONLY_RESERVED_WORDS else keyword
     if new_key != keyword:
-        print("\nFound OpenSCAD code that's not compatible with Python. \n"
-              "Imported OpenSCAD code using `%s` \n"
-              "can be accessed with `%s` in SolidPython\n" % (keyword, new_key))
+        print(f"\nFound OpenSCAD code that's not compatible with Python. \n"
+              f"Imported OpenSCAD code using `{keyword}` \n"
+              f"can be accessed with `{new_key}` in SolidPython\n")
     return new_key
 
 
@@ -725,9 +724,9 @@ def py2openscad(o: Union[bool, float, str, Iterable]) -> str:
     if type(o) == bool:
         return str(o).lower()
     if type(o) == float:
-        return "%.10f" % o  # type: ignore
+        return f"{o:.10f}"  # type: ignore
     if type(o) == str:
-        return '"' + o + '"'  # type: ignore
+        return f'\"{o}\"'  # type: ignore
     if type(o).__name__ == "ndarray":
         import numpy  # type: ignore
         return numpy.array2string(o, separator=",", threshold=1000000000)
