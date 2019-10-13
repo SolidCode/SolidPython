@@ -1,52 +1,51 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
-import os
-import sys
-
+import difflib
 import unittest
 
-from solid import *
-from solid.utils import *
-from euclid3 import *
-import difflib
-from solid.test.ExpandedTestCase import DiffOutput
+from euclid3 import Point3, Vector3
 
+from solid import scad_render
+from solid.objects import cube, polygon, sphere, translate
+from solid.test.ExpandedTestCase import DiffOutput
+from solid.utils import BoundingBox, arc, arc_inverted, euc_to_arr, euclidify, extrude_along_path, fillet_2d, is_scad, offset_points, split_body_planar, transform_to_point
+from solid.utils import FORWARD_VEC, RIGHT_VEC, UP_VEC
+from solid.utils import back, down, forward, left, right, up
 
 tri = [Point3(0, 0, 0), Point3(10, 0, 0), Point3(0, 10, 0)]
 scad_test_cases = [
-    (                               up,                 [2],   '\n\ntranslate(v = [0, 0, 2]);'),
-    (                               down,               [2],   '\n\ntranslate(v = [0, 0, -2]);'),
-    (                               left,               [2],   '\n\ntranslate(v = [-2, 0, 0]);'),
-    (                               right,              [2],   '\n\ntranslate(v = [2, 0, 0]);'),
-    (                               forward,            [2],   '\n\ntranslate(v = [0, 2, 0]);'),
-    (                               back,               [2],   '\n\ntranslate(v = [0, -2, 0]);'),   
-    (                               arc,                [10, 0, 90, 24], '\n\ndifference() {\n\tcircle($fn = 24, r = 10);\n\trotate(a = 0) {\n\t\ttranslate(v = [0, -10, 0]) {\n\t\t\tsquare(center = true, size = [30, 20]);\n\t\t}\n\t}\n\trotate(a = -90) {\n\t\ttranslate(v = [0, -10, 0]) {\n\t\t\tsquare(center = true, size = [30, 20]);\n\t\t}\n\t}\n}'),
-    (                               arc_inverted,       [10, 0, 90, 24], '\n\ndifference() {\n\tintersection() {\n\t\trotate(a = 0) {\n\t\t\ttranslate(v = [-990, 0, 0]) {\n\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t}\n\t\t}\n\t\trotate(a = 90) {\n\t\t\ttranslate(v = [-990, -1000, 0]) {\n\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t}\n\t\t}\n\t}\n\tcircle($fn = 24, r = 10);\n}'),
-    ( 'transform_to_point_scad',    transform_to_point, [cube(2), [2,2,2], [3,3,1]], '\n\nmultmatrix(m = [[0.7071067812, -0.1622214211, -0.6882472016, 2], [-0.7071067812, -0.1622214211, -0.6882472016, 2], [0.0000000000, 0.9733285268, -0.2294157339, 2], [0, 0, 0, 1.0000000000]]) {\n\tcube(size = 2);\n}'),
-    ( 'extrude_along_path',         extrude_along_path, [tri, [[0,0,0],[0,20,0]]], '\n\npolyhedron(faces = [[0, 3, 1], [1, 3, 4], [1, 4, 2], [2, 4, 5], [0, 2, 5], [0, 5, 3], [0, 1, 2], [3, 5, 4]], points = [[0.0000000000, 0.0000000000, 0.0000000000], [10.0000000000, 0.0000000000, 0.0000000000], [0.0000000000, 0.0000000000, 10.0000000000], [0.0000000000, 20.0000000000, 0.0000000000], [10.0000000000, 20.0000000000, 0.0000000000], [0.0000000000, 20.0000000000, 10.0000000000]]);'),
-    ( 'extrude_along_path_vertical',extrude_along_path, [tri, [[0,0,0],[0,0,20]]], '\n\npolyhedron(faces = [[0, 3, 1], [1, 3, 4], [1, 4, 2], [2, 4, 5], [0, 2, 5], [0, 5, 3], [0, 1, 2], [3, 5, 4]], points = [[0.0000000000, 0.0000000000, 0.0000000000], [-10.0000000000, 0.0000000000, 0.0000000000], [0.0000000000, 10.0000000000, 0.0000000000], [0.0000000000, 0.0000000000, 20.0000000000], [-10.0000000000, 0.0000000000, 20.0000000000], [0.0000000000, 10.0000000000, 20.0000000000]]);'),
+    (up, [2], '\n\ntranslate(v = [0, 0, 2]);'),
+    (down, [2], '\n\ntranslate(v = [0, 0, -2]);'),
+    (left, [2], '\n\ntranslate(v = [-2, 0, 0]);'),
+    (right, [2], '\n\ntranslate(v = [2, 0, 0]);'),
+    (forward, [2], '\n\ntranslate(v = [0, 2, 0]);'),
+    (back, [2], '\n\ntranslate(v = [0, -2, 0]);'),
+    (arc, [10, 0, 90, 24], '\n\ndifference() {\n\tcircle($fn = 24, r = 10);\n\trotate(a = 0) {\n\t\ttranslate(v = [0, -10, 0]) {\n\t\t\tsquare(center = true, size = [30, 20]);\n\t\t}\n\t}\n\trotate(a = -90) {\n\t\ttranslate(v = [0, -10, 0]) {\n\t\t\tsquare(center = true, size = [30, 20]);\n\t\t}\n\t}\n}'),
+    (arc_inverted, [10, 0, 90, 24], '\n\ndifference() {\n\tintersection() {\n\t\trotate(a = 0) {\n\t\t\ttranslate(v = [-990, 0, 0]) {\n\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t}\n\t\t}\n\t\trotate(a = 90) {\n\t\t\ttranslate(v = [-990, -1000, 0]) {\n\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t}\n\t\t}\n\t}\n\tcircle($fn = 24, r = 10);\n}'),
+    ('transform_to_point_scad', transform_to_point, [cube(2), [2, 2, 2], [3, 3, 1]], '\n\nmultmatrix(m = [[0.7071067812, -0.1622214211, -0.6882472016, 2], [-0.7071067812, -0.1622214211, -0.6882472016, 2], [0.0000000000, 0.9733285268, -0.2294157339, 2], [0, 0, 0, 1.0000000000]]) {\n\tcube(size = 2);\n}'),
+    ('extrude_along_path', extrude_along_path, [tri, [[0, 0, 0], [0, 20, 0]]], '\n\npolyhedron(faces = [[0, 3, 1], [1, 3, 4], [1, 4, 2], [2, 4, 5], [0, 2, 5], [0, 5, 3], [0, 1, 2], [3, 5, 4]], points = [[0.0000000000, 0.0000000000, 0.0000000000], [10.0000000000, 0.0000000000, 0.0000000000], [0.0000000000, 0.0000000000, 10.0000000000], [0.0000000000, 20.0000000000, 0.0000000000], [10.0000000000, 20.0000000000, 0.0000000000], [0.0000000000, 20.0000000000, 10.0000000000]]);'),
+    ('extrude_along_path_vertical', extrude_along_path, [tri, [[0, 0, 0], [0, 0, 20]]], '\n\npolyhedron(faces = [[0, 3, 1], [1, 3, 4], [1, 4, 2], [2, 4, 5], [0, 2, 5], [0, 5, 3], [0, 1, 2], [3, 5, 4]], points = [[0.0000000000, 0.0000000000, 0.0000000000], [-10.0000000000, 0.0000000000, 0.0000000000], [0.0000000000, 10.0000000000, 0.0000000000], [0.0000000000, 0.0000000000, 20.0000000000], [-10.0000000000, 0.0000000000, 20.0000000000], [0.0000000000, 10.0000000000, 20.0000000000]]);'),
 
-]   
+]
 
 other_test_cases = [
-    (                                   euclidify,      [[0,0,0]],          'Vector3(0.00, 0.00, 0.00)'),
-    ( 'euclidify_recursive',            euclidify,      [[[0,0,0], [1,0,0]]], '[Vector3(0.00, 0.00, 0.00), Vector3(1.00, 0.00, 0.00)]'),
-    ( 'euclidify_Vector',               euclidify,      [Vector3(0,0,0)], 'Vector3(0.00, 0.00, 0.00)'),
-    ( 'euclidify_recursive_Vector',     euclidify,      [[Vector3(0,0,0), Vector3(0,0,1)]],  '[Vector3(0.00, 0.00, 0.00), Vector3(0.00, 0.00, 1.00)]'),
-    (                                   euc_to_arr,     [Vector3(0,0,0)], '[0, 0, 0]'),
-    ( 'euc_to_arr_recursive',           euc_to_arr,     [[Vector3(0,0,0), Vector3(0,0,1)]], '[[0, 0, 0], [0, 0, 1]]'),
-    ( 'euc_to_arr_arr',                 euc_to_arr,     [[0,0,0]], '[0, 0, 0]'),
-    ( 'euc_to_arr_arr_recursive',       euc_to_arr,     [[[0,0,0], [1,0,0]]], '[[0, 0, 0], [1, 0, 0]]'),
-    (                                   is_scad,        [cube(2)], 'True'),
-    ( 'is_scad_false',                  is_scad,        [2], 'False'),
-    ( 'transform_to_point_single_arr',  transform_to_point, [[1,0,0], [2,2,2], [3,3,1]], 'Point3(2.71, 1.29, 2.00)'),
-    ( 'transform_to_point_single_pt3',  transform_to_point, [Point3(1,0,0), [2,2,2], [3,3,1]], 'Point3(2.71, 1.29, 2.00)'),
-    ( 'transform_to_point_arr_arr',     transform_to_point, [[[1,0,0], [0,1,0], [0,0,1]]  , [2,2,2], [3,3,1]], '[Point3(2.71, 1.29, 2.00), Point3(1.84, 1.84, 2.97), Point3(1.31, 1.31, 1.77)]'),
-    ( 'transform_to_point_pt3_arr',     transform_to_point, [[Point3(1,0,0), Point3(0,1,0), Point3(0,0,1)], [2,2,2], [3,3,1]], '[Point3(2.71, 1.29, 2.00), Point3(1.84, 1.84, 2.97), Point3(1.31, 1.31, 1.77)]') ,
-    ( 'transform_to_point_redundant',   transform_to_point, [ [Point3(0,0,0), Point3(10,0,0), Point3(0,10,0)], [2,2,2], Vector3(0,0,1), Point3(0,0,0), Vector3(0,1,0), Vector3(0,0,1)], '[Point3(2.00, 2.00, 2.00), Point3(-8.00, 2.00, 2.00), Point3(2.00, 12.00, 2.00)]'),
-    ( 'offset_points_inside',           offset_points,  [tri, 2, True],  '[Point3(2.00, 2.00, 0.00), Point3(5.17, 2.00, 0.00), Point3(2.00, 5.17, 0.00)]'),
-    ( 'offset_points_outside',          offset_points,  [tri, 2, False], '[Point3(-2.00, -2.00, 0.00), Point3(14.83, -2.00, 0.00), Point3(-2.00, 14.83, 0.00)]'),
-    ( 'offset_points_open_poly',        offset_points,  [tri, 2, False, False], '[Point3(0.00, -2.00, 0.00), Point3(14.83, -2.00, 0.00), Point3(1.41, 11.41, 0.00)]'),
+    (euclidify, [[0, 0, 0]], 'Vector3(0.00, 0.00, 0.00)'),
+    ('euclidify_recursive', euclidify, [[[0, 0, 0], [1, 0, 0]]], '[Vector3(0.00, 0.00, 0.00), Vector3(1.00, 0.00, 0.00)]'),
+    ('euclidify_Vector', euclidify, [Vector3(0, 0, 0)], 'Vector3(0.00, 0.00, 0.00)'),
+    ('euclidify_recursive_Vector', euclidify, [[Vector3(0, 0, 0), Vector3(0, 0, 1)]], '[Vector3(0.00, 0.00, 0.00), Vector3(0.00, 0.00, 1.00)]'),
+    (euc_to_arr, [Vector3(0, 0, 0)], '[0, 0, 0]'),
+    ('euc_to_arr_recursive', euc_to_arr, [[Vector3(0, 0, 0), Vector3(0, 0, 1)]], '[[0, 0, 0], [0, 0, 1]]'),
+    ('euc_to_arr_arr', euc_to_arr, [[0, 0, 0]], '[0, 0, 0]'),
+    ('euc_to_arr_arr_recursive', euc_to_arr, [[[0, 0, 0], [1, 0, 0]]], '[[0, 0, 0], [1, 0, 0]]'),
+    (is_scad, [cube(2)], 'True'),
+    ('is_scad_false', is_scad, [2], 'False'),
+    ('transform_to_point_single_arr', transform_to_point, [[1, 0, 0], [2, 2, 2], [3, 3, 1]], 'Point3(2.71, 1.29, 2.00)'),
+    ('transform_to_point_single_pt3', transform_to_point, [Point3(1, 0, 0), [2, 2, 2], [3, 3, 1]], 'Point3(2.71, 1.29, 2.00)'),
+    ('transform_to_point_arr_arr', transform_to_point, [[[1, 0, 0], [0, 1, 0], [0, 0, 1]], [2, 2, 2], [3, 3, 1]], '[Point3(2.71, 1.29, 2.00), Point3(1.84, 1.84, 2.97), Point3(1.31, 1.31, 1.77)]'),
+    ('transform_to_point_pt3_arr', transform_to_point, [[Point3(1, 0, 0), Point3(0, 1, 0), Point3(0, 0, 1)], [2, 2, 2], [3, 3, 1]], '[Point3(2.71, 1.29, 2.00), Point3(1.84, 1.84, 2.97), Point3(1.31, 1.31, 1.77)]'),
+    ('transform_to_point_redundant', transform_to_point, [[Point3(0, 0, 0), Point3(10, 0, 0), Point3(0, 10, 0)], [2, 2, 2], Vector3(0, 0, 1), Point3(0, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, 1)], '[Point3(2.00, 2.00, 2.00), Point3(-8.00, 2.00, 2.00), Point3(2.00, 12.00, 2.00)]'),
+    ('offset_points_inside', offset_points, [tri, 2, True], '[Point3(2.00, 2.00, 0.00), Point3(5.17, 2.00, 0.00), Point3(2.00, 5.17, 0.00)]'),
+    ('offset_points_outside', offset_points, [tri, 2, False], '[Point3(-2.00, -2.00, 0.00), Point3(14.83, -2.00, 0.00), Point3(-2.00, 14.83, 0.00)]'),
+    ('offset_points_open_poly', offset_points, [tri, 2, False, False], '[Point3(0.00, -2.00, 0.00), Point3(14.83, -2.00, 0.00), Point3(1.41, 11.41, 0.00)]'),
 ]
 
 
@@ -136,6 +135,7 @@ def create_tests():
         test_name, func, args, expected = read_test_tuple(test_tuple)
         test = test_generator_no_scad(func, args, expected)
         setattr(TestSPUtils, test_name, test)
+
 
 if __name__ == '__main__':
     create_tests()

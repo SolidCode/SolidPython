@@ -1,54 +1,55 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 import os
-import sys
+import tempfile
+import unittest
 from pathlib import Path
 
-import unittest
-import tempfile
+from solid.objects import background, circle, cube, cylinder, debug, disable, hole, import_scad, include, part, root, rotate, sphere, square, translate, use
+from solid.solidpython import scad_render, scad_render_animated_file, scad_render_to_file
 from solid.test.ExpandedTestCase import DiffOutput
-from solid import *
 
 scad_test_case_templates = [
-{'name': 'polygon',     'kwargs': {'paths': [[0, 1, 2]]}, 'expected': '\n\npolygon(paths = [[0, 1, 2]], points = [[0, 0, 0], [1, 0, 0], [0, 1, 0]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]]}, },
-{'name': 'circle',      'kwargs': {'segments': 12, 'r': 1}, 'expected': '\n\ncircle($fn = 12, r = 1);', 'args': {}, },
-{'name': 'circle',      'kwargs': {'segments': 12, 'd': 1}, 'expected': '\n\ncircle($fn = 12, d = 1);', 'args': {}, },
-{'name': 'square',      'kwargs': {'center': False, 'size': 1}, 'expected': '\n\nsquare(center = false, size = 1);', 'args': {}, },
-{'name': 'sphere',      'kwargs': {'segments': 12, 'r': 1}, 'expected': '\n\nsphere($fn = 12, r = 1);', 'args': {}, },
-{'name': 'sphere',      'kwargs': {'segments': 12, 'd': 1}, 'expected': '\n\nsphere($fn = 12, d = 1);', 'args': {}, },
-{'name': 'cube',        'kwargs': {'center': False, 'size': 1}, 'expected': '\n\ncube(center = false, size = 1);', 'args': {}, },
-{'name': 'cylinder',    'kwargs': {'r1': None, 'r2': None, 'h': 1, 'segments': 12, 'r': 1, 'center': False}, 'expected': '\n\ncylinder($fn = 12, center = false, h = 1, r = 1);', 'args': {}, },
-{'name': 'cylinder',    'kwargs': {'d1': 4, 'd2': 2, 'h': 1, 'segments': 12, 'center': False}, 'expected': '\n\ncylinder($fn = 12, center = false, d1 = 4, d2 = 2, h = 1);', 'args': {}, },
-{'name': 'polyhedron',  'kwargs': {'convexity': None}, 'expected': '\n\npolyhedron(faces = [[0, 1, 2]], points = [[0, 0, 0], [1, 0, 0], [0, 1, 0]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]], 'faces': [[0, 1, 2]]}, },
-{'name': 'union',       'kwargs': {}, 'expected': '\n\nunion();', 'args': {}, },
-{'name': 'intersection','kwargs': {}, 'expected': '\n\nintersection();', 'args': {}, },
-{'name': 'difference',  'kwargs': {}, 'expected': '\n\ndifference();', 'args': {}, },
-{'name': 'translate',   'kwargs': {'v': [1, 0, 0]}, 'expected': '\n\ntranslate(v = [1, 0, 0]);', 'args': {}, },
-{'name': 'scale',       'kwargs': {'v': 0.5}, 'expected': '\n\nscale(v = 0.5000000000);', 'args': {}, },
-{'name': 'rotate',      'kwargs': {'a': 45, 'v': [0, 0, 1]}, 'expected': '\n\nrotate(a = 45, v = [0, 0, 1]);', 'args': {}, },
-{'name': 'mirror',      'kwargs': {}, 'expected': '\n\nmirror(v = [0, 0, 1]);', 'args': {'v': [0, 0, 1]}, },
-{'name': 'resize',      'kwargs': {'newsize':[5,5,5], 'auto':[True, True, False]}, 'expected': '\n\nresize(auto = [true, true, false], newsize = [5, 5, 5]);', 'args': {}, },
-{'name': 'multmatrix',  'kwargs': {}, 'expected': '\n\nmultmatrix(m = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);', 'args': {'m': [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]}, },
-{'name': 'color',       'kwargs': {}, 'expected': '\n\ncolor(c = [1, 0, 0]);', 'args': {'c': [1, 0, 0]}, },
-{'name': 'minkowski',   'kwargs': {}, 'expected': '\n\nminkowski();', 'args': {}, },
-{'name': 'offset',      'kwargs': {'r': 1}, 'expected': '\n\noffset(r = 1);', 'args': {}, },
-{'name': 'offset',      'kwargs': {'delta': 1}, 'expected': '\n\noffset(chamfer = false, delta = 1);', 'args': {}, },
-{'name': 'hull',        'kwargs': {}, 'expected': '\n\nhull();', 'args': {}, },
-{'name': 'render',      'kwargs': {'convexity': None}, 'expected': '\n\nrender();', 'args': {}, },
-{'name': 'projection',  'kwargs': {'cut': None}, 'expected': '\n\nprojection();', 'args': {}, },
-{'name': 'surface',     'kwargs': {'center': False, 'convexity': None}, 'expected': '\n\nsurface(center = false, file = "/Path/to/dummy.dxf");', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
-{'name': 'import_stl',  'kwargs': {'layer': None, 'origin': (0,0)}, 'expected': '\n\nimport(file = "/Path/to/dummy.stl", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.stl'"}, },
-{'name': 'import_dxf',  'kwargs': {'layer': None, 'origin': (0,0)}, 'expected': '\n\nimport(file = "/Path/to/dummy.dxf", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
-{'name': 'import_',     'kwargs': {'layer': None, 'origin': (0,0)}, 'expected': '\n\nimport(file = "/Path/to/dummy.dxf", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
-{'name': 'import_',     'kwargs': {'layer': None, 'origin': (0,0), 'convexity': 2}, 'expected': '\n\nimport(convexity = 2, file = "/Path/to/dummy.dxf", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
-{'name': 'linear_extrude',      'kwargs': {'twist': None, 'slices': None, 'center': False, 'convexity': None, 'height': 1, 'scale': 0.9}, 'expected': '\n\nlinear_extrude(center = false, height = 1, scale = 0.9000000000);', 'args': {}, },
-{'name': 'rotate_extrude',      'kwargs': {'angle':90, 'segments': 4, 'convexity': None}, 'expected': '\n\nrotate_extrude($fn = 4, angle = 90);', 'args': {}, },
-{'name': 'intersection_for',    'kwargs': {}, 'expected': '\n\nintersection_for(n = [0, 1, 2]);', 'args': {'n': [0, 1, 2]}, },
+    {'name': 'polygon', 'kwargs': {'paths': [[0, 1, 2]]}, 'expected': '\n\npolygon(paths = [[0, 1, 2]], points = [[0, 0, 0], [1, 0, 0], [0, 1, 0]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]]}, },
+    {'name': 'circle', 'kwargs': {'segments': 12, 'r': 1}, 'expected': '\n\ncircle($fn = 12, r = 1);', 'args': {}, },
+    {'name': 'circle', 'kwargs': {'segments': 12, 'd': 1}, 'expected': '\n\ncircle($fn = 12, d = 1);', 'args': {}, },
+    {'name': 'square', 'kwargs': {'center': False, 'size': 1}, 'expected': '\n\nsquare(center = false, size = 1);', 'args': {}, },
+    {'name': 'sphere', 'kwargs': {'segments': 12, 'r': 1}, 'expected': '\n\nsphere($fn = 12, r = 1);', 'args': {}, },
+    {'name': 'sphere', 'kwargs': {'segments': 12, 'd': 1}, 'expected': '\n\nsphere($fn = 12, d = 1);', 'args': {}, },
+    {'name': 'cube', 'kwargs': {'center': False, 'size': 1}, 'expected': '\n\ncube(center = false, size = 1);', 'args': {}, },
+    {'name': 'cylinder', 'kwargs': {'r1': None, 'r2': None, 'h': 1, 'segments': 12, 'r': 1, 'center': False}, 'expected': '\n\ncylinder($fn = 12, center = false, h = 1, r = 1);', 'args': {}, },
+    {'name': 'cylinder', 'kwargs': {'d1': 4, 'd2': 2, 'h': 1, 'segments': 12, 'center': False}, 'expected': '\n\ncylinder($fn = 12, center = false, d1 = 4, d2 = 2, h = 1);', 'args': {}, },
+    {'name': 'polyhedron', 'kwargs': {'convexity': None}, 'expected': '\n\npolyhedron(faces = [[0, 1, 2]], points = [[0, 0, 0], [1, 0, 0], [0, 1, 0]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]], 'faces': [[0, 1, 2]]}, },
+    {'name': 'union', 'kwargs': {}, 'expected': '\n\nunion();', 'args': {}, },
+    {'name': 'intersection', 'kwargs': {}, 'expected': '\n\nintersection();', 'args': {}, },
+    {'name': 'difference', 'kwargs': {}, 'expected': '\n\ndifference();', 'args': {}, },
+    {'name': 'translate', 'kwargs': {'v': [1, 0, 0]}, 'expected': '\n\ntranslate(v = [1, 0, 0]);', 'args': {}, },
+    {'name': 'scale', 'kwargs': {'v': 0.5}, 'expected': '\n\nscale(v = 0.5000000000);', 'args': {}, },
+    {'name': 'rotate', 'kwargs': {'a': 45, 'v': [0, 0, 1]}, 'expected': '\n\nrotate(a = 45, v = [0, 0, 1]);', 'args': {}, },
+    {'name': 'mirror', 'kwargs': {}, 'expected': '\n\nmirror(v = [0, 0, 1]);', 'args': {'v': [0, 0, 1]}, },
+    {'name': 'resize', 'kwargs': {'newsize': [5, 5, 5], 'auto': [True, True, False]}, 'expected': '\n\nresize(auto = [true, true, false], newsize = [5, 5, 5]);', 'args': {}, },
+    {'name': 'multmatrix', 'kwargs': {}, 'expected': '\n\nmultmatrix(m = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);', 'args': {'m': [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]}, },
+    {'name': 'color', 'kwargs': {}, 'expected': '\n\ncolor(c = [1, 0, 0]);', 'args': {'c': [1, 0, 0]}, },
+    {'name': 'minkowski', 'kwargs': {}, 'expected': '\n\nminkowski();', 'args': {}, },
+    {'name': 'offset', 'kwargs': {'r': 1}, 'expected': '\n\noffset(r = 1);', 'args': {}, },
+    {'name': 'offset', 'kwargs': {'delta': 1}, 'expected': '\n\noffset(chamfer = false, delta = 1);', 'args': {}, },
+    {'name': 'hull', 'kwargs': {}, 'expected': '\n\nhull();', 'args': {}, },
+    {'name': 'render', 'kwargs': {'convexity': None}, 'expected': '\n\nrender();', 'args': {}, },
+    {'name': 'projection', 'kwargs': {'cut': None}, 'expected': '\n\nprojection();', 'args': {}, },
+    {'name': 'surface', 'kwargs': {'center': False, 'convexity': None}, 'expected': '\n\nsurface(center = false, file = "/Path/to/dummy.dxf");', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
+    {'name': 'import_stl', 'kwargs': {'layer': None, 'origin': (0, 0)}, 'expected': '\n\nimport(file = "/Path/to/dummy.stl", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.stl'"}, },
+    {'name': 'import_dxf', 'kwargs': {'layer': None, 'origin': (0, 0)}, 'expected': '\n\nimport(file = "/Path/to/dummy.dxf", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
+    {'name': 'import_', 'kwargs': {'layer': None, 'origin': (0, 0)}, 'expected': '\n\nimport(file = "/Path/to/dummy.dxf", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
+    {'name': 'import_', 'kwargs': {'layer': None, 'origin': (0, 0), 'convexity': 2}, 'expected': '\n\nimport(convexity = 2, file = "/Path/to/dummy.dxf", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
+    {'name': 'linear_extrude', 'kwargs': {'twist': None, 'slices': None, 'center': False, 'convexity': None, 'height': 1, 'scale': 0.9}, 'expected': '\n\nlinear_extrude(center = false, height = 1, scale = 0.9000000000);', 'args': {}, },
+    {'name': 'rotate_extrude', 'kwargs': {'angle': 90, 'segments': 4, 'convexity': None}, 'expected': '\n\nrotate_extrude($fn = 4, angle = 90);', 'args': {}, },
+    {'name': 'intersection_for', 'kwargs': {}, 'expected': '\n\nintersection_for(n = [0, 1, 2]);', 'args': {'n': [0, 1, 2]}, },
 ]
+
 
 class TemporaryFileBuffer(object):
     name = None
     contents = None
+
     def __enter__(self):
         f = tempfile.NamedTemporaryFile(delete=False)
         self.name = f.name
@@ -102,7 +103,7 @@ class TestSolidPython(DiffOutput):
         self.assertEqual(expected, actual)
 
     def test_parse_scad_callables(self):
-        test_str =  """
+        test_str = """
                     module hex (width=10, height=10,    
                                 flats= true, center=false){}
                     function righty (angle=90) = 1;
@@ -134,34 +135,34 @@ class TestSolidPython(DiffOutput):
                     module var_with_parentheses(var_with_parentheses = 8 * ((9 - 1) + 89) / 15){}
                     module var_with_functions(var_with_functions = abs(min(chamferHeight2, 0)) */-+ 1){}
                     module var_with_conditionnal_assignment(var_with_conditionnal_assignment = mytest ? 45 : yop){}
-                   """ 
+                   """
         expected = [
-            {'name': 'hex', 'args': [], 'kwargs': ['width', 'height', 'flats', 'center']}, 
-            {'name': 'righty', 'args': [], 'kwargs': ['angle']}, 
-            {'name': 'lefty', 'args': ['avar'], 'kwargs': []}, 
-            {'name': 'more', 'args': [], 'kwargs': ['a']}, 
-            {'name': 'pyramid', 'args': [], 'kwargs': ['side', 'height', 'square', 'centerHorizontal', 'centerVertical']}, 
-            {'name': 'no_comments', 'args': [], 'kwargs': ['arg', 'other_arg', 'last_arg']}, 
-            {'name': 'float_arg', 'args': [], 'kwargs': ['arg']}, 
-            {'name': 'arg_var', 'args': ['var5'], 'kwargs': []}, 
-            {'name': 'kwarg_var', 'args': [], 'kwargs': ['var2']}, 
-            {'name': 'var_true', 'args': [], 'kwargs': ['var_true']}, 
-            {'name': 'var_false', 'args': [],'kwargs': ['var_false']}, 
-            {'name': 'var_int', 'args': [], 'kwargs': ['var_int']}, 
-            {'name': 'var_negative', 'args': [], 'kwargs': ['var_negative']}, 
-            {'name': 'var_float', 'args': [], 'kwargs': ['var_float']}, 
-            {'name': 'var_number', 'args': [], 'kwargs': ['var_number']}, 
-            {'name': 'var_empty_vector', 'args': [], 'kwargs': ['var_empty_vector']}, 
-            {'name': 'var_simple_string', 'args': [], 'kwargs': ['var_simple_string']}, 
-            {'name': 'var_complex_string', 'args': [], 'kwargs': ['var_complex_string']}, 
-            {'name': 'var_vector', 'args': [], 'kwargs': ['var_vector']}, 
-            {'name': 'var_complex_vector', 'args': [], 'kwargs': ['var_complex_vector']}, 
-            {'name': 'var_vector', 'args': [], 'kwargs': ['var_vector']}, 
-            {'name': 'var_range', 'args': [], 'kwargs': ['var_range']}, 
-            {'name': 'var_range_step', 'args': [], 'kwargs': ['var_range_step']}, 
-            {'name': 'var_with_arithmetic', 'args': [], 'kwargs': ['var_with_arithmetic']}, 
-            {'name': 'var_with_parentheses', 'args': [], 'kwargs': ['var_with_parentheses']}, 
-            {'name': 'var_with_functions', 'args': [], 'kwargs': ['var_with_functions']}, 
+            {'name': 'hex', 'args': [], 'kwargs': ['width', 'height', 'flats', 'center']},
+            {'name': 'righty', 'args': [], 'kwargs': ['angle']},
+            {'name': 'lefty', 'args': ['avar'], 'kwargs': []},
+            {'name': 'more', 'args': [], 'kwargs': ['a']},
+            {'name': 'pyramid', 'args': [], 'kwargs': ['side', 'height', 'square', 'centerHorizontal', 'centerVertical']},
+            {'name': 'no_comments', 'args': [], 'kwargs': ['arg', 'other_arg', 'last_arg']},
+            {'name': 'float_arg', 'args': [], 'kwargs': ['arg']},
+            {'name': 'arg_var', 'args': ['var5'], 'kwargs': []},
+            {'name': 'kwarg_var', 'args': [], 'kwargs': ['var2']},
+            {'name': 'var_true', 'args': [], 'kwargs': ['var_true']},
+            {'name': 'var_false', 'args': [], 'kwargs': ['var_false']},
+            {'name': 'var_int', 'args': [], 'kwargs': ['var_int']},
+            {'name': 'var_negative', 'args': [], 'kwargs': ['var_negative']},
+            {'name': 'var_float', 'args': [], 'kwargs': ['var_float']},
+            {'name': 'var_number', 'args': [], 'kwargs': ['var_number']},
+            {'name': 'var_empty_vector', 'args': [], 'kwargs': ['var_empty_vector']},
+            {'name': 'var_simple_string', 'args': [], 'kwargs': ['var_simple_string']},
+            {'name': 'var_complex_string', 'args': [], 'kwargs': ['var_complex_string']},
+            {'name': 'var_vector', 'args': [], 'kwargs': ['var_vector']},
+            {'name': 'var_complex_vector', 'args': [], 'kwargs': ['var_complex_vector']},
+            {'name': 'var_vector', 'args': [], 'kwargs': ['var_vector']},
+            {'name': 'var_range', 'args': [], 'kwargs': ['var_range']},
+            {'name': 'var_range_step', 'args': [], 'kwargs': ['var_range_step']},
+            {'name': 'var_with_arithmetic', 'args': [], 'kwargs': ['var_with_arithmetic']},
+            {'name': 'var_with_parentheses', 'args': [], 'kwargs': ['var_with_parentheses']},
+            {'name': 'var_with_functions', 'args': [], 'kwargs': ['var_with_functions']},
             {'name': 'var_with_conditionnal_assignment', 'args': [], 'kwargs': ['var_with_conditionnal_assignment']}
         ]
 
@@ -187,7 +188,7 @@ class TestSolidPython(DiffOutput):
 
         abs_path = a._get_include_path(include_file)
         expected = "use <%s>\n\n\nsteps(howmany = 3);" % abs_path
-        self.assertEqual(expected, actual)        
+        self.assertEqual(expected, actual)
 
     def test_use_reserved_words(self):
         scad_str = '''module reserved_word_arg(or=3){\n\tcube(or);\n}\nmodule or(arg=3){\n\tcube(arg);\n}\n'''
@@ -201,12 +202,12 @@ class TestSolidPython(DiffOutput):
             use(path)
             a = reserved_word_arg(or_=5)
             actual = scad_render(a)
-            expected = "use <%s>\n\n\nreserved_word_arg(or = 5);"%path;
+            expected = "use <%s>\n\n\nreserved_word_arg(or = 5);" % path;
             self.assertEqual(expected, actual)
 
             b = or_(arg=5)
             actual = scad_render(b)
-            expected = "use <%s>\n\n\nor(arg = 5);"%path;
+            expected = "use <%s>\n\n\nor(arg = 5);" % path;
             self.assertEqual(expected, actual)
         finally:
             os.remove(path)
@@ -268,12 +269,12 @@ class TestSolidPython(DiffOutput):
         # Confirm that's still happening as it's supposed to
         h = hole()(
                 rotate(a=90, v=[0, 1, 0])(
-                    cylinder(2, 20, center=True)
+                        cylinder(2, 20, center=True)
                 )
-            )
+        )
 
         h_vert = rotate(a=-90, v=[0, 1, 0])(
-            h
+                h
         )
 
         a = cube(10, center=True) + h + h_vert
@@ -314,6 +315,7 @@ class TestSolidPython(DiffOutput):
             rad = 15
             c = translate([rad * math.cos(rads), rad * math.sin(rads)])(square(10))
             return c
+
         with TemporaryFileBuffer() as tmp:
             scad_render_animated_file(my_animate, steps=2, back_and_forth=False,
                                       filepath=tmp.name, include_orig_code=False)
@@ -353,8 +355,8 @@ class TestSolidPython(DiffOutput):
     def test_numpy_type(self):
         try:
             import numpy
-            numpy_cube = cube(size=numpy.array([1,2,3]))
-            expected ='\n\ncube(size = [1,2,3]);'
+            numpy_cube = cube(size=numpy.array([1, 2, 3]))
+            expected = '\n\ncube(size = [1,2,3]);'
             actual = scad_render(numpy_cube)
             self.assertEqual(expected, actual, 'Numpy SolidPython not rendered correctly')
         except ImportError:
@@ -367,7 +369,7 @@ class TestSolidPython(DiffOutput):
             def __iter__(self):
                 return iter([1, 2, 3])
 
-        expected ='\n\ncube(size = [1, 2, 3]);'
+        expected = '\n\ncube(size = [1, 2, 3]);'
         iterables = [
             [1, 2, 3],
             (1, 2, 3),
