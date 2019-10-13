@@ -38,7 +38,7 @@ class polygon(OpenSCADObject):
     references to the elements of the *points* vector.)
     """
 
-    def __init__(self, points: Points, paths: Indexes = None):
+    def __init__(self, points: Points, paths: Indexes = None) -> None:
         if not paths:
             paths = [list(range(len(points)))]
         super().__init__('polygon',
@@ -60,7 +60,7 @@ class circle(OpenSCADObject):
     :type segments: int
     """
 
-    def __init__(self, r: float = None, d: float = None, segments: int = None):
+    def __init__(self, r: float = None, d: float = None, segments: int = None) -> None:
         super().__init__('circle',
                          {'r': r, 'd': d, 'segments': segments})
 
@@ -83,7 +83,7 @@ class square(OpenSCADObject):
     :type center: boolean
     """
 
-    def __init__(self, size: ScadSize = None, center: bool = None):
+    def __init__(self, size: ScadSize = None, center: bool = None) -> None:
         super().__init__('square',
                          {'size': size, 'center': center})
 
@@ -103,7 +103,7 @@ class sphere(OpenSCADObject):
     :type segments: int
     """
 
-    def __init__(self, r: float = None, d: float = None, segments: int = None):
+    def __init__(self, r: float = None, d: float = None, segments: int = None) -> None:
         super().__init__('sphere',
                          {'r': r, 'd': d, 'segments': segments})
 
@@ -126,7 +126,7 @@ class cube(OpenSCADObject):
     :type center: boolean
     """
 
-    def __init__(self, size: ScadSize = None, center: bool = None):
+    def __init__(self, size: ScadSize = None, center: bool = None) -> None:
         super().__init__('cube',
                          {'size': size, 'center': center})
 
@@ -171,7 +171,7 @@ class cylinder(OpenSCADObject):
 
     def __init__(self, r: float = None, h: float = None, r1: float = None, r2: float = None,
                  d: float = None, d1: float = None, d2: float = None, center: bool = None,
-                 segments: int = None):
+                 segments: int = None) -> None:
         super().__init__('cylinder',
                          {'r': r, 'h': h, 'r1': r1, 'r2': r2, 'd': d,
                           'd1': d1, 'd2': d2, 'center': center,
@@ -206,7 +206,7 @@ class polyhedron(OpenSCADObject):
     :type convexity: int
     """
 
-    def __init__(self, points: P3s, faces: Indexes, convexity: int = None, triangles: Indexes = None):
+    def __init__(self, points: P3s, faces: Indexes, convexity: int = None, triangles: Indexes = None) -> None:
         super().__init__('polyhedron',
                          {'points': points, 'faces': faces,
                           'convexity': convexity,
@@ -219,7 +219,7 @@ class union(OpenSCADObject):
     children.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__('union', {})
 
     def __add__(self, x: OpenSCADObjectPlus) -> OpenSCADObject:
@@ -237,7 +237,7 @@ class intersection(OpenSCADObject):
     **overlapping** portion
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__('intersection', {})
 
     def __mul__(self, x: OpenSCADObjectPlus) -> OpenSCADObject:
@@ -254,7 +254,7 @@ class difference(OpenSCADObject):
     Subtracts the 2nd (and all further) child nodes from the first one.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__('difference', {})
 
     def __sub__(self, x: OpenSCADObjectPlus) -> OpenSCADObject:
@@ -267,13 +267,13 @@ class difference(OpenSCADObject):
 
 
 class hole(OpenSCADObject):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__('hole', {})
         self.set_hole(True)
 
 
 class part(OpenSCADObject):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__('part', {})
         self.set_part_root(True)
 
@@ -286,7 +286,7 @@ class translate(OpenSCADObject):
     :type v: 3 value sequence
     """
 
-    def __init__(self, v: P3 = None):
+    def __init__(self, v: P3 = None) -> None:
         super().__init__('translate', {'v': v})
 
 
@@ -298,7 +298,7 @@ class scale(OpenSCADObject):
     :type v: 3 value sequence
     """
 
-    def __init__(self, v: P3 = None):
+    def __init__(self, v: P3 = None) -> None:
         super().__init__('scale', {'v': v})
 
 
@@ -314,7 +314,7 @@ class rotate(OpenSCADObject):
     :type v: 3 value sequence
     """
 
-    def __init__(self, a: Union[float, Vec3] = None, v: Vec3 = None):
+    def __init__(self, a: Union[float, Vec3] = None, v: Vec3 = None) -> None:
         super().__init__('rotate', {'a': a, 'v': v})
 
 
@@ -327,7 +327,7 @@ class mirror(OpenSCADObject):
 
     """
 
-    def __init__(self, v: Vec3):
+    def __init__(self, v: Vec3) -> None:
         super().__init__('mirror', {'v': v})
 
 
@@ -342,7 +342,7 @@ class resize(OpenSCADObject):
     :type auto: 3 boolean sequence
     """
 
-    def __init__(self, newsize: Vec3, auto: Tuple[bool, bool, bool] = None):
+    def __init__(self, newsize: Vec3, auto: Tuple[bool, bool, bool] = None) -> None:
         super().__init__('resize', {'newsize': newsize, 'auto': auto})
 
 
@@ -355,7 +355,7 @@ class multmatrix(OpenSCADObject):
     :type m: sequence of 4 sequences, each containing 4 numbers.
     """
 
-    def __init__(self, m: Tuple[Vec4, Vec4, Vec4, Vec4]):
+    def __init__(self, m: Tuple[Vec4, Vec4, Vec4, Vec4]) -> None:
         super().__init__('multmatrix', {'m': m})
 
 
@@ -370,7 +370,7 @@ class color(OpenSCADObject):
     :type c: sequence of 3 or 4 numbers between 0 and 1
     """
 
-    def __init__(self, c: Vec34):
+    def __init__(self, c: Vec34) -> None:
         super().__init__('color', {'c': c})
 
 
@@ -381,7 +381,7 @@ class minkowski(OpenSCADObject):
     of child nodes.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__('minkowski', {})
 
 
@@ -404,7 +404,7 @@ class offset(OpenSCADObject):
     :type chamfer: bool
     """
 
-    def __init__(self, r: float = None, delta: float = None, chamfer: bool = False):
+    def __init__(self, r: float = None, delta: float = None, chamfer: bool = False) -> None:
         if r:
             kwargs = {'r': r}
         elif delta:
@@ -421,7 +421,7 @@ class hull(OpenSCADObject):
     of child nodes.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__('hull', {})
 
 
@@ -434,7 +434,7 @@ class render(OpenSCADObject):
     :type convexity: int
     """
 
-    def __init__(self, convexity: int = None):
+    def __init__(self, convexity: int = None) -> None:
         super().__init__('render', {'convexity': convexity})
 
 
@@ -470,7 +470,7 @@ class linear_extrude(OpenSCADObject):
     """
 
     def __init__(self, height: float = None, center: bool = None, convexity: int = None,
-                 twist: float = None, slices: int = None, scale: float = None):
+                 twist: float = None, slices: int = None, scale: float = None) -> None:
         super().__init__('linear_extrude',
                          {'height': height, 'center': center,
                           'convexity': convexity, 'twist': twist,
@@ -507,7 +507,7 @@ class rotate_extrude(OpenSCADObject):
 
     """
 
-    def __init__(self, angle: float = 360, convexity: int = None, segments: int = None):
+    def __init__(self, angle: float = 360, convexity: int = None, segments: int = None) -> None:
         super().__init__('rotate_extrude',
                          {'angle': angle, 'segments': segments,
                           'convexity': convexity})
@@ -516,7 +516,7 @@ class rotate_extrude(OpenSCADObject):
 class dxf_linear_extrude(OpenSCADObject):
     def __init__(self, file: str, layer: float = None, height: float = None,
                  center: bool = None, convexity: int = None, twist: float = None,
-                 slices: int = None):
+                 slices: int = None) -> None:
         super().__init__('dxf_linear_extrude',
                          {'file': file, 'layer': layer,
                           'height': height, 'center': center,
@@ -535,7 +535,7 @@ class projection(OpenSCADObject):
     :type cut: boolean
     """
 
-    def __init__(self, cut: bool = None):
+    def __init__(self, cut: bool = None) -> None:
         super().__init__('projection', {'cut': cut})
 
 
@@ -563,7 +563,7 @@ class surface(OpenSCADObject):
     :type convexity: int
     """
 
-    def __init__(self, file, center: bool = None, convexity: int = None, invert=None):
+    def __init__(self, file, center: bool = None, convexity: int = None, invert=None) -> None:
         super().__init__('surface',
                          {'file': file, 'center': center,
                           'convexity': convexity, 'invert': invert})
@@ -620,7 +620,7 @@ class text(OpenSCADObject):
 
     def __init__(self, text: str, size: float = None, font: str = None, halign: str = None,
                  valign: str = None, spacing: float = None, direction: str = None,
-                 language: str = None, script: str = None, segments: int = None):
+                 language: str = None, script: str = None, segments: int = None) -> None:
         super().__init__('text',
                          {'text': text, 'size': size, 'font': font,
                           'halign': halign, 'valign': valign,
@@ -630,7 +630,7 @@ class text(OpenSCADObject):
 
 
 class child(OpenSCADObject):
-    def __init__(self, index: int = None, vector: Sequence[int] = None, range=None):
+    def __init__(self, index: int = None, vector: Sequence[int] = None, range=None) -> None:
         super().__init__('child',
                          {'index': index, 'vector': vector,
                           'range': range})
@@ -653,21 +653,21 @@ class children(OpenSCADObject):
     :param range: [:] or [::]. select children between to , incremented by (default 1).
     """
 
-    def __init__(self, index: int = None, vector: float = None, range: P23 = None):
+    def __init__(self, index: int = None, vector: float = None, range: P23 = None) -> None:
         super().__init__('children',
                          {'index': index, 'vector': vector,
                           'range': range})
 
 
 class import_stl(OpenSCADObject):
-    def __init__(self, file: str, origin: P2 = (0, 0), convexity: int = None, layer: int = None):
+    def __init__(self, file: str, origin: P2 = (0, 0), convexity: int = None, layer: int = None) -> None:
         super().__init__('import',
                          {'file': file, 'origin': origin,
                           'convexity': convexity, 'layer': layer})
 
 
 class import_dxf(OpenSCADObject):
-    def __init__(self, file, origin=(0, 0), convexity: int = None, layer: int = None):
+    def __init__(self, file, origin=(0, 0), convexity: int = None, layer: int = None) -> None:
         super().__init__('import',
                          {'file': file, 'origin': origin,
                           'convexity': convexity, 'layer': layer})
@@ -688,7 +688,7 @@ class import_(OpenSCADObject):
     :type convexity: int
     """
 
-    def __init__(self, file: str, origin: P2 = (0, 0), convexity: int = None, layer: int = None):
+    def __init__(self, file: str, origin: P2 = (0, 0), convexity: int = None, layer: int = None) -> None:
         super().__init__('import',
                          {'file': file, 'origin': origin,
                           'convexity': convexity, 'layer': layer})
@@ -700,12 +700,12 @@ class intersection_for(OpenSCADObject):
     intersection of the contents.
     """
 
-    def __init__(self, n: int):
+    def __init__(self, n: int) -> None:
         super().__init__('intersection_for', {'n': n})
 
 
 class assign(OpenSCADObject):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__('assign', {})
 
 
