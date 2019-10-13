@@ -792,7 +792,6 @@ def use(scad_file_path: PathStr, use_not_include: bool = True, dest_namespace_di
     """
     # These functions in solidpython are used here and only here; don't pollute
     # the global namespace with them
-    from pathlib import Path
     from .solidpython import parse_scad_callables
     from .solidpython import new_openscad_class_str
     from .solidpython import calling_module
