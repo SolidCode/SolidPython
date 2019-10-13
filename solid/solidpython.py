@@ -9,17 +9,18 @@
 
 
 import datetime
-import os 
-import sys
-import regex as re
 import inspect
-import pkg_resources
+import os
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
-
-from typing import Set, Sequence, List, Callable, Optional, Union, Iterable
 from types import ModuleType
+from typing import Callable, Iterable, List, Optional, Sequence, Set, Union
+
+import pkg_resources
+import regex as re
+
 PathStr = Union[Path, str]
 
 # These are features added to SolidPython but NOT in OpenSCAD.
