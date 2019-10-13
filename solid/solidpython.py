@@ -497,14 +497,14 @@ def _write_code_to_file(rendered_string: str,
     try:
         calling_file = Path(calling_module(stack_depth=3).__file__).absolute()
         # Output path is determined four ways:
-        # -- If supplied, use the destination path
+        # -- If filepath is supplied, use filepath
         # -- If no filepath is supplied but an out_dir is supplied, 
         #       give the calling file a .scad suffix and put it in out_dir
         # -- If neither filepath nor out_dir are supplied, give the new
         #       file a .scad suffix and put it next to the calling file
-        # __ If no path info is supplied and we can't find a calling file 
-        #       (i.e, this is being called from an interactive terminal), store
-        #       in a file in Path.cwd() / 'solid.scad'
+        # -- If no path info is supplied and we can't find a calling file 
+        #       (i.e, this is being called from an interactive terminal), 
+        #       write a file to Path.cwd() / 'solid.scad'
         out_path = None
         if filepath:
             out_path = Path(filepath)
