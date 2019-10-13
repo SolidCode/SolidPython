@@ -38,7 +38,7 @@ PYTHON_ONLY_RESERVED_WORDS = [
 # =========================
 # = Internal Utilities    =
 # =========================
-class OpenSCADObject(object):
+class OpenSCADObject:
 
     def __init__(self, name: str, params: dict):
         self.name = name
