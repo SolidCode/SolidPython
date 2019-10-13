@@ -1,12 +1,11 @@
 """
 Classes for OpenSCAD builtins
 """
-from .solidpython import OpenSCADObject
-from .solidpython import IncludedOpenSCADObject
 from pathlib import Path
-
-from typing import Sequence, Tuple, Union, Optional, Dict
 from types import SimpleNamespace
+from typing import Dict, Optional, Sequence, Tuple, Union
+
+from .solidpython import OpenSCADObject
 
 PathStr = Union[Path, str]
 
