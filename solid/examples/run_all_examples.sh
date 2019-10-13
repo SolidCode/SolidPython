@@ -14,12 +14,12 @@ fi
  
  function run_example {
     echo "===================================================";
-    python "$1 $2";
+    python "$1" "$2";
     echo "===================================================";
 }
 
 for py in *.py;
-do run_example "$py $COMPILED_EXAMPLES";
+do run_example "$py" "$COMPILED_EXAMPLES";
 done 
 
 run_example mazebox/mazebox.py "$COMPILED_EXAMPLES";
