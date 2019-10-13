@@ -43,22 +43,22 @@ class OpenSCADObject(object):
     def __init__(self, name:str, params:dict):
         self.name = name
         self.params = params
-        self.children: List[OpenSCADObject] = []
+        self.children: List["OpenSCADObject"] = []
         self.modifier = ""
-        self.parent: Optional[OpenSCADObject] = None
+        self.parent: Optional["OpenSCADObject"] = None
         self.is_hole = False
         self.has_hole_children = False
         self.is_part_root = False
 
-    def set_hole(self, is_hole:bool=True) -> OpenSCADObject:
+    def set_hole(self, is_hole:bool=True) -> "OpenSCADObject":
         self.is_hole = is_hole
         return self
 
-    def set_part_root(self, is_root:bool=True) -> OpenSCADObject:
+    def set_part_root(self, is_root:bool=True) -> "OpenSCADObject":
         self.is_part_root = is_root
         return self
 
-    def find_hole_children(self, path:List[OpenSCADObject]=None) -> List[OpenSCADObject]:
+    def find_hole_children(self, path:List["OpenSCADObject"]=None) -> List["OpenSCADObject"]:
         # Because we don't force a copy every time we re-use a node
         # (e.g a = cylinder(2, 6);  b = right(10) (a)
         #  the identical 'a' object appears in the tree twice),
@@ -84,7 +84,7 @@ class OpenSCADObject(object):
 
         return hole_kids
 
-    def set_modifier(self, m:str) -> OpenSCADObject:
+    def set_modifier(self, m:str) -> "OpenSCADObject":
         # Used to add one of the 4 single-character modifiers: 
         # #(debug) !(root) %(background) or *(disable)
         string_vals = {'disable':      '*',
@@ -223,7 +223,7 @@ class OpenSCADObject(object):
             
         return s
 
-    def add(self, child:Union[OpenSCADObject, Sequence[OpenSCADObject]]) -> OpenSCADObject:
+    def add(self, child:Union["OpenSCADObject", Sequence["OpenSCADObject"]]) -> "OpenSCADObject":
         '''
         if child is a single object, assume it's an OpenSCADObjects and 
         add it to self.children
@@ -246,16 +246,16 @@ class OpenSCADObject(object):
             child.set_parent(self) # type: ignore
         return self
 
-    def set_parent(self, parent:OpenSCADObject):
+    def set_parent(self, parent:"OpenSCADObject"):
         self.parent = parent
 
-    def add_param(self, k:str, v:float) -> OpenSCADObject:
+    def add_param(self, k:str, v:float) -> "OpenSCADObject":
         if k == '$fn':
             k = 'segments'
         self.params[k] = v
         return self
 
-    def copy(self) -> OpenSCADObject:
+    def copy(self) -> "OpenSCADObject":
         '''
         Provides a copy of this object and all children,
         but doesn't copy self.parent, meaning the new object belongs
@@ -279,7 +279,7 @@ class OpenSCADObject(object):
             other.add(c.copy())
         return other
 
-    def __call__(self, *args:OpenSCADObject) -> OpenSCADObject:
+    def __call__(self, *args:"OpenSCADObject") -> "OpenSCADObject":
         '''
         Adds all objects in args to self.  This enables OpenSCAD-like syntax,
         e.g.:
@@ -290,28 +290,28 @@ class OpenSCADObject(object):
         '''
         return self.add(args)
 
-    def __add__(self, x:OpenSCADObject) -> OpenSCADObject:
+    def __add__(self, x:"OpenSCADObject") -> "OpenSCADObject":
         '''
         This makes u = a+b identical to:
         u = union()(a, b )
         '''
         return objects.union()(self, x)
 
-    def __radd__(self, x:OpenSCADObject) -> OpenSCADObject:
+    def __radd__(self, x:"OpenSCADObject") -> "OpenSCADObject":
         '''
         This makes u = a+b identical to:
         u = union()(a, b )
         '''
         return objects.union()(self, x)
 
-    def __sub__(self, x:OpenSCADObject) -> OpenSCADObject:
+    def __sub__(self, x:"OpenSCADObject") -> "OpenSCADObject":
         '''
         This makes u = a - b identical to:
         u = difference()(a, b )
         '''
         return objects.difference()(self, x)
 
-    def __mul__(self, x:OpenSCADObject) -> OpenSCADObject:
+    def __mul__(self, x:"OpenSCADObject") -> "OpenSCADObject":
         '''
         This makes u = a * b identical to:
         u = intersection()(a, b )
