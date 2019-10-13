@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 # Basic shape with several repeated parts, demonstrating the use of
 # solid.utils.bill_of_materials()

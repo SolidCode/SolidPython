@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 #   A-Mazing Box, http://www.thingiverse.com/thing:1481
 #   Copyright (C) 2009    Philipp Tiefenbacher <wizards23@gmail.com>
