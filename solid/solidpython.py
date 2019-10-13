@@ -7,7 +7,6 @@
 #   License: LGPL 2.1 or later
 #
 
-
 import datetime
 import inspect
 import os
@@ -30,17 +29,18 @@ non_rendered_classes = ['hole', 'part']
 # Words reserved in Python but not OpenSCAD
 # Re: https://github.com/SolidCode/SolidPython/issues/99
 PYTHON_ONLY_RESERVED_WORDS = [
-    'False','class','finally','is','return','None','continue','lambda',
-    'try','True','def','from','nonlocal','while','and','del','global','not',
-    'with','as','elif','or','yield','assert','pass', 'break','except','in','raise',
+    'False', 'class', 'finally', 'is', 'return', 'None', 'continue', 'lambda',
+    'try', 'True', 'def', 'from', 'nonlocal', 'while', 'and', 'del', 'global', 'not',
+    'with', 'as', 'elif', 'or', 'yield', 'assert', 'pass', 'break', 'except', 'in', 'raise',
 ]
+
 
 # =========================
 # = Internal Utilities    =
 # =========================
 class OpenSCADObject(object):
 
-    def __init__(self, name:str, params:dict):
+    def __init__(self, name: str, params: dict):
         self.name = name
         self.params = params
         self.children: List["OpenSCADObject"] = []
@@ -50,15 +50,15 @@ class OpenSCADObject(object):
         self.has_hole_children = False
         self.is_part_root = False
 
-    def set_hole(self, is_hole:bool=True) -> "OpenSCADObject":
+    def set_hole(self, is_hole: bool = True) -> "OpenSCADObject":
         self.is_hole = is_hole
         return self
 
-    def set_part_root(self, is_root:bool=True) -> "OpenSCADObject":
+    def set_part_root(self, is_root: bool = True) -> "OpenSCADObject":
         self.is_part_root = is_root
         return self
 
-    def find_hole_children(self, path:List["OpenSCADObject"]=None) -> List["OpenSCADObject"]:
+    def find_hole_children(self, path: List["OpenSCADObject"] = None) -> List["OpenSCADObject"]:
         # Because we don't force a copy every time we re-use a node
         # (e.g a = cylinder(2, 6);  b = right(10) (a)
         #  the identical 'a' object appears in the tree twice),
@@ -84,13 +84,13 @@ class OpenSCADObject(object):
 
         return hole_kids
 
-    def set_modifier(self, m:str) -> "OpenSCADObject":
+    def set_modifier(self, m: str) -> "OpenSCADObject":
         # Used to add one of the 4 single-character modifiers: 
         # #(debug) !(root) %(background) or *(disable)
-        string_vals = {'disable':      '*',
-                       'debug':        '#',
-                       'background':   '%',
-                       'root':         '!',
+        string_vals = {'disable': '*',
+                       'debug': '#',
+                       'background': '%',
+                       'root': '!',
                        '*': '*',
                        '#': '#',
                        '%': '%',
@@ -99,7 +99,7 @@ class OpenSCADObject(object):
         self.modifier = string_vals.get(m.lower(), '')
         return self
 
-    def _render(self, render_holes:bool=False) -> str:
+    def _render(self, render_holes: bool = False) -> str:
         '''
         NOTE: In general, you won't want to call this method. For most purposes,
         you really want scad_render(), 
@@ -148,7 +148,7 @@ class OpenSCADObject(object):
         # OpenSCAD will accept Python reserved words as callables or argument names,
         # but they won't compile in Python. Those have already been substituted
         # out (e.g 'or' => 'or_'). Sub them back here.
-        self.params = {_unsubbed_keyword(k):v for k, v in self.params.items()}
+        self.params = {_unsubbed_keyword(k): v for k, v in self.params.items()}
 
         # OpenSCAD doesn't have a 'segments' argument, but it does
         # have '$fn'.  Swap one for the other
@@ -199,7 +199,7 @@ class OpenSCADObject(object):
             pass
         else:
             s = self._render_str_no_children() + "{" + indent(s) + "\n}"
-            
+
         # Holes exist in the compiled tree in two pieces:
         # The shapes of the holes themselves, (an object for which
         # obj.is_hole is True, and all its children) and the
@@ -220,10 +220,10 @@ class OpenSCADObject(object):
         # -ETJ 19 Feb 2013
         s = s.replace("intersection", "union")
         s = s.replace("difference", "union")
-            
+
         return s
 
-    def add(self, child:Union["OpenSCADObject", Sequence["OpenSCADObject"]]) -> "OpenSCADObject":
+    def add(self, child: Union["OpenSCADObject", Sequence["OpenSCADObject"]]) -> "OpenSCADObject":
         '''
         if child is a single object, assume it's an OpenSCADObjects and 
         add it to self.children
@@ -242,14 +242,14 @@ class OpenSCADObject(object):
             if child != 0:
                 raise ValueError
         else:
-            self.children.append(child) # type: ignore
-            child.set_parent(self) # type: ignore
+            self.children.append(child)  # type: ignore
+            child.set_parent(self)  # type: ignore
         return self
 
-    def set_parent(self, parent:"OpenSCADObject"):
+    def set_parent(self, parent: "OpenSCADObject"):
         self.parent = parent
 
-    def add_param(self, k:str, v:float) -> "OpenSCADObject":
+    def add_param(self, k: str, v: float) -> "OpenSCADObject":
         if k == '$fn':
             k = 'segments'
         self.params[k] = v
@@ -279,7 +279,7 @@ class OpenSCADObject(object):
             other.add(c.copy())
         return other
 
-    def __call__(self, *args:"OpenSCADObject") -> "OpenSCADObject":
+    def __call__(self, *args: "OpenSCADObject") -> "OpenSCADObject":
         '''
         Adds all objects in args to self.  This enables OpenSCAD-like syntax,
         e.g.:
@@ -290,28 +290,28 @@ class OpenSCADObject(object):
         '''
         return self.add(args)
 
-    def __add__(self, x:"OpenSCADObject") -> "OpenSCADObject":
+    def __add__(self, x: "OpenSCADObject") -> "OpenSCADObject":
         '''
         This makes u = a+b identical to:
         u = union()(a, b )
         '''
         return objects.union()(self, x)
 
-    def __radd__(self, x:"OpenSCADObject") -> "OpenSCADObject":
+    def __radd__(self, x: "OpenSCADObject") -> "OpenSCADObject":
         '''
         This makes u = a+b identical to:
         u = union()(a, b )
         '''
         return objects.union()(self, x)
 
-    def __sub__(self, x:"OpenSCADObject") -> "OpenSCADObject":
+    def __sub__(self, x: "OpenSCADObject") -> "OpenSCADObject":
         '''
         This makes u = a - b identical to:
         u = difference()(a, b )
         '''
         return objects.difference()(self, x)
 
-    def __mul__(self, x:"OpenSCADObject") -> "OpenSCADObject":
+    def __mul__(self, x: "OpenSCADObject") -> "OpenSCADObject":
         '''
         This makes u = a * b identical to:
         u = intersection()(a, b )
@@ -346,6 +346,7 @@ class OpenSCADObject(object):
 
         return png_data
 
+
 class IncludedOpenSCADObject(OpenSCADObject):
     # Identical to OpenSCADObject, but each subclass of IncludedOpenSCADObject
     # represents imported scad code, so each instance needs to store the path
@@ -379,10 +380,11 @@ class IncludedOpenSCADObject(OpenSCADObject):
         raise ValueError("Unable to find included SCAD file: "
                          "%(include_file_path)s in sys.path" % vars())
 
+
 # =========================================
 # = Rendering Python code to OpenSCAD code=
 # =========================================
-def _find_include_strings(obj: OpenSCADObject) -> Set[str]: 
+def _find_include_strings(obj: OpenSCADObject) -> Set[str]:
     include_strings = set()
     if isinstance(obj, IncludedOpenSCADObject):
         include_strings.add(obj.include_string)
@@ -390,7 +392,8 @@ def _find_include_strings(obj: OpenSCADObject) -> Set[str]:
         include_strings.update(_find_include_strings(child))
     return include_strings
 
-def scad_render(scad_object: OpenSCADObject, file_header: str='') -> str:
+
+def scad_render(scad_object: OpenSCADObject, file_header: str = '') -> str:
     # Make this object the root of the tree
     root = scad_object
 
@@ -403,8 +406,9 @@ def scad_render(scad_object: OpenSCADObject, file_header: str='') -> str:
     scad_body = root._render()
     return file_header + includes + scad_body
 
-def scad_render_animated(func_to_animate:Callable[[Optional[float]], OpenSCADObject], 
-    steps:int =20, back_and_forth:bool=True, filepath:PathStr=None, file_header:str='') -> str:
+
+def scad_render_animated(func_to_animate: Callable[[Optional[float]], OpenSCADObject],
+                         steps: int = 20, back_and_forth: bool = True, filepath: PathStr = None, file_header: str = '') -> str:
     # func_to_animate takes a single float argument, _time in [0, 1), and
     # returns an OpenSCADObject instance.
     #
@@ -434,7 +438,7 @@ def scad_render_animated(func_to_animate:Callable[[Optional[float]], OpenSCADObj
     # should avoid any rounding error problems, and doesn't require the file
     # to be animated with an identical number of steps to the way it was
     # created. -ETJ 28 Mar 2013
-    scad_obj = func_to_animate(_time=0) # type: ignore
+    scad_obj = func_to_animate(_time=0)  # type: ignore
     include_strings = _find_include_strings(scad_obj)
     # and render the string
     includes = ''.join(include_strings) + "\n"
@@ -455,7 +459,7 @@ def scad_render_animated(func_to_animate:Callable[[Optional[float]], OpenSCADObj
                 eval_time = time * 2
             else:
                 eval_time = 2 - 2 * time
-        scad_obj = func_to_animate(_time=eval_time) # type: ignore
+        scad_obj = func_to_animate(_time=eval_time)  # type: ignore
 
         scad_str = indent(scad_obj._render())
         rendered_string += ("if ($t >= %(time)s && $t < %(end_time)s){"
@@ -463,24 +467,27 @@ def scad_render_animated(func_to_animate:Callable[[Optional[float]], OpenSCADObj
                             "}\n" % vars())
     return rendered_string
 
-def scad_render_animated_file(func_to_animate:Callable[[Optional[float]], OpenSCADObject]
-    , steps:int=20, back_and_forth:bool=True, 
-    filepath:Optional[str]=None, file_header:str='', include_orig_code:bool=True) -> bool:
-    rendered_string = scad_render_animated(func_to_animate, steps, 
-                                            back_and_forth, file_header)
+
+def scad_render_animated_file(func_to_animate: Callable[[Optional[float]], OpenSCADObject]
+                              , steps: int = 20, back_and_forth: bool = True,
+                              filepath: Optional[str] = None, file_header: str = '', include_orig_code: bool = True) -> bool:
+    rendered_string = scad_render_animated(func_to_animate, steps,
+                                           back_and_forth, file_header)
     return _write_code_to_file(rendered_string, filepath, include_orig_code)
 
-def scad_render_to_file(scad_object: OpenSCADObject, filepath:PathStr=None, 
-    file_header:str='', include_orig_code:bool=True) -> bool:
+
+def scad_render_to_file(scad_object: OpenSCADObject, filepath: PathStr = None,
+                        file_header: str = '', include_orig_code: bool = True) -> bool:
     header = "// Generated by SolidPython {version} on {date}\n".format(
-                 version = _get_version(),
-                 date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            version=_get_version(),
+            date=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     header += file_header
 
     rendered_string = scad_render(scad_object, header)
     return _write_code_to_file(rendered_string, filepath, include_orig_code)
 
-def _write_code_to_file(rendered_string:str, filepath:PathStr=None, include_orig_code:bool=True) -> bool:
+
+def _write_code_to_file(rendered_string: str, filepath: PathStr = None, include_orig_code: bool = True) -> bool:
     try:
         calling_file = Path(calling_module(stack_depth=3).__file__).absolute()
         # If filepath isn't supplied, place a .scad file with the same name
@@ -495,11 +502,12 @@ def _write_code_to_file(rendered_string:str, filepath:PathStr=None, include_orig
         # and can't read filename from the calling file either, so just save to
         # solid.scad.
         if not filepath:
-             out_path = Path().absolute() / 'solid.scad'
+            out_path = Path().absolute() / 'solid.scad'
 
     # TODO: This write is destructive; warn about overwrites?
     out_path.write_text(rendered_string)
     return True
+
 
 def _get_version():
     # Returns SolidPython version
@@ -521,13 +529,13 @@ def _get_version():
 
     raise RuntimeError("Unable to determine software version.")
 
-def sp_code_in_scad_comment(calling_file:PathStr) -> str:
+
+def sp_code_in_scad_comment(calling_file: PathStr) -> str:
     # Once a SCAD file has been created, it's difficult to reconstruct
     # how it got there, since it has no variables, modules, etc.  So, include
     # the Python code that generated the scad code as comments at the end of
     # the SCAD code
     pyopenscad_str = Path(calling_file).read_text()
-
 
     # TODO: optimally, this would also include a version number and
     # git hash (& date & github URL?) for the version of solidpython used
@@ -544,14 +552,16 @@ def sp_code_in_scad_comment(calling_file:PathStr) -> str:
                       "************************************************/\n") % vars()
     return pyopenscad_str
 
+
 # ===========
 # = Parsing =
 # ===========
-def extract_callable_signatures(scad_file_path:PathStr) -> List[dict]:
+def extract_callable_signatures(scad_file_path: PathStr) -> List[dict]:
     scad_code_str = Path(scad_file_path).read_text()
     return parse_scad_callables(scad_code_str)
 
-def parse_scad_callables(scad_code_str:str) -> List[dict]:
+
+def parse_scad_callables(scad_code_str: str) -> List[dict]:
     callables = []
 
     # Note that this isn't comprehensive; tuples or nested data structures in
@@ -563,7 +573,7 @@ def parse_scad_callables(scad_code_str:str) -> List[dict]:
 
     # TODO:  write a pyparsing grammar for OpenSCAD, or, even better, use the yacc parse grammar
     # used by the language itself.  -ETJ 06 Feb 2011
-    
+
     # FIXME: OpenSCAD use/import includes top level variables. We should parse 
     # those out (e.g. x = someValue;) as well -ETJ 21 May 2019
     no_comments_re = r'(?mxs)(//.*?\n|/\*.*?\*/)'
@@ -598,7 +608,8 @@ def parse_scad_callables(scad_code_str:str) -> List[dict]:
 
     return callables
 
-def calling_module(stack_depth:int=2) -> ModuleType:
+
+def calling_module(stack_depth: int = 2) -> ModuleType:
     '''
     Returns the module *2* back in the frame stack.  That means:
     code in module A calls code in module B, which asks calling_module()
@@ -617,27 +628,27 @@ def calling_module(stack_depth:int=2) -> ModuleType:
     # Return that module.  (Note that __main__ doesn't have a __file__ attr,
     # but that's caught elsewhere.)
     if not calling_mod:
-        import __main__ as calling_mod # type: ignore
+        import __main__ as calling_mod  # type: ignore
     return calling_mod
 
-def new_openscad_class_str(class_name:str, 
-    args:Sequence[str]=None, 
-    kwargs:Sequence[str]=None, 
-    include_file_path:Optional[str]=None, 
-    use_not_include:bool=True) -> str:
+
+def new_openscad_class_str(class_name: str,
+                           args: Sequence[str] = None,
+                           kwargs: Sequence[str] = None,
+                           include_file_path: Optional[str] = None,
+                           use_not_include: bool = True) -> str:
     args_str = ''
     args_pairs = ''
 
     args = args or []
     kwargs = kwargs or []
 
-
     # Re: https://github.com/SolidCode/SolidPython/issues/99
     # Don't allow any reserved words as argument names or module names
     # (They might be valid OpenSCAD argument names, but not in Python)
     class_name = _subbed_keyword(class_name)
 
-    args = map(_subbed_keyword, args) # type: ignore
+    args = map(_subbed_keyword, args)  # type: ignore
     for arg in args:
         args_str += ', ' + arg
         args_pairs += "'%(arg)s':%(arg)s, " % vars()
@@ -645,7 +656,7 @@ def new_openscad_class_str(class_name:str,
     # kwargs have a default value defined in their SCAD versions.  We don't
     # care what that default value will be (SCAD will take care of that), just
     # that one is defined.
-    kwargs = map(_subbed_keyword, kwargs) #type: ignore
+    kwargs = map(_subbed_keyword, kwargs)  # type: ignore
     for kwarg in kwargs:
         args_str += ', %(kwarg)s=None' % vars()
         args_pairs += "'%(kwarg)s':%(kwarg)s, " % vars()
@@ -655,7 +666,6 @@ def new_openscad_class_str(class_name:str,
         # again here so any backslashes don't get used as escape characters
         # themselves
         include_file_str = Path(include_file_path).as_posix()
-
 
         # NOTE the explicit import of 'solid' below. This is a fix for:
         # https://github.com/SolidCode/SolidPython/issues/20 -ETJ 16 Jan 2014
@@ -674,39 +684,43 @@ def new_openscad_class_str(class_name:str,
 
     return result
 
-def _subbed_keyword(keyword:str) -> str:
+
+def _subbed_keyword(keyword: str) -> str:
     # Append an underscore to any python reserved word. 
     # No-op for all other strings, e.g. 'or' => 'or_', 'other' => 'other'
     new_key = keyword + '_' if keyword in PYTHON_ONLY_RESERVED_WORDS else keyword
     if new_key != keyword:
         print("\nFound OpenSCAD code that's not compatible with Python. \n"
               "Imported OpenSCAD code using `%s` \n"
-              "can be accessed with `%s` in SolidPython\n"%(keyword, new_key))
+              "can be accessed with `%s` in SolidPython\n" % (keyword, new_key))
     return new_key
 
-def _unsubbed_keyword(subbed_keyword:str) -> str:
+
+def _unsubbed_keyword(subbed_keyword: str) -> str:
     # Remove trailing underscore for already-subbed python reserved words. 
     # No-op for all other strings: e.g. 'or_' => 'or', 'other_' => 'other_'
     shortened = subbed_keyword[:-1]
     return shortened if shortened in PYTHON_ONLY_RESERVED_WORDS else subbed_keyword
 
+
 # now that we have the base class defined, we can do a circular import
 from . import objects
 
-def py2openscad(o:Union[bool, float, str, Iterable]) -> str:
+
+def py2openscad(o: Union[bool, float, str, Iterable]) -> str:
     if type(o) == bool:
         return str(o).lower()
     if type(o) == float:
-        return "%.10f" % o # type: ignore
+        return "%.10f" % o  # type: ignore
     if type(o) == str:
-        return '"' + o + '"' # type: ignore
+        return '"' + o + '"'  # type: ignore
     if type(o).__name__ == "ndarray":
-        import numpy # type: ignore
+        import numpy  # type: ignore
         return numpy.array2string(o, separator=",", threshold=1000000000)
     if hasattr(o, "__iter__"):
         s = "["
         first = True
-        for i in o: # type: ignore
+        for i in o:  # type: ignore
             if not first:
                 s += ", "
             first = False
@@ -715,5 +729,6 @@ def py2openscad(o:Union[bool, float, str, Iterable]) -> str:
         return s
     return str(o)
 
-def indent(s:str) -> str:
+
+def indent(s: str) -> str:
     return s.replace("\n", "\n\t")
