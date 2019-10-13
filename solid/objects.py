@@ -41,8 +41,8 @@ class polygon(OpenSCADObject):
     def __init__(self, points: Points, paths: Indexes = None):
         if not paths:
             paths = [list(range(len(points)))]
-        OpenSCADObject.__init__(self, 'polygon',
-                                {'points': points, 'paths': paths})
+        super().__init__('polygon',
+                         {'points': points, 'paths': paths})
 
 
 class circle(OpenSCADObject):
@@ -61,8 +61,8 @@ class circle(OpenSCADObject):
     """
 
     def __init__(self, r: float = None, d: float = None, segments: int = None):
-        OpenSCADObject.__init__(self, 'circle',
-                                {'r': r, 'd': d, 'segments': segments})
+        super().__init__('circle',
+                         {'r': r, 'd': d, 'segments': segments})
 
 
 class square(OpenSCADObject):
@@ -84,8 +84,8 @@ class square(OpenSCADObject):
     """
 
     def __init__(self, size: ScadSize = None, center: bool = None):
-        OpenSCADObject.__init__(self, 'square',
-                                {'size': size, 'center': center})
+        super().__init__('square',
+                         {'size': size, 'center': center})
 
 
 class sphere(OpenSCADObject):
@@ -104,8 +104,8 @@ class sphere(OpenSCADObject):
     """
 
     def __init__(self, r: float = None, d: float = None, segments: int = None):
-        OpenSCADObject.__init__(self, 'sphere',
-                                {'r': r, 'd': d, 'segments': segments})
+        super().__init__('sphere',
+                         {'r': r, 'd': d, 'segments': segments})
 
 
 class cube(OpenSCADObject):
@@ -127,8 +127,8 @@ class cube(OpenSCADObject):
     """
 
     def __init__(self, size: ScadSize = None, center: bool = None):
-        OpenSCADObject.__init__(self, 'cube',
-                                {'size': size, 'center': center})
+        super().__init__('cube',
+                         {'size': size, 'center': center})
 
 
 class cylinder(OpenSCADObject):
@@ -172,10 +172,10 @@ class cylinder(OpenSCADObject):
     def __init__(self, r: float = None, h: float = None, r1: float = None, r2: float = None,
                  d: float = None, d1: float = None, d2: float = None, center: bool = None,
                  segments: int = None):
-        OpenSCADObject.__init__(self, 'cylinder',
-                                {'r': r, 'h': h, 'r1': r1, 'r2': r2, 'd': d,
-                                 'd1': d1, 'd2': d2, 'center': center,
-                                 'segments': segments})
+        super().__init__('cylinder',
+                         {'r': r, 'h': h, 'r1': r1, 'r2': r2, 'd': d,
+                          'd1': d1, 'd2': d2, 'center': center,
+                          'segments': segments})
 
 
 class polyhedron(OpenSCADObject):
@@ -207,10 +207,10 @@ class polyhedron(OpenSCADObject):
     """
 
     def __init__(self, points: P3s, faces: Indexes, convexity: int = None, triangles: Indexes = None):
-        OpenSCADObject.__init__(self, 'polyhedron',
-                                {'points': points, 'faces': faces,
-                                 'convexity': convexity,
-                                 'triangles': triangles})
+        super().__init__('polyhedron',
+                         {'points': points, 'faces': faces,
+                          'convexity': convexity,
+                          'triangles': triangles})
 
 
 class union(OpenSCADObject):
@@ -220,7 +220,7 @@ class union(OpenSCADObject):
     """
 
     def __init__(self):
-        OpenSCADObject.__init__(self, 'union', {})
+        super().__init__('union', {})
 
     def __add__(self, x: OpenSCADObjectPlus) -> OpenSCADObject:
         new_union = union()
@@ -238,7 +238,7 @@ class intersection(OpenSCADObject):
     """
 
     def __init__(self):
-        OpenSCADObject.__init__(self, 'intersection', {})
+        super().__init__('intersection', {})
 
     def __mul__(self, x: OpenSCADObjectPlus) -> OpenSCADObject:
         new_int = intersection()
@@ -255,7 +255,7 @@ class difference(OpenSCADObject):
     """
 
     def __init__(self):
-        OpenSCADObject.__init__(self, 'difference', {})
+        super().__init__('difference', {})
 
     def __sub__(self, x: OpenSCADObjectPlus) -> OpenSCADObject:
         new_diff = difference()
@@ -268,13 +268,13 @@ class difference(OpenSCADObject):
 
 class hole(OpenSCADObject):
     def __init__(self):
-        OpenSCADObject.__init__(self, 'hole', {})
+        super().__init__('hole', {})
         self.set_hole(True)
 
 
 class part(OpenSCADObject):
     def __init__(self):
-        OpenSCADObject.__init__(self, 'part', {})
+        super().__init__('part', {})
         self.set_part_root(True)
 
 
@@ -287,7 +287,7 @@ class translate(OpenSCADObject):
     """
 
     def __init__(self, v: P3 = None):
-        OpenSCADObject.__init__(self, 'translate', {'v': v})
+        super().__init__('translate', {'v': v})
 
 
 class scale(OpenSCADObject):
@@ -299,7 +299,7 @@ class scale(OpenSCADObject):
     """
 
     def __init__(self, v: P3 = None):
-        OpenSCADObject.__init__(self, 'scale', {'v': v})
+        super().__init__('scale', {'v': v})
 
 
 class rotate(OpenSCADObject):
@@ -315,7 +315,7 @@ class rotate(OpenSCADObject):
     """
 
     def __init__(self, a: Union[float, Vec3] = None, v: Vec3 = None):
-        OpenSCADObject.__init__(self, 'rotate', {'a': a, 'v': v})
+        super().__init__('rotate', {'a': a, 'v': v})
 
 
 class mirror(OpenSCADObject):
@@ -328,7 +328,7 @@ class mirror(OpenSCADObject):
     """
 
     def __init__(self, v: Vec3):
-        OpenSCADObject.__init__(self, 'mirror', {'v': v})
+        super().__init__('mirror', {'v': v})
 
 
 class resize(OpenSCADObject):
@@ -343,7 +343,7 @@ class resize(OpenSCADObject):
     """
 
     def __init__(self, newsize: Vec3, auto: Tuple[bool, bool, bool] = None):
-        OpenSCADObject.__init__(self, 'resize', {'newsize': newsize, 'auto': auto})
+        super().__init__('resize', {'newsize': newsize, 'auto': auto})
 
 
 class multmatrix(OpenSCADObject):
@@ -356,7 +356,7 @@ class multmatrix(OpenSCADObject):
     """
 
     def __init__(self, m: Tuple[Vec4, Vec4, Vec4, Vec4]):
-        OpenSCADObject.__init__(self, 'multmatrix', {'m': m})
+        super().__init__('multmatrix', {'m': m})
 
 
 class color(OpenSCADObject):
@@ -371,7 +371,7 @@ class color(OpenSCADObject):
     """
 
     def __init__(self, c: Vec34):
-        OpenSCADObject.__init__(self, 'color', {'c': c})
+        super().__init__('color', {'c': c})
 
 
 class minkowski(OpenSCADObject):
@@ -382,7 +382,7 @@ class minkowski(OpenSCADObject):
     """
 
     def __init__(self):
-        OpenSCADObject.__init__(self, 'minkowski', {})
+        super().__init__('minkowski', {})
 
 
 class offset(OpenSCADObject):
@@ -411,7 +411,7 @@ class offset(OpenSCADObject):
             kwargs = {'delta': delta, 'chamfer': chamfer}
         else:
             raise ValueError("offset(): Must supply r or delta")
-        OpenSCADObject.__init__(self, 'offset', kwargs)
+        super().__init__('offset', kwargs)
 
 
 class hull(OpenSCADObject):
@@ -422,7 +422,7 @@ class hull(OpenSCADObject):
     """
 
     def __init__(self):
-        OpenSCADObject.__init__(self, 'hull', {})
+        super().__init__('hull', {})
 
 
 class render(OpenSCADObject):
@@ -435,7 +435,7 @@ class render(OpenSCADObject):
     """
 
     def __init__(self, convexity: int = None):
-        OpenSCADObject.__init__(self, 'render', {'convexity': convexity})
+        super().__init__('render', {'convexity': convexity})
 
 
 class linear_extrude(OpenSCADObject):
@@ -471,10 +471,10 @@ class linear_extrude(OpenSCADObject):
 
     def __init__(self, height: float = None, center: bool = None, convexity: int = None,
                  twist: float = None, slices: int = None, scale: float = None):
-        OpenSCADObject.__init__(self, 'linear_extrude',
-                                {'height': height, 'center': center,
-                                 'convexity': convexity, 'twist': twist,
-                                 'slices': slices, 'scale': scale})
+        super().__init__('linear_extrude',
+                         {'height': height, 'center': center,
+                          'convexity': convexity, 'twist': twist,
+                          'slices': slices, 'scale': scale})
 
 
 class rotate_extrude(OpenSCADObject):
@@ -508,20 +508,20 @@ class rotate_extrude(OpenSCADObject):
     """
 
     def __init__(self, angle: float = 360, convexity: int = None, segments: int = None):
-        OpenSCADObject.__init__(self, 'rotate_extrude',
-                                {'angle': angle, 'segments': segments,
-                                 'convexity': convexity})
+        super().__init__('rotate_extrude',
+                         {'angle': angle, 'segments': segments,
+                          'convexity': convexity})
 
 
 class dxf_linear_extrude(OpenSCADObject):
     def __init__(self, file: str, layer: float = None, height: float = None,
                  center: bool = None, convexity: int = None, twist: float = None,
                  slices: int = None):
-        OpenSCADObject.__init__(self, 'dxf_linear_extrude',
-                                {'file': file, 'layer': layer,
-                                 'height': height, 'center': center,
-                                 'convexity': convexity, 'twist': twist,
-                                 'slices': slices})
+        super().__init__('dxf_linear_extrude',
+                         {'file': file, 'layer': layer,
+                          'height': height, 'center': center,
+                          'convexity': convexity, 'twist': twist,
+                          'slices': slices})
 
 
 class projection(OpenSCADObject):
@@ -536,7 +536,7 @@ class projection(OpenSCADObject):
     """
 
     def __init__(self, cut: bool = None):
-        OpenSCADObject.__init__(self, 'projection', {'cut': cut})
+        super().__init__('projection', {'cut': cut})
 
 
 class surface(OpenSCADObject):
@@ -564,9 +564,9 @@ class surface(OpenSCADObject):
     """
 
     def __init__(self, file, center: bool = None, convexity: int = None, invert=None):
-        OpenSCADObject.__init__(self, 'surface',
-                                {'file': file, 'center': center,
-                                 'convexity': convexity, 'invert': invert})
+        super().__init__('surface',
+                         {'file': file, 'center': center,
+                          'convexity': convexity, 'invert': invert})
 
 
 class text(OpenSCADObject):
@@ -621,19 +621,19 @@ class text(OpenSCADObject):
     def __init__(self, text: str, size: float = None, font: str = None, halign: str = None,
                  valign: str = None, spacing: float = None, direction: str = None,
                  language: str = None, script: str = None, segments: int = None):
-        OpenSCADObject.__init__(self, 'text',
-                                {'text': text, 'size': size, 'font': font,
-                                 'halign': halign, 'valign': valign,
-                                 'spacing': spacing, 'direction': direction,
-                                 'language': language, 'script': script,
-                                 'segments': segments})
+        super().__init__('text',
+                         {'text': text, 'size': size, 'font': font,
+                          'halign': halign, 'valign': valign,
+                          'spacing': spacing, 'direction': direction,
+                          'language': language, 'script': script,
+                          'segments': segments})
 
 
 class child(OpenSCADObject):
     def __init__(self, index: int = None, vector: Sequence[int] = None, range=None):
-        OpenSCADObject.__init__(self, 'child',
-                                {'index': index, 'vector': vector,
-                                 'range': range})
+        super().__init__('child',
+                         {'index': index, 'vector': vector,
+                          'range': range})
 
 
 class children(OpenSCADObject):
@@ -654,23 +654,23 @@ class children(OpenSCADObject):
     """
 
     def __init__(self, index: int = None, vector: float = None, range: P23 = None):
-        OpenSCADObject.__init__(self, 'children',
-                                {'index': index, 'vector': vector,
-                                 'range': range})
+        super().__init__('children',
+                         {'index': index, 'vector': vector,
+                          'range': range})
 
 
 class import_stl(OpenSCADObject):
     def __init__(self, file: str, origin: P2 = (0, 0), convexity: int = None, layer: int = None):
-        OpenSCADObject.__init__(self, 'import',
-                                {'file': file, 'origin': origin,
-                                 'convexity': convexity, 'layer': layer})
+        super().__init__('import',
+                         {'file': file, 'origin': origin,
+                          'convexity': convexity, 'layer': layer})
 
 
 class import_dxf(OpenSCADObject):
     def __init__(self, file, origin=(0, 0), convexity: int = None, layer: int = None):
-        OpenSCADObject.__init__(self, 'import',
-                                {'file': file, 'origin': origin,
-                                 'convexity': convexity, 'layer': layer})
+        super().__init__('import',
+                         {'file': file, 'origin': origin,
+                          'convexity': convexity, 'layer': layer})
 
 
 class import_(OpenSCADObject):
@@ -689,9 +689,9 @@ class import_(OpenSCADObject):
     """
 
     def __init__(self, file: str, origin: P2 = (0, 0), convexity: int = None, layer: int = None):
-        OpenSCADObject.__init__(self, 'import',
-                                {'file': file, 'origin': origin,
-                                 'convexity': convexity, 'layer': layer})
+        super().__init__('import',
+                         {'file': file, 'origin': origin,
+                          'convexity': convexity, 'layer': layer})
 
 
 class intersection_for(OpenSCADObject):
@@ -701,12 +701,12 @@ class intersection_for(OpenSCADObject):
     """
 
     def __init__(self, n: int):
-        OpenSCADObject.__init__(self, 'intersection_for', {'n': n})
+        super().__init__('intersection_for', {'n': n})
 
 
 class assign(OpenSCADObject):
     def __init__(self):
-        OpenSCADObject.__init__(self, 'assign', {})
+        super().__init__('assign', {})
 
 
 # ================================
