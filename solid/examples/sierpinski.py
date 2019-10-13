@@ -67,10 +67,10 @@ def weighted_midpoint(a, b, weight=0.5, jitter_range_vec=None):
 
 
 def sierpinski_3d(generation, scale=1, midpoint_weight=0.5, jitter_range_vec=None):
-    orig_tet = SierpinskiTetrahedron([[ 1.0,  1.0,  1.0],
-                                      [-1.0, -1.0,  1.0],
-                                      [-1.0,  1.0, -1.0],
-                                      [ 1.0, -1.0, -1.0]])
+    orig_tet = SierpinskiTetrahedron([[1.0, 1.0, 1.0],
+                                      [-1.0, -1.0, 1.0],
+                                      [-1.0, 1.0, -1.0],
+                                      [1.0, -1.0, -1.0]])
     all_tets = [orig_tet]
     for i in range(generation):
         all_tets = [subtet for tet in all_tets for subtet in tet.next_gen(midpoint_weight, jitter_range_vec)]

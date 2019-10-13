@@ -32,7 +32,6 @@ def star(num_points=5, outer_rad=15, dip_factor=0.5):
 
 
 def extrude_example():
-
     # Note the incorrect triangulation at the two ends of the path.  This
     # is because star isn't convex, and the triangulation algorithm for
     # the two end caps only works for convex shapes.
@@ -49,6 +48,7 @@ def extrude_example():
     extruded = extrude_along_path(shape_pts=shape, path_pts=path, scale_factors=scales)
 
     return extruded
+
 
 if __name__ == '__main__':
     out_dir = sys.argv[1] if len(sys.argv) > 1 else None

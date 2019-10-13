@@ -80,6 +80,7 @@ def multipart_hole():
 
     return a
 
+
 if __name__ == '__main__':
     out_dir = sys.argv[1] if len(sys.argv) > 1 else None
 

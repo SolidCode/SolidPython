@@ -15,6 +15,7 @@ def show_appended_python_code():
 
     return a
 
+
 if __name__ == '__main__':
     out_dir = sys.argv[1] if len(sys.argv) > 1 else None
     a = show_appended_python_code()

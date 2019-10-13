@@ -20,7 +20,7 @@ from .trianglemath import Tripple2Vec3D, angleBetweenPlanes
 SEGMENTS = 48
 
 rn = 3 * 64
-#r = 10
+# r = 10
 innerR = 25
 gap = 0.5
 wall = 1.50
@@ -33,6 +33,7 @@ h = hn * s
 hone = h / hn
 
 toph = (h - gripH) + 3
+
 
 def getPNG(fn):
     with open(fn, 'rb') as f:
@@ -50,6 +51,7 @@ def getPNG(fn):
                 r.append(px)
         return raw
 
+
 def build_depth_map(img_path):
     depth = []
     for i in range(0, hn):
@@ -58,6 +60,7 @@ def build_depth_map(img_path):
     depth = getPNG(img_path)
     depth.reverse()
     return depth
+
 
 def getPx(depth_map, x, y, default):
     x = int(x)
@@ -69,6 +72,7 @@ def getPx(depth_map, x, y, default):
         return depth_map[y][x]
     return default
 
+
 def myComp(x, y):
     d = Tripple2Vec3D(y).angle2D() - Tripple2Vec3D(x).angle2D()
     if (d < 0):
@@ -78,8 +82,8 @@ def myComp(x, y):
     else:
         return 1
 
-def bumpMapCylinder(depth_map, theR, hn, inset, default):
 
+def bumpMapCylinder(depth_map, theR, hn, inset, default):
     pts = []
     trls = []
     for i in range(0, hn):
@@ -90,13 +94,13 @@ def bumpMapCylinder(depth_map, theR, hn, inset, default):
             p = [r * cos(a), r * sin(a), i * hone]
             circ.append(p)
         circ = insetPoly(circ, inset)
-        #circ.sort(lambda x, y: -1 if (Tripple2Vec3D(y).angle2D() - Tripple2Vec3D(x).angle2D() < 0) else 1)
+        # circ.sort(lambda x, y: -1 if (Tripple2Vec3D(y).angle2D() - Tripple2Vec3D(x).angle2D() < 0) else 1)
         aold = Tripple2Vec3D(circ[0]).angle2D()
         for c in circ:
             a = Tripple2Vec3D(c).angle2D()
             # print(a)
             if (a > aold and (abs(a - aold) < 1 * pi)):
-                #print(a, aold)
+                # print(a, aold)
                 # exit()
                 pass
             aold = a
@@ -119,7 +123,7 @@ def bumpMapCylinder(depth_map, theR, hn, inset, default):
             a1 = min(a1, pi - a1)
             a2 = angleBetweenPlanes([pts[p2], pts[p1], pts[p4]], [pts[p2], pts[p3], pts[p4]])
             a2 = min(a2, pi - a2)
-            #print(a1, a2)
+            # print(a1, a2)
             if (a1 < a2):
                 t = [p1, p2, p3]
                 trls.append(t)
@@ -133,6 +137,7 @@ def bumpMapCylinder(depth_map, theR, hn, inset, default):
 
     return polyhedron(pts, trls, 6)
 
+
 def top_part():
     maze_path = os.path.join(os.path.dirname(__file__), 'maze7.png')
 
@@ -143,16 +148,17 @@ def top_part():
     u.add(bumpMapCylinder(depth_map, innerR, hn, 0, 255))
     u.add(cylinder(r=innerR + wall + gap, h=gripH))
     d.add(u)
-    #u.add(translate([80,0,0]).add(bumpMapCylinder(depth_map, innerR, wall)))
+    # u.add(translate([80,0,0]).add(bumpMapCylinder(depth_map, innerR, wall)))
     d.add(intersection()
-    .add(bumpMapCylinder(depth_map, innerR, hn + 2, wall, 0).set_modifier("") )
-    .add(translate([0, 0, baseH])
-    .add(cylinder(r=innerR + 2 * wall, h=h * 1.1).set_modifier(""))))
+          .add(bumpMapCylinder(depth_map, innerR, hn + 2, wall, 0).set_modifier(""))
+          .add(translate([0, 0, baseH])
+               .add(cylinder(r=innerR + 2 * wall, h=h * 1.1).set_modifier(""))))
 
     # u.add()
     # print("$fa=2; $fs=0.5;\n")
     # print(d._render())
     return d
+
 
 def bottom_part():
     top = difference()
@@ -172,15 +178,16 @@ def bottom_part():
 
     return top
 
+
 if __name__ == '__main__':
     out_dir = sys.argv[1] if len(sys.argv) > 1 else None
     file_out = os.path.join(out_dir, 'mazebox.scad')
 
     assm = union()(
-        top_part(),
-        translate([3*innerR, 0,0])(
-            bottom_part()
-        )
+            top_part(),
+            translate([3 * innerR, 0, 0])(
+                    bottom_part()
+            )
     )
 
     print(f"{__file__}: SCAD file written to: \n{file_out}")

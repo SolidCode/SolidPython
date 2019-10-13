@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 import sys
 from pathlib import Path
 
@@ -17,15 +16,17 @@ def demo_import_scad():
     a = scad_mod.steps(5)
     return a
 
+
 # The `use()` function mimics the bahavior of OpenSCAD's use()`
 def demo_scad_use():
     # scad_to_include.scad includes a module called steps()
     scad_path = Path(__file__).parent / 'scad_to_include.scad'
     # `This adds the SCAD module `steps()` to the global namespace
-    use(scad_path)  
+    use(scad_path)
 
     a = steps(5)
     return a
+
 
 if __name__ == '__main__':
     out_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else None

@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-
 import os
 import sys
 from math import cos, sin
@@ -15,6 +14,7 @@ def my_animate(_time=0):
     c = translate([rad * cos(rads), rad * sin(rads)])(square(10))
 
     return c
+
 
 if __name__ == '__main__':
     out_dir = sys.argv[1] if len(sys.argv) > 1 else None
@@ -39,6 +39,4 @@ if __name__ == '__main__':
                                                                   # to the end of the generated
                                                                   # OpenSCAD code.
     print(f"{__file__}: SCAD file written to: \n{file_out}")
-        
 
-    

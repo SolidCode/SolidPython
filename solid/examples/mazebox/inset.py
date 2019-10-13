@@ -1,5 +1,6 @@
 from math import sqrt
 
+
 class Vec2D:
 
     def __init__(self, x, y):
@@ -71,6 +72,7 @@ class MetaCADLine:
 def det(a, b, c, d):
     return a * d - b * c
 
+
 # solves system of 2 linear equations in 2 unknown
 
 
@@ -122,7 +124,7 @@ def insetPoly(poly, inset):
             diff = newLine.normal.minus(oldnorm).len()
             if (diff > 0.1):
                 pass
-                #print("error inverting")
+                # print("error inverting")
                 # exit()
             else:
                 pass
@@ -137,7 +139,7 @@ def insetPoly(poly, inset):
         newLine = MetaCADLine(asVec2D(points[iprev]), asVec2D(points[i]))
         diff = newLine.normal.minus(oldnorm).len()
         if (diff > 0.1):
-            #print("wrong dir detected")
+            # print("wrong dir detected")
             if (istart == -1):
                 istart = i
                 ilen = 1
@@ -147,16 +149,16 @@ def insetPoly(poly, inset):
             if (ilen > 0):
                 if (istart == 0):
                     pass
-                    #print("oh noes")
+                    # print("oh noes")
                     # exit()
                 else:
-                    #print("trying to save: ", istart, i)
+                    # print("trying to save: ", istart, i)
                     idxs = (len(poly) + istart - 1) % len(poly)
                     idxe = (i) % len(poly)
                     p1 = points[idxs]
                     p2 = points[idxe]
-                    #points[idxs] = p2
-                    #points[idxe] = p1
+                    # points[idxs] = p2
+                    # points[idxe] = p1
                     for j in range(istart, i):
                         t = float(1 + j - istart) / (1 + i - istart)
                         # print(t)
