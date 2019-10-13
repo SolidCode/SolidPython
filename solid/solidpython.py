@@ -59,11 +59,13 @@ class OpenSCADObject(object):
         return self
 
     def find_hole_children(self, path: List["OpenSCADObject"] = None) -> List["OpenSCADObject"]:
-        # Because we don't force a copy every time we re-use a node
-        # (e.g a = cylinder(2, 6);  b = right(10) (a)
-        #  the identical 'a' object appears in the tree twice),
-        # we can't count on an object's 'parent' field to trace its
-        # path to the root.  Instead, keep track explicitly
+        """
+        Because we don't force a copy every time we re-use a node
+        (e.g a = cylinder(2, 6);  b = right(10) (a)
+         the identical 'a' object appears in the tree twice),
+        we can't count on an object's 'parent' field to trace its
+        path to the root.  Instead, keep track explicitly
+        """
         path = path if path else [self]
         hole_kids = []
 
@@ -85,8 +87,10 @@ class OpenSCADObject(object):
         return hole_kids
 
     def set_modifier(self, m: str) -> "OpenSCADObject":
-        # Used to add one of the 4 single-character modifiers: 
-        # #(debug) !(root) %(background) or *(disable)
+        """
+        Used to add one of the 4 single-character modifiers:
+        #(debug) !(root) %(background) or *(disable)
+        """
         string_vals = {'disable': '*',
                        'debug': '#',
                        'background': '%',
@@ -100,11 +104,11 @@ class OpenSCADObject(object):
         return self
 
     def _render(self, render_holes: bool = False) -> str:
-        '''
+        """
         NOTE: In general, you won't want to call this method. For most purposes,
         you really want scad_render(), 
         Calling obj._render won't include necessary 'use' or 'include' statements
-        '''
+        """
         # First, render all children
         s = ""
         for child in self.children:
@@ -224,13 +228,13 @@ class OpenSCADObject(object):
         return s
 
     def add(self, child: Union["OpenSCADObject", Sequence["OpenSCADObject"]]) -> "OpenSCADObject":
-        '''
+        """
         if child is a single object, assume it's an OpenSCADObjects and 
         add it to self.children
 
         if child is a list, assume its members are all OpenSCADObjects and
         add them all to self.children
-        '''
+        """
         if isinstance(child, (list, tuple)):
             # __call__ passes us a list inside a tuple, but we only care
             # about the list, so skip single-member tuples containing lists
@@ -256,13 +260,13 @@ class OpenSCADObject(object):
         return self
 
     def copy(self) -> "OpenSCADObject":
-        '''
+        """
         Provides a copy of this object and all children,
         but doesn't copy self.parent, meaning the new object belongs
         to a different tree
         Initialize an instance of this class with the same params
         that created self, the object being copied.
-        '''
+        """
 
         # Python can't handle an '$fn' argument, while openSCAD only wants
         # '$fn'.  Swap back and forth as needed; the final renderer will
@@ -280,49 +284,49 @@ class OpenSCADObject(object):
         return other
 
     def __call__(self, *args: "OpenSCADObject") -> "OpenSCADObject":
-        '''
+        """
         Adds all objects in args to self.  This enables OpenSCAD-like syntax,
         e.g.:
         union()(
             cube(),
             sphere()
         )
-        '''
+        """
         return self.add(args)
 
     def __add__(self, x: "OpenSCADObject") -> "OpenSCADObject":
-        '''
+        """
         This makes u = a+b identical to:
         u = union()(a, b )
-        '''
+        """
         return objects.union()(self, x)
 
     def __radd__(self, x: "OpenSCADObject") -> "OpenSCADObject":
-        '''
+        """
         This makes u = a+b identical to:
         u = union()(a, b )
-        '''
+        """
         return objects.union()(self, x)
 
     def __sub__(self, x: "OpenSCADObject") -> "OpenSCADObject":
-        '''
+        """
         This makes u = a - b identical to:
         u = difference()(a, b )
-        '''
+        """
         return objects.difference()(self, x)
 
     def __mul__(self, x: "OpenSCADObject") -> "OpenSCADObject":
-        '''
+        """
         This makes u = a * b identical to:
         u = intersection()(a, b )
-        '''
+        """
         return objects.intersection()(self, x)
 
     def _repr_png_(self) -> Optional[bytes]:
-        '''
+        """
         Allow rich clients such as the IPython Notebook, to display the current
         OpenSCAD rendering of this object.
-        '''
+        """
         png_data = None
         tmp = tempfile.NamedTemporaryFile(suffix=".scad", delete=False)
         tmp_png = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
@@ -348,9 +352,11 @@ class OpenSCADObject(object):
 
 
 class IncludedOpenSCADObject(OpenSCADObject):
-    # Identical to OpenSCADObject, but each subclass of IncludedOpenSCADObject
-    # represents imported scad code, so each instance needs to store the path
-    # to the scad file it's included from.
+    """
+    Identical to OpenSCADObject, but each subclass of IncludedOpenSCADObject
+    represents imported scad code, so each instance needs to store the path
+    to the scad file it's included from.
+    """
 
     def __init__(self, name, params, include_file_path, use_not_include=False, **kwargs):
         self.include_file_path = self._get_include_path(include_file_path)
@@ -510,8 +516,10 @@ def _write_code_to_file(rendered_string: str, filepath: PathStr = None, include_
 
 
 def _get_version():
-    # Returns SolidPython version
-    # Raises a RuntimeError if the version cannot be determined
+    """
+    Returns SolidPython version
+    Raises a RuntimeError if the version cannot be determined
+    """
 
     try:
         # if SolidPython is installed use `pkg_resources`
@@ -531,10 +539,12 @@ def _get_version():
 
 
 def sp_code_in_scad_comment(calling_file: PathStr) -> str:
-    # Once a SCAD file has been created, it's difficult to reconstruct
-    # how it got there, since it has no variables, modules, etc.  So, include
-    # the Python code that generated the scad code as comments at the end of
-    # the SCAD code
+    """
+    Once a SCAD file has been created, it's difficult to reconstruct
+    how it got there, since it has no variables, modules, etc.  So, include
+    the Python code that generated the scad code as comments at the end of
+    the SCAD code
+    """
     pyopenscad_str = Path(calling_file).read_text()
 
     # TODO: optimally, this would also include a version number and
@@ -610,7 +620,7 @@ def parse_scad_callables(scad_code_str: str) -> List[dict]:
 
 
 def calling_module(stack_depth: int = 2) -> ModuleType:
-    '''
+    """
     Returns the module *2* back in the frame stack.  That means:
     code in module A calls code in module B, which asks calling_module()
     for module A.
@@ -621,7 +631,7 @@ def calling_module(stack_depth: int = 2) -> ModuleType:
     this.
 
     Got that?
-    '''
+    """
     frm = inspect.stack()[stack_depth]
     calling_mod = inspect.getmodule(frm[0])
     # If calling_mod is None, this is being called from an interactive session.
@@ -686,8 +696,10 @@ def new_openscad_class_str(class_name: str,
 
 
 def _subbed_keyword(keyword: str) -> str:
-    # Append an underscore to any python reserved word. 
-    # No-op for all other strings, e.g. 'or' => 'or_', 'other' => 'other'
+    """
+    Append an underscore to any python reserved word.
+    No-op for all other strings, e.g. 'or' => 'or_', 'other' => 'other'
+    """
     new_key = keyword + '_' if keyword in PYTHON_ONLY_RESERVED_WORDS else keyword
     if new_key != keyword:
         print("\nFound OpenSCAD code that's not compatible with Python. \n"
@@ -697,8 +709,10 @@ def _subbed_keyword(keyword: str) -> str:
 
 
 def _unsubbed_keyword(subbed_keyword: str) -> str:
-    # Remove trailing underscore for already-subbed python reserved words. 
-    # No-op for all other strings: e.g. 'or_' => 'or', 'other_' => 'other_'
+    """
+    Remove trailing underscore for already-subbed python reserved words.
+    No-op for all other strings: e.g. 'or_' => 'or', 'other_' => 'other_'
+    """
     shortened = subbed_keyword[:-1]
     return shortened if shortened in PYTHON_ONLY_RESERVED_WORDS else subbed_keyword
 
