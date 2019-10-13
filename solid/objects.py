@@ -134,7 +134,7 @@ class cube(OpenSCADObject):
 class cylinder(OpenSCADObject):
     """
     Creates a cylinder or cone at the origin of the coordinate system. A
-    single radius (r) makes a cylinder, two different radi (r1, r2) make a
+    single radius (r) makes a cylinder, two different radii (r1, r2) make a
     cone.
 
     :param h: This is the height of the cylinder. Default value is 1.
@@ -269,13 +269,13 @@ class difference(OpenSCADObject):
 class hole(OpenSCADObject):
     def __init__(self) -> None:
         super().__init__('hole', {})
-        self.set_hole(True)
+        self.set_hole(is_hole=True)
 
 
 class part(OpenSCADObject):
     def __init__(self) -> None:
         super().__init__('part', {})
-        self.set_part_root(True)
+        self.set_part_root(is_root=True)
 
 
 class translate(OpenSCADObject):
@@ -487,7 +487,7 @@ class rotate_extrude(OpenSCADObject):
     The 2D shape needs to be either completely on the positive, or negative
     side (not recommended), of the X axis. It can touch the axis, i.e. zero,
     however if the shape crosses the X axis a warning will be shown in the
-    console windows and the rotate\_extrude() will be ignored. If the shape
+    console windows and the rotate/_extrude() will be ignored. If the shape
     is in the negative axis the faces will be inside-out, you probably don't
     want to do that; it may be fixed in the future.
 
