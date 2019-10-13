@@ -24,7 +24,7 @@ class Vec3D:
     def times(self, t):
         return Vec3D(self.x * t, self.y * t, self.z * t)
 
-    # changes the objetct itself
+    # changes the object itself
     def add(self, v):
         self.x += v.x
         self.y += v.y

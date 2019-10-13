@@ -17,10 +17,10 @@ def basic_geometry():
     # left_piece uses standard OpenSCAD grammar (note the commas between
     # block elements; OpenSCAD doesn't require this)
     left_piece =  union()(
-                        translate([-15, 0, 0])(
+                        translate((-15, 0, 0))(
                             cube([10, 5, 3], center=True)
                         ),
-                        translate([-10, 0, 0])(
+                        translate((-10, 0, 0))(
                             difference()(
                                 cylinder(r=5, h=15, center=True),
                                 cylinder(r=4, h=16, center=True)

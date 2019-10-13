@@ -17,7 +17,7 @@ def demo_import_scad():
     return a
 
 
-# The `use()` function mimics the bahavior of OpenSCAD's use()`
+# The `use()` function mimics the behavior of OpenSCAD's use()`
 def demo_scad_use():
     # scad_to_include.scad includes a module called steps()
     scad_path = Path(__file__).parent / 'scad_to_include.scad'

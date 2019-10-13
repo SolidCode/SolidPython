@@ -151,7 +151,7 @@ def top_part():
     # u.add(translate([80,0,0]).add(bumpMapCylinder(depth_map, innerR, wall)))
     d.add(intersection()
           .add(bumpMapCylinder(depth_map, innerR, hn + 2, wall, 0).set_modifier(""))
-          .add(translate([0, 0, baseH])
+          .add(translate((0, 0, baseH))
                .add(cylinder(r=innerR + 2 * wall, h=h * 1.1).set_modifier(""))))
 
     # u.add()
@@ -167,14 +167,14 @@ def bottom_part():
     top.add(u)
     d = difference()
     d.add(cylinder(r=innerR + wall + gap, h=toph))
-    d.add(translate([0, 0, baseH]).add(cylinder(r=innerR + gap, h=toph)))
+    d.add(translate((0, 0, baseH)).add(cylinder(r=innerR + gap, h=toph)))
     u.add(d)
     top.add(u2)
     for i in range(0, 3):
         a = i * 2 * pi / 3.0
         r = innerR + gap + wall / 2
-        u.add(translate([(r - 0.3) * cos(a), (r - 0.3) * sin(a), toph - 6]).add(sphere(r=2.4)))
-        u2.add(translate([(r + wall - 0.3) * cos(a), (r + wall - 0.3) * sin(a), toph - 6]).add(sphere(r=2.4)))
+        u.add(translate(((r - 0.3) * cos(a), (r - 0.3) * sin(a), toph - 6)).add(sphere(r=2.4)))
+        u2.add(translate(((r + wall - 0.3) * cos(a), (r + wall - 0.3) * sin(a), toph - 6)).add(sphere(r=2.4)))
 
     return top
 
@@ -185,7 +185,7 @@ if __name__ == '__main__':
 
     assm = union()(
             top_part(),
-            translate([3 * innerR, 0, 0])(
+            translate((3 * innerR, 0, 0))(
                     bottom_part()
             )
     )

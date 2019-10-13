@@ -77,7 +77,7 @@ def det(a, b, c, d):
 
 
 class LinearSolve2:
-    # the equations look like thsi looks like this
+    # the equations look like this looks like this
     # x1*a + x2*b = r1
     # x1*c + x2*d = r2
 

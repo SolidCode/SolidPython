@@ -2,16 +2,18 @@
 import os
 import sys
 from math import cos, sin
+from typing import Optional
 
 from solid import scad_render_animated_file
+from solid.solidpython import OpenSCADObject
 from solid.objects import square, translate
 
 
-def my_animate(_time=0):
+def my_animate(_time: Optional[float] = 0) -> OpenSCADObject:
     # _time will range from 0 to 1, not including 1
     rads = _time * 2 * 3.1416
     rad = 15
-    c = translate([rad * cos(rads), rad * sin(rads)])(square(10))
+    c = translate((rad * cos(rads), rad * sin(rads)))(square(10))
 
     return c
 
