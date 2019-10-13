@@ -803,8 +803,7 @@ def use(scad_file_path: PathStr, use_not_include: bool = True, dest_namespace_di
     try:
         contents = scad_file_path.read_text()
     except Exception as e:
-        raise Exception("Failed to import SCAD module '%(scad_file_path)s' "
-                        "with error: %(e)s " % vars())
+        raise Exception(f"Failed to import SCAD module '{scad_file_path}' with error: {e} ")
 
     # Once we have a list of all callables and arguments, dynamically
     # add OpenSCADObject subclasses for all callables to the calling module's
