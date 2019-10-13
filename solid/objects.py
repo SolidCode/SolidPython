@@ -24,7 +24,7 @@ OpenSCADObjectPlus = Union[OpenSCADObject, Sequence[OpenSCADObject]]
 
 
 class polygon(OpenSCADObject):
-    '''
+    """
     Create a polygon with the specified points and paths.
 
     :param points: the list of points of the polygon
@@ -36,7 +36,7 @@ class polygon(OpenSCADObject):
     polygon has holes. The parameter is optional and if omitted the points are 
     assumed in order. (The 'pN' components of the *paths* vector are 0-indexed 
     references to the elements of the *points* vector.)
-    '''
+    """
 
     def __init__(self, points: Points, paths: Indexes = None):
         if not paths:
@@ -46,7 +46,7 @@ class polygon(OpenSCADObject):
 
 
 class circle(OpenSCADObject):
-    '''
+    """
     Creates a circle at the origin of the coordinate system. The argument
     name is optional.
 
@@ -58,7 +58,7 @@ class circle(OpenSCADObject):
 
     :param segments: Number of fragments in 360 degrees.
     :type segments: int
-    '''
+    """
 
     def __init__(self, r: float = None, d: float = None, segments: int = None):
         OpenSCADObject.__init__(self, 'circle',
@@ -66,7 +66,7 @@ class circle(OpenSCADObject):
 
 
 class square(OpenSCADObject):
-    '''
+    """
     Creates a square at the origin of the coordinate system. When center is
     True the square will be centered on the origin, otherwise it is created
     in the first quadrant. The argument names are optional if the arguments
@@ -81,7 +81,7 @@ class square(OpenSCADObject):
     object is centered at (0,0). Otherwise, the square is placed in the positive 
     quadrant with one corner at (0,0). Defaults to False.
     :type center: boolean
-    '''
+    """
 
     def __init__(self, size: ScadSize = None, center: bool = None):
         OpenSCADObject.__init__(self, 'square',
@@ -89,7 +89,7 @@ class square(OpenSCADObject):
 
 
 class sphere(OpenSCADObject):
-    '''
+    """
     Creates a sphere at the origin of the coordinate system. The argument
     name is optional.
 
@@ -101,7 +101,7 @@ class sphere(OpenSCADObject):
 
     :param segments: Resolution of the sphere
     :type segments: int
-    '''
+    """
 
     def __init__(self, r: float = None, d: float = None, segments: int = None):
         OpenSCADObject.__init__(self, 'sphere',
@@ -109,7 +109,7 @@ class sphere(OpenSCADObject):
 
 
 class cube(OpenSCADObject):
-    '''
+    """
     Creates a cube at the origin of the coordinate system. When center is
     True the cube will be centered on the origin, otherwise it is created in
     the first octant. The argument names are optional if the arguments are
@@ -124,7 +124,7 @@ class cube(OpenSCADObject):
     object is centered at (0,0,0). Otherwise, the cube is placed in the positive 
     quadrant with one corner at (0,0,0). Defaults to False
     :type center: boolean
-    '''
+    """
 
     def __init__(self, size: ScadSize = None, center: bool = None):
         OpenSCADObject.__init__(self, 'cube',
@@ -132,7 +132,7 @@ class cube(OpenSCADObject):
 
 
 class cylinder(OpenSCADObject):
-    '''
+    """
     Creates a cylinder or cone at the origin of the coordinate system. A
     single radius (r) makes a cylinder, two different radi (r1, r2) make a
     cone.
@@ -167,7 +167,7 @@ class cylinder(OpenSCADObject):
 
     :param segments: Number of fragments in 360 degrees.
     :type segments: int
-    '''
+    """
 
     def __init__(self, r: float = None, h: float = None, r1: float = None, r2: float = None,
                  d: float = None, d1: float = None, d2: float = None, center: bool = None,
@@ -179,7 +179,7 @@ class cylinder(OpenSCADObject):
 
 
 class polyhedron(OpenSCADObject):
-    '''
+    """
     Create a polyhedron with a list of points and a list of faces. The point
     list is all the vertices of the shape, the faces list is how the points
     relate to the surfaces of the polyhedron.
@@ -204,7 +204,7 @@ class polyhedron(OpenSCADObject):
     parameter is only needed for correctly displaying the object in OpenCSG 
     preview mode and has no effect on the polyhedron rendering.
     :type convexity: int
-    '''
+    """
 
     def __init__(self, points: P3s, faces: Indexes, convexity: int = None, triangles: Indexes = None):
         OpenSCADObject.__init__(self, 'polyhedron',
@@ -214,10 +214,10 @@ class polyhedron(OpenSCADObject):
 
 
 class union(OpenSCADObject):
-    '''
+    """
     Creates a union of all its child nodes. This is the **sum** of all
     children.
-    '''
+    """
 
     def __init__(self):
         OpenSCADObject.__init__(self, 'union', {})
@@ -232,10 +232,10 @@ class union(OpenSCADObject):
 
 
 class intersection(OpenSCADObject):
-    '''
+    """
     Creates the intersection of all child nodes. This keeps the
     **overlapping** portion
-    '''
+    """
 
     def __init__(self):
         OpenSCADObject.__init__(self, 'intersection', {})
@@ -250,9 +250,9 @@ class intersection(OpenSCADObject):
 
 
 class difference(OpenSCADObject):
-    '''
+    """
     Subtracts the 2nd (and all further) child nodes from the first one.
-    '''
+    """
 
     def __init__(self):
         OpenSCADObject.__init__(self, 'difference', {})
@@ -279,31 +279,31 @@ class part(OpenSCADObject):
 
 
 class translate(OpenSCADObject):
-    '''
+    """
     Translates (moves) its child elements along the specified vector.
 
     :param v: X, Y and Z translation
     :type v: 3 value sequence
-    '''
+    """
 
     def __init__(self, v: P3 = None):
         OpenSCADObject.__init__(self, 'translate', {'v': v})
 
 
 class scale(OpenSCADObject):
-    '''
+    """
     Scales its child elements using the specified vector.
 
     :param v: X, Y and Z scale factor
     :type v: 3 value sequence
-    '''
+    """
 
     def __init__(self, v: P3 = None):
         OpenSCADObject.__init__(self, 'scale', {'v': v})
 
 
 class rotate(OpenSCADObject):
-    '''
+    """
     Rotates its child 'a' degrees about the origin of the coordinate system
     or around an arbitrary axis.
 
@@ -312,27 +312,27 @@ class rotate(OpenSCADObject):
 
     :param v: sequence specifying 0 or 1 to indicate which axis to rotate by 'a' degrees. Ignored if 'a' is a sequence.
     :type v: 3 value sequence
-    '''
+    """
 
     def __init__(self, a: Union[float, Vec3] = None, v: Vec3 = None):
         OpenSCADObject.__init__(self, 'rotate', {'a': a, 'v': v})
 
 
 class mirror(OpenSCADObject):
-    '''
+    """
     Mirrors the child element on a plane through the origin.
 
     :param v: the normal vector of a plane intersecting the origin through which to mirror the object.
     :type v: 3 number sequence
 
-    '''
+    """
 
     def __init__(self, v: Vec3):
         OpenSCADObject.__init__(self, 'mirror', {'v': v})
 
 
 class resize(OpenSCADObject):
-    '''
+    """
     Modify the size of the child object to match the given new size.
 
     :param newsize: X, Y and Z values
@@ -340,27 +340,27 @@ class resize(OpenSCADObject):
     
     :param auto: 3-tuple of booleans to specify which axes should be scaled
     :type auto: 3 boolean sequence
-    '''
+    """
 
     def __init__(self, newsize: Vec3, auto: Tuple[bool, bool, bool] = None):
         OpenSCADObject.__init__(self, 'resize', {'newsize': newsize, 'auto': auto})
 
 
 class multmatrix(OpenSCADObject):
-    '''
+    """
     Multiplies the geometry of all child elements with the given 4x4
     transformation matrix.
 
     :param m: transformation matrix
     :type m: sequence of 4 sequences, each containing 4 numbers.
-    '''
+    """
 
     def __init__(self, m: Tuple[Vec4, Vec4, Vec4, Vec4]):
         OpenSCADObject.__init__(self, 'multmatrix', {'m': m})
 
 
 class color(OpenSCADObject):
-    '''
+    """
     Displays the child elements using the specified RGB color + alpha value.
     This is only used for the F5 preview as CGAL and STL (F6) do not
     currently support color. The alpha value will default to 1.0 (opaque) if
@@ -368,25 +368,25 @@ class color(OpenSCADObject):
 
     :param c: RGB color + alpha value.
     :type c: sequence of 3 or 4 numbers between 0 and 1
-    '''
+    """
 
     def __init__(self, c: Vec34):
         OpenSCADObject.__init__(self, 'color', {'c': c})
 
 
 class minkowski(OpenSCADObject):
-    '''
+    """
     Renders the `minkowski
     sum <http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Minkowski_sum_3/Chapter_main.html>`__
     of child nodes.
-    '''
+    """
 
     def __init__(self):
         OpenSCADObject.__init__(self, 'minkowski', {})
 
 
 class offset(OpenSCADObject):
-    '''
+    """
     
     :param r: Amount to offset the polygon (rounded corners). When negative, 
         the polygon is offset inwards. The parameter r specifies the radius 
@@ -402,7 +402,7 @@ class offset(OpenSCADObject):
         should be chamfered (cut off with a straight line) or not (extended to 
         their intersection).
     :type chamfer: bool
-    '''
+    """
 
     def __init__(self, r: float = None, delta: float = None, chamfer: bool = False):
         if r:
@@ -415,31 +415,31 @@ class offset(OpenSCADObject):
 
 
 class hull(OpenSCADObject):
-    '''
+    """
     Renders the `convex
     hull <http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Convex_hull_2/Chapter_main.html>`__
     of child nodes.
-    '''
+    """
 
     def __init__(self):
         OpenSCADObject.__init__(self, 'hull', {})
 
 
 class render(OpenSCADObject):
-    '''
+    """
     Always calculate the CSG model for this tree (even in OpenCSG preview
     mode).
 
     :param convexity: The convexity parameter specifies the maximum number of front sides (back sides) a ray intersecting the object might penetrate. This parameter is only needed for correctly displaying the object in OpenCSG preview mode and has no effect on the polyhedron rendering.
     :type convexity: int
-    '''
+    """
 
     def __init__(self, convexity: int = None):
         OpenSCADObject.__init__(self, 'render', {'convexity': convexity})
 
 
 class linear_extrude(OpenSCADObject):
-    '''
+    """
     Linear Extrusion is a modeling operation that takes a 2D polygon as
     input and extends it in the third dimension. This way a 3D shape is
     created.
@@ -467,7 +467,7 @@ class linear_extrude(OpenSCADObject):
     :param scale: relative size of the top of the extrusion compared to the start
     :type scale: number
 
-    '''
+    """
 
     def __init__(self, height: float = None, center: bool = None, convexity: int = None,
                  twist: float = None, slices: int = None, scale: float = None):
@@ -478,7 +478,7 @@ class linear_extrude(OpenSCADObject):
 
 
 class rotate_extrude(OpenSCADObject):
-    '''
+    """
     A rotational extrusion is a Linear Extrusion with a twist, literally.
     Unfortunately, it can not be used to produce a helix for screw threads
     as the 2D outline must be normal to the axis of rotation, ie they need
@@ -505,7 +505,7 @@ class rotate_extrude(OpenSCADObject):
     preview mode and has no effect on the polyhedron rendering.
     :type convexity: int
 
-    '''
+    """
 
     def __init__(self, angle: float = 360, convexity: int = None, segments: int = None):
         OpenSCADObject.__init__(self, 'rotate_extrude',
@@ -525,7 +525,7 @@ class dxf_linear_extrude(OpenSCADObject):
 
 
 class projection(OpenSCADObject):
-    '''
+    """
     Creates 2d shapes from 3d models, and export them to the dxf format.
     It works by projecting a 3D model to the (x,y) plane, with z at 0.
 
@@ -533,14 +533,14 @@ class projection(OpenSCADObject):
     cutting the object) When False points above and below the plane will be 
     considered as well (creating a proper projection).
     :type cut: boolean
-    '''
+    """
 
     def __init__(self, cut: bool = None):
         OpenSCADObject.__init__(self, 'projection', {'cut': cut})
 
 
 class surface(OpenSCADObject):
-    '''
+    """
     Surface reads information from text or image files.
 
     :param file: The path to the file containing the heightmap data.
@@ -561,7 +561,7 @@ class surface(OpenSCADObject):
     This parameter is only needed for correctly displaying the object in OpenCSG 
     preview mode and has no effect on the polyhedron rendering.
     :type convexity: int
-    '''
+    """
 
     def __init__(self, file, center: bool = None, convexity: int = None, invert=None):
         OpenSCADObject.__init__(self, 'surface',
@@ -570,7 +570,7 @@ class surface(OpenSCADObject):
 
 
 class text(OpenSCADObject):
-    '''
+    """
     Create text using fonts installed on the local system or provided as separate 
     font file.
 
@@ -616,7 +616,7 @@ class text(OpenSCADObject):
     :param segments: used for subdividing the curved path segments provided by 
     freetype
     :type segments: int
-    '''
+    """
 
     def __init__(self, text: str, size: float = None, font: str = None, halign: str = None,
                  valign: str = None, spacing: float = None, direction: str = None,
@@ -637,7 +637,7 @@ class child(OpenSCADObject):
 
 
 class children(OpenSCADObject):
-    '''
+    """
     The child nodes of the module instantiation can be accessed using the
     children() statement within the module. The number of module children
     can be accessed using the $children variable.
@@ -651,7 +651,7 @@ class children(OpenSCADObject):
     :type vector: sequence of int
 
     :param range: [:] or [::]. select children between to , incremented by (default 1).
-    '''
+    """
 
     def __init__(self, index: int = None, vector: float = None, range: P23 = None):
         OpenSCADObject.__init__(self, 'children',
@@ -674,7 +674,7 @@ class import_dxf(OpenSCADObject):
 
 
 class import_(OpenSCADObject):
-    '''
+    """
     Imports a file for use in the current OpenSCAD model. OpenSCAD currently
     supports import of DXF and STL (both ASCII and Binary) files.
 
@@ -686,7 +686,7 @@ class import_(OpenSCADObject):
     parameter is only needed for correctly displaying the object in OpenCSG 
     preview mode and has no effect on the polyhedron rendering.
     :type convexity: int
-    '''
+    """
 
     def __init__(self, file: str, origin: P2 = (0, 0), convexity: int = None, layer: int = None):
         OpenSCADObject.__init__(self, 'import',
@@ -695,10 +695,10 @@ class import_(OpenSCADObject):
 
 
 class intersection_for(OpenSCADObject):
-    '''
+    """
     Iterate over the values in a vector or range and take an
     intersection of the contents.
-    '''
+    """
 
     def __init__(self, n: int):
         OpenSCADObject.__init__(self, 'intersection_for', {'n': n})
@@ -736,7 +736,7 @@ def disable(openscad_obj: OpenSCADObject) -> OpenSCADObject:
 # = IMPORTING OPENSCAD CODE =
 # ===========================
 def import_scad(scad_filepath: PathStr) -> Optional[SimpleNamespace]:
-    '''
+    """
     import_scad() is the namespaced, more Pythonic way to import OpenSCAD code.
     Return a python namespace containing all imported SCAD modules
 
@@ -751,7 +751,7 @@ def import_scad(scad_filepath: PathStr) -> Optional[SimpleNamespace]:
         mcad = solid.import_scad('<PATH_TO/MCAD')
         dir(mcad) # => ['bearing', 'boxes', 'constants', 'curves',...]
         dir(mcad.bearing) # => ['bearing', 'bearingDimensions', ...]
-    '''
+    """
     scad = Path(scad_filepath)
 
     namespace: Optional[SimpleNamespace] = SimpleNamespace()
@@ -786,10 +786,10 @@ def import_scad(scad_filepath: PathStr) -> Optional[SimpleNamespace]:
 #   scad_file_path.scad, which may have side effects.
 #   Unless you have a specific need, call use().
 def use(scad_file_path: PathStr, use_not_include: bool = True, dest_namespace_dict: Dict = None):
-    '''
+    """
     Opens scad_file_path, parses it for all usable calls,
     and adds them to caller's namespace.
-    '''
+    """
     # These functions in solidpython are used here and only here; don't pollute
     # the global namespace with them
     from pathlib import Path
