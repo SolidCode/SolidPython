@@ -490,7 +490,7 @@ def scad_render_to_file(scad_object: OpenSCADObject,
     rendered_string = scad_render(scad_object, header)
     return _write_code_to_file(rendered_string, filepath, out_dir, include_orig_code)
 
-def _write_code_to_file(rendered_string:str, 
+def _write_code_to_file(rendered_string: str, 
                         filepath: PathStr=None, 
                         out_dir: PathStr=None, 
                         include_orig_code: bool=True) -> bool:
@@ -509,7 +509,10 @@ def _write_code_to_file(rendered_string:str,
         if filepath:
             out_path = Path(filepath)
         elif out_dir:
-            out_path = Path(out_dir) / calling_file.with_suffix('.scad').name
+            odp = Path(out_dir)
+            if not odp.exists():
+                odp.mkdir()
+            out_path = odp / calling_file.with_suffix('.scad').name
         else:
             out_path = calling_file.with_suffix('.scad')
         
@@ -520,13 +523,16 @@ def _write_code_to_file(rendered_string:str,
         # We can't read original code from a file, so don't try,
         # and can't read filename from the calling file either, so just save to
         # solid.scad.
-        if not filepath:
-            parent_dir = Path(out_dir) if out_dir else Path()
-            out_path = parent_dir / 'solid.scad'
+        if filepath:
+            out_path = path(filepath)
+        else:
+            odp = Path(out_dir) if out_dir else Path.cwd()
+            if not odp.exists():
+                odp.mkdir()
+            out_path = odp / 'solid.scad'
 
-    # TODO: This write is destructive; warn about overwrites?
     out_path.write_text(rendered_string)
-    return True
+    return out_path.absolute().as_posix()
 
 def _get_version():
     # Returns SolidPython version

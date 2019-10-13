@@ -40,15 +40,13 @@ def basic_geometry():
     return union()(left_piece, right_piece)
 
 if __name__ == '__main__':
-    out_dir = sys.argv[1] if len(sys.argv) > 1 else os.curdir
-    file_out = os.path.join(out_dir, 'basic_geometry.scad')
+    out_dir = sys.argv[1] if len(sys.argv) > 1 else None
 
     a = basic_geometry()
-
-    print("%(__file__)s: SCAD file written to: \n%(file_out)s" % vars())
 
     # Adding the file_header argument as shown allows you to change
     # the detail of arcs by changing the SEGMENTS variable.  This can
     # be expensive when making lots of small curves, but is otherwise
     # useful.
-    scad_render_to_file(a, file_out, file_header='$fn = %s;' % SEGMENTS)
+    file_out = scad_render_to_file(a, out_dir=out_dir, file_header=f'$fn = {SEGMENTS};')
+    print(f"{__file__}: SCAD file written to: \n{file_out}")

@@ -25,11 +25,7 @@ def demo_scad_use():
     return a
 
 if __name__ == '__main__':
-    this_file = Path(__file__)
-    out_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else this_file.parent
-    file_out = out_dir / this_file.with_suffix('.scad').name
+    out_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else None
     a = demo_import_scad()
-
+    file_out = scad_render_to_file(a, out_dir=out_dir)
     print(f"{__file__}: SCAD file written to: \n{file_out}")
-
-    scad_render_to_file(a, file_out)

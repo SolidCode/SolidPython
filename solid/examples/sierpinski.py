@@ -83,7 +83,7 @@ def sierpinski_3d(generation, scale=1, midpoint_weight=0.5, jitter_range_vec=Non
 
 
 if __name__ == '__main__':
-    out_dir = sys.argv[1] if len(sys.argv) > 1 else os.curdir
+    out_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else Path.cwd()
 
     generations = 3
     midpoint_weight = 0.5
@@ -101,6 +101,6 @@ if __name__ == '__main__':
         for p in tet.points:
             t.add(translate(p).add(cube(5, center=True)))
 
-    file_out = os.path.join(out_dir, 'gasket_%s_gen.scad' % generations)
-    print("%(__file__)s: SCAD file written to: \n%(file_out)s" % vars())
-    scad_render_to_file(t, file_out)
+    file_out = out_dir / f'gasket_{generations}_gen.scad'
+    file_out = scad_render_to_file(t, file_out)
+    print(f"{__file__}: SCAD file written to: \n{file_out}")

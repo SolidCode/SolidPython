@@ -140,15 +140,15 @@ def main_3d(out_dir):
 
         # Do the SCAD
         edges = [list(range(len(points)))]
-        all_polys.add(up(h)(
-            polyhedron(points=points, faces=faces)
-        )
+        all_polys.add(
+            up(h)(
+                polyhedron(points=points, faces=faces)
+            )
         )
 
-    file_out = os.path.join(out_dir, 'koch_3d.scad')
-    cur_file = __file__
-    print("%(cur_file)s: SCAD file written to: %(file_out)s" % vars())
-    scad_render_to_file(all_polys, file_out, include_orig_code=True)
+    file_out = Path(out_dir) / 'koch_3d.scad'
+    file_out = scad_render_to_file(all_polys, file_out, include_orig_code=True)
+    print(f"{__file__}: SCAD file written to: {file_out}")
 
 
 def main(out_dir):
@@ -197,12 +197,10 @@ def main(out_dir):
         edges = [list(range(len(points)))]
         all_polys.add(forward(h)(polygon(points=points, paths=edges)))
 
-    file_out = os.path.join(out_dir, 'koch.scad')
-    cur_file = __file__
-    print("%(cur_file)s: SCAD file written to: %(file_out)s " % vars())
-    scad_render_to_file(all_polys, file_out, include_orig_code=True)
+    file_out = scad_render_to_file(all_polys, out_dir=out_dir, include_orig_code=True)
+    print(f"{__file__}: SCAD file written to: {file_out}")
 
 if __name__ == '__main__':
-    out_dir = sys.argv[1] if len(sys.argv) > 1 else os.curdir
+    out_dir = sys.argv[1] if len(sys.argv) > 1 else None
     main_3d(out_dir)
     main(out_dir)

@@ -91,7 +91,7 @@ def doohickey():
     return d
 
 
-def assemble():
+def assembly():
     return union()(
         doohickey(),
         translate([-10, 0, doohickey_h / 2])(m3_12()),
@@ -104,19 +104,15 @@ def assemble():
     )
 
 if __name__ == '__main__':
-    out_dir = sys.argv[1] if len(sys.argv) > 1 else os.curdir
-    file_out = os.path.join(out_dir, 'BOM_example.scad')
+    out_dir = sys.argv[1] if len(sys.argv) > 1 else None
 
-    a = assemble()
-
+    a = assembly()
     bom = bill_of_materials()
+    file_out = scad_render_to_file(a, out_dir=out_dir)
 
-    print("%(__file__)s: SCAD file written to: \n%(file_out)s" % vars())
+    print(f"{__file__}: SCAD file written to: \n{file_out}")
     print(bom)
 
     print("Or, Spreadsheet-ready TSV:\n\n")
     bom = bill_of_materials(csv=True)
     print(bom)
-
-
-    scad_render_to_file(a, file_out)

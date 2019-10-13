@@ -173,7 +173,7 @@ def bottom_part():
     return top
 
 if __name__ == '__main__':
-    out_dir = sys.argv[1] if len(sys.argv) > 1 else os.curdir
+    out_dir = sys.argv[1] if len(sys.argv) > 1 else None
     file_out = os.path.join(out_dir, 'mazebox.scad')
 
     assm = union()(
@@ -183,5 +183,5 @@ if __name__ == '__main__':
         )
     )
 
-    print("%(__file__)s: SCAD file written to: \n%(file_out)s" % vars())
-    scad_render_to_file(assm, file_out, file_header='$fn = %s;' % SEGMENTS, include_orig_code=True)
+    print(f"{__file__}: SCAD file written to: \n{file_out}")
+    scad_render_to_file(assm, file_out, file_header=f'$fn = {SEGMENTS};', include_orig_code=True)
