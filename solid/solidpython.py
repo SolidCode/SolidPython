@@ -16,6 +16,10 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+import keyword
+
+from typing import Set, Sequence, List, Callable, Optional, Union, Iterable
+
 from types import ModuleType
 from typing import Callable, Iterable, List, Optional, Sequence, Set, Union
 
@@ -30,11 +34,8 @@ non_rendered_classes = ['hole', 'part']
 
 # Words reserved in Python but not OpenSCAD
 # Re: https://github.com/SolidCode/SolidPython/issues/99
-PYTHON_ONLY_RESERVED_WORDS = [
-    'False', 'class', 'finally', 'is', 'return', 'None', 'continue', 'lambda',
-    'try', 'True', 'def', 'from', 'nonlocal', 'while', 'and', 'del', 'global', 'not',
-    'with', 'as', 'elif', 'or', 'yield', 'assert', 'pass', 'break', 'except', 'in', 'raise',
-]
+
+PYTHON_ONLY_RESERVED_WORDS = keyword.kwlist
 
 
 # =========================
