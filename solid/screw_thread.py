@@ -14,8 +14,8 @@ from solid.utils import EPSILON, UP_VEC, bounding_box, radians
 solid.patch_euclid.run_patch()
 
 
-def thread(outline_pts, inner_rad, pitch, length, external=True, 
-            segments_per_rot=32, neck_in_degrees=0, neck_out_degrees=0):
+def thread(outline_pts, inner_rad, pitch, length, external=True,
+           segments_per_rot=32, neck_in_degrees=0, neck_out_degrees=0):
     '''Sweeps outline_pts (an array of points describing a closed polygon in XY)
     through a spiral. 
 
@@ -110,7 +110,7 @@ def thread(outline_pts, inner_rad, pitch, length, external=True,
 
         if neck_in_degrees != 0 and angle < neck_in_degrees:
             rad = neck_in_rad + int_ext_mult * angle / neck_in_degrees * outline_w
-        elif neck_out_degrees != 0 and  angle > total_angle - neck_out_degrees:
+        elif neck_out_degrees != 0 and angle > total_angle - neck_out_degrees:
             rad = neck_in_rad + int_ext_mult * (total_angle - angle) / neck_out_degrees * outline_w
 
         elev_vec = Vector3(rad, 0, elevation)
@@ -124,7 +124,7 @@ def thread(outline_pts, inner_rad, pitch, length, external=True,
         if i < total_steps - 1:
             ind = i * poly_sides
             for j in range(ind, ind + poly_sides - 1):
-                all_tris.append([j, j + 1,   j + poly_sides])
+                all_tris.append([j, j + 1, j + poly_sides])
                 all_tris.append([j + 1, j + poly_sides + 1, j + poly_sides])
             all_tris.append([ind, ind + poly_sides - 1 + poly_sides, ind + poly_sides - 1])
             all_tris.append([ind, ind + poly_sides, ind + poly_sides - 1 + poly_sides])
@@ -132,7 +132,7 @@ def thread(outline_pts, inner_rad, pitch, length, external=True,
     # End triangle fans for beginning and end
     last_loop = len(all_points) - poly_sides
     for i in range(poly_sides - 2):
-        all_tris.append([0,  i + 2, i + 1])
+        all_tris.append([0, i + 2, i + 1])
         all_tris.append([last_loop, last_loop + i + 1, last_loop + i + 2])
 
     # Make the polyhedron
@@ -166,8 +166,8 @@ def assembly():
 
     rad = 5
     pts = [[0, -1, 0],
-           [1,  0, 0],
-           [0,  1, 0],
+           [1, 0, 0],
+           [0, 1, 0],
            [-1, 0, 0],
            [-1, -1, 0]]
 
@@ -175,6 +175,7 @@ def assembly():
                neck_in_degrees=30, neck_out_degrees=30)
 
     return a + cylinder(10 + EPSILON, 2)
+
 
 if __name__ == '__main__':
     a = assembly()
