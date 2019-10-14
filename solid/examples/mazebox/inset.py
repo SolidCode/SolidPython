@@ -4,7 +4,8 @@ from math import sqrt
 class Vec2D:
 
     def __init__(self, x, y):
-        self.set(x, y)
+        self.x = x
+        self.y = y
 
     def set(self, x, y):
         self.x = x
@@ -59,7 +60,7 @@ class MetaCADLine:
     def intersect(self, l):
         solve = LinearSolve2(l.dir.x, -self.dir.x, l.dir.y, -self.dir.y,
                              self.start.x - l.start.x, self.start.y - l.start.y)
-        if (solve.error):
+        if solve.error:
             return None
         else:
             point = self.start.plus(self.dir.times(solve.x2))
@@ -83,7 +84,7 @@ class LinearSolve2:
 
     def __init__(self, a, b, c, d, r1, r2):
         q = det(a, b, c, d)
-        if (abs(q) < 0.000000001):
+        if abs(q) < 0.000000001:
             self.error = True
         else:
             self.error = False
@@ -97,77 +98,55 @@ def asVec2D(l):
 
 def insetPoly(poly, inset):
     points = []
-    inverted = []
-    for i in range(0, len(poly)):
+    for i in range(len(poly)):
         iprev = (i + len(poly) - 1) % len(poly)
         inext = (i + 1) % len(poly)
 
         prev = MetaCADLine(asVec2D(poly[iprev]), asVec2D(poly[i]))
-        oldnorm = Vec2D(prev.normal.x, prev.normal.y)
         next = MetaCADLine(asVec2D(poly[i]), asVec2D(poly[inext]))
 
         prev.parallelMove(inset)
         next.parallelMove(inset)
 
         intersect = prev.intersect(next)
-        if intersect == None:
+        if intersect is None:
             # take parallel moved poly[i]
             # from the line thats longer (in case we    have a degenerate line
             # in there)
-            if (prev.dir.length() < next.dir.length()):
+            if prev.dir.len() < next.dir.len():
                 intersect = Vec2D(next.start.x, next.start.y)
             else:
                 intersect = Vec2D(prev.end.x, prev.end.y)
         points.append(intersect.asTripple(poly[i][2]))
-        if (len(points) >= 2):
-            newLine = MetaCADLine(asVec2D(points[iprev]), asVec2D(points[i]))
-            diff = newLine.normal.minus(oldnorm).len()
-            if (diff > 0.1):
-                pass
-                # print("error inverting")
-                # exit()
-            else:
-                pass
-                # print("ok")
+
     istart = -1
     ilen = 0
-    for i in range(0, len(poly)):
+    for i in range(len(poly)):
         iprev = (i + len(poly) - 1) % len(poly)
-        inext = (i + 1) % len(poly)
         prev = MetaCADLine(asVec2D(poly[iprev]), asVec2D(poly[i]))
         oldnorm = Vec2D(prev.normal.x, prev.normal.y)
         newLine = MetaCADLine(asVec2D(points[iprev]), asVec2D(points[i]))
         diff = newLine.normal.minus(oldnorm).len()
-        if (diff > 0.1):
-            # print("wrong dir detected")
-            if (istart == -1):
+        if diff > 0.1:
+            if istart == -1:
                 istart = i
                 ilen = 1
             else:
                 ilen += 1
         else:
-            if (ilen > 0):
-                if (istart == 0):
-                    pass
-                    # print("oh noes")
-                    # exit()
-                else:
-                    # print("trying to save: ", istart, i)
+            if ilen > 0:
+                if istart != 0:
                     idxs = (len(poly) + istart - 1) % len(poly)
-                    idxe = (i) % len(poly)
+                    idxe = i % len(poly)
                     p1 = points[idxs]
                     p2 = points[idxe]
-                    # points[idxs] = p2
-                    # points[idxe] = p1
                     for j in range(istart, i):
                         t = float(1 + j - istart) / (1 + i - istart)
-                        # print(t)
                         points[j] = [
-                            p2[0] * t + p1[0] * (1 - t), p2[1] * t + p1[1] * (1 - t), p2[2] * t + p1[2] * (1 - t)]
+                            p2[0] * t + p1[0] * (1 - t),
+                            p2[1] * t + p1[1] * (1 - t),
+                            p2[2] * t + p1[2] * (1 - t)
+                        ]
                     istart = -1
                     ilen = 0
-
-            iprev = (i + len(poly) - 1) % len(poly)
-            inext = (i + 1) % len(poly)
-
     return points

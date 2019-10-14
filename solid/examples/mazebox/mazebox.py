@@ -41,10 +41,7 @@ def getPNG(fn):
         data = r.read()
         pixel = data[2]
         raw = []
-        # print(data)
         for row in pixel:
-            # print(row)
-            # exit()
             r = []
             raw.append(r)
             for px in row:
@@ -65,56 +62,47 @@ def build_depth_map(img_path):
 def getPx(depth_map, x, y, default):
     x = int(x)
     y = int(y)
-    x = x % len(depth_map[0])
-    if (y >= len(depth_map)):
+    x %= len(depth_map[0])
+    if y >= len(depth_map):
         y = len(depth_map) - 1
-    if (x >= 0 and x < len(depth_map[0]) and y >= 0 and y < len(depth_map)):
+    if 0 <= x < len(depth_map[0]) and 0 <= y < len(depth_map):
         return depth_map[y][x]
     return default
 
 
 def myComp(x, y):
     d = Tripple2Vec3D(y).angle2D() - Tripple2Vec3D(x).angle2D()
-    if (d < 0):
+    if d < 0:
         return -1
-    elif (d == 0):
+    elif d == 0:
         return 0
     else:
         return 1
 
 
-def bumpMapCylinder(depth_map, theR, hn, inset, default):
+def bumpMapCylinder(depth_map, the_r, hn_, inset, default):
     pts = []
     trls = []
-    for i in range(0, hn):
+    for i in range(hn_):
         circ = []
-        for j in range(0, rn):
+        for j in range(rn):
             a = j * 2 * pi / rn
-            r = theR - ((255 - getPx(depth_map, j, i, default)) / 150.0)
+            r = the_r - ((255 - getPx(depth_map, j, i, default)) / 150)
             p = [r * cos(a), r * sin(a), i * hone]
             circ.append(p)
         circ = insetPoly(circ, inset)
-        # circ.sort(lambda x, y: -1 if (Tripple2Vec3D(y).angle2D() - Tripple2Vec3D(x).angle2D() < 0) else 1)
-        aold = Tripple2Vec3D(circ[0]).angle2D()
         for c in circ:
-            a = Tripple2Vec3D(c).angle2D()
-            # print(a)
-            if (a > aold and (abs(a - aold) < 1 * pi)):
-                # print(a, aold)
-                # exit()
-                pass
-            aold = a
             pts.append(c)
 
     pts.append([0, 0, 0])
     pts.append([0, 0, i * hone])
 
-    for j in range(0, rn):
-        t = [j, (j + 1) % rn, rn * hn]
+    for j in range(rn):
+        t = [j, (j + 1) % rn, rn * hn_]
         trls.append(t)
-        t = [(rn * hn - 1) - j, (rn * hn - 1) - ((j + 1) % rn), rn * hn + 1]
+        t = [(rn * hn_ - 1) - j, (rn * hn_ - 1) - ((j + 1) % rn), rn * hn_ + 1]
         trls.append(t)
-        for i in range(0, hn - 1):
+        for i in range(0, hn_ - 1):
             p1 = i * rn + ((j + 1) % rn)
             p2 = i * rn + j
             p3 = (i + 1) * rn + j
@@ -123,8 +111,7 @@ def bumpMapCylinder(depth_map, theR, hn, inset, default):
             a1 = min(a1, pi - a1)
             a2 = angleBetweenPlanes([pts[p2], pts[p1], pts[p4]], [pts[p2], pts[p3], pts[p4]])
             a2 = min(a2, pi - a2)
-            # print(a1, a2)
-            if (a1 < a2):
+            if a1 < a2:
                 t = [p1, p2, p3]
                 trls.append(t)
                 t = [p4, p1, p3]
@@ -148,15 +135,10 @@ def top_part():
     u.add(bumpMapCylinder(depth_map, innerR, hn, 0, 255))
     u.add(cylinder(r=innerR + wall + gap, h=gripH))
     d.add(u)
-    # u.add(translate([80,0,0]).add(bumpMapCylinder(depth_map, innerR, wall)))
     d.add(intersection()
           .add(bumpMapCylinder(depth_map, innerR, hn + 2, wall, 0).set_modifier(""))
           .add(translate((0, 0, baseH))
                .add(cylinder(r=innerR + 2 * wall, h=h * 1.1).set_modifier(""))))
-
-    # u.add()
-    # print("$fa=2; $fs=0.5;\n")
-    # print(d._render())
     return d
 
 
@@ -191,4 +173,4 @@ if __name__ == '__main__':
     )
 
     print(f"{__file__}: SCAD file written to: \n{file_out}")
-    scad_render_to_file(assm, file_out, file_header=f'$fn = {SEGMENTS};', include_orig_code=True)
+    scad_render_to_file(assm, file_out, file_header=f'$fn = {SEGMENTS};')

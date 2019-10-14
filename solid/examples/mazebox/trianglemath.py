@@ -8,11 +8,13 @@ def Tripple2Vec3D(t):
 class Vec3D:
 
     def __init__(self, x, y, z):
-        self.set(x, y, z)
+        self.x = x
+        self.y = y
+        self.z = z
 
     def angle2D(self):
         a = atan2(self.x, self.y)
-        if (a < 0):
+        if a < 0:
             a += 2 * pi
         return a
 
@@ -73,12 +75,10 @@ def angleBetweenPlanes(p1, p2):
     n2 = planeNormal(p2)
     n1.normalize()
     n2.normalize()
-    # print(n1.asTripple())
-    # print(n2.asTripple())
+
     s = n1.scalarProduct(n2)
-    # print(s)
-    if (s > 1):
+    if s > 1:
         s = 1
-    if (s < -1):
+    if s < -1:
         s = -1
     return acos(s)
