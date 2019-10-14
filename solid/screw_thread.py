@@ -59,7 +59,6 @@ def thread(outline_pts, inner_rad, pitch, length, external=True,
     threads, (i.e., pitch=tooth_height), I use pitch= tooth_height+EPSILON,
     since pitch=tooth_height will self-intersect for rotations >=1
     """
-    a = union()
     rotations = float(length) / pitch
 
     total_angle = 360.0 * rotations
@@ -83,7 +82,7 @@ def thread(outline_pts, inner_rad, pitch, length, external=True,
 
     # outline_pts, since they were created in 2D , are in the XY plane.
     # But spirals move a profile in XZ around the Z-axis.  So swap Y and Z
-    # co-ords... and hope users know about this
+    # coordinates... and hope users know about this
     # Also add inner_rad to the profile
     euc_points = []
     for p in outline_pts:
@@ -164,10 +163,6 @@ def default_thread_section(tooth_height, tooth_depth):
 
 
 def assembly():
-    # Scad code here
-    a = union()
-
-    rad = 5
     pts = [[0, -1, 0],
            [1, 0, 0],
            [0, 1, 0],
