@@ -1,12 +1,9 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-from __future__ import division
-import os
+#! /usr/bin/env python3
 import sys
 
-# Assumes SolidPython is in site-packages or elsewhwere in sys.path
-from solid import *
-from solid.utils import *
+from solid import scad_render_to_file
+from solid.objects import cube, cylinder, hole, part, rotate
+from solid.utils import FORWARD_VEC, right, up
 
 SEGMENTS = 120
 
@@ -78,9 +75,8 @@ def multipart_hole():
 
     # The section of the bolt inside not_part disappears.  The section
     # of the bolt inside is_part is still there.
-    a = not_part + bolt + right(45)(is_part + bolt)
+    return not_part + bolt + right(45)(is_part + bolt)
 
-    return a
 
 if __name__ == '__main__':
     out_dir = sys.argv[1] if len(sys.argv) > 1 else None
@@ -95,6 +91,5 @@ if __name__ == '__main__':
     b = up(40)(multipart_hole())
     a += b
 
-    file_out = scad_render_to_file(a, out_dir=out_dir, file_header=f'$fn = {SEGMENTS};', 
-                    include_orig_code=True)
+    file_out = scad_render_to_file(a, out_dir=out_dir, file_header=f'$fn = {SEGMENTS};', include_orig_code=True)
     print(f"{__file__}: SCAD file written to: \n{file_out}")

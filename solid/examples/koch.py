@@ -1,21 +1,21 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-import os
+#! /usr/bin/env python3
 import sys
+from pathlib import Path
 
-from solid import *
-from solid.utils import *
+from euclid3 import LineSegment2, LineSegment3, Point2, Point3
 
-from euclid3 import *
+from solid import scad_render_to_file
+from solid.objects import polygon, polyhedron, union
+from solid.utils import forward, up
 
-ONE_THIRD = 1 / 3.0
+ONE_THIRD = 1 / 3
 
 
 def affine_combination(a, b, weight=0.5):
-    '''
+    """
     Note that weight is a fraction of the distance between self and other.
-    So... 0.33 is a point .33 of the way between self and other.  
-    '''
+    So... 0.33 is a point .33 of the way between self and other.
+    """
     if hasattr(a, 'z'):
         return Point3((1 - weight) * a.x + weight * b.x,
                       (1 - weight) * a.y + weight * b.y,
@@ -32,12 +32,12 @@ def kochify_3d(a, b, c,
                pyr_a_weight=ONE_THIRD, pyr_b_weight=ONE_THIRD, pyr_c_weight=ONE_THIRD,
                pyr_height_weight=ONE_THIRD
                ):
-    '''
-    Point3s a, b, and c must be coplanar and define a face 
+    """
+    Point3s a, b, and c must be coplanar and define a face
     ab_weight, etc define the subdivision of the original face
     pyr_a_weight, etc define where the point of the new pyramid face will go
     pyr_height determines how far from the face the new pyramid's point will be
-    '''
+    """
     triangles = []
     new_a = affine_combination(a, b, ab_weight)
     new_b = affine_combination(b, c, bc_weight)
@@ -96,8 +96,6 @@ def main_3d(out_dir):
     pyr_b_weight = ONE_THIRD
     pyr_c_weight = ONE_THIRD
     pyr_height_weight = ONE_THIRD
-    pyr_height_weight = ONE_THIRD
-    # pyr_height_weight = .25
 
     all_polys = union()
 
@@ -121,7 +119,6 @@ def main_3d(out_dir):
                                   ab_weight, bc_weight, ca_weight,
                                   pyr_a_weight, pyr_b_weight, pyr_c_weight,
                                   pyr_height_weight)
-            # new_tris = kochify_3d(  a, b, c)
             generations[g].extend(new_tris)
 
     # Put all generations into SCAD
@@ -141,9 +138,9 @@ def main_3d(out_dir):
         # Do the SCAD
         edges = [list(range(len(points)))]
         all_polys.add(
-            up(h)(
-                polyhedron(points=points, faces=faces)
-            )
+                up(h)(
+                        polyhedron(points=points, faces=faces)
+                )
         )
 
     file_out = Path(out_dir) / 'koch_3d.scad'
@@ -153,7 +150,6 @@ def main_3d(out_dir):
 
 def main(out_dir):
     # Parameters
-    midpoint_weight = 0.5
     height_ratio = 0.25
     left_loc = ONE_THIRD
     midpoint_loc = 0.5
@@ -177,15 +173,11 @@ def main(out_dir):
         generations.append([])
         for seg in generations[g - 1]:
             generations[g].extend(kochify(seg, height_ratio, left_loc, midpoint_loc, right_loc))
-            # generations[g].extend(kochify(seg))
 
     # # Put all generations into SCAD
     orig_length = abs(generations[0][0])
     for g, a_gen in enumerate(generations):
         points = [s.p1 for s in a_gen]
-        # points.append(a_gen[-1].p2) # add the last point
-
-        rect_offset = 10
 
         # Just use arrays for points so SCAD understands
         points = [[p.x, p.y] for p in points]
@@ -199,6 +191,7 @@ def main(out_dir):
 
     file_out = scad_render_to_file(all_polys, out_dir=out_dir, include_orig_code=True)
     print(f"{__file__}: SCAD file written to: {file_out}")
+
 
 if __name__ == '__main__':
     out_dir = sys.argv[1] if len(sys.argv) > 1 else None
