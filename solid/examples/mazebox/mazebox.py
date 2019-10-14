@@ -14,8 +14,8 @@ import png
 
 from solid import scad_render_to_file
 from solid.objects import cylinder, difference, intersection, polyhedron, sphere, translate, union
-from .inset import insetPoly
-from .trianglemath import Tripple2Vec3D, angleBetweenPlanes
+from inset import insetPoly
+from trianglemath import Tripple2Vec3D, angleBetweenPlanes
 
 SEGMENTS = 48
 
