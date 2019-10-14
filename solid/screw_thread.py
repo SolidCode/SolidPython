@@ -1,11 +1,12 @@
 #! /usr/bin/env python3
 from math import ceil
+from typing import Sequence, Tuple, Union
 
 from euclid3 import Point3, Vector3
 
 import solid.patch_euclid
 from solid import scad_render_to_file
-from solid.objects import cylinder, polyhedron, render, union
+from solid.objects import cylinder, polyhedron, render
 from solid.utils import EPSILON, UP_VEC, bounding_box, radians
 
 # NOTE: The PyEuclid on PyPi doesn't include several elements added to
@@ -13,9 +14,20 @@ from solid.utils import EPSILON, UP_VEC, bounding_box, radians
 # TODO: when euclid updates, remove this cruft. -ETJ 13 Feb 2013
 solid.patch_euclid.run_patch()
 
+P2 = Tuple[float, float]
+P3 = Tuple[float, float, float]
+P23 = Union[P2, P3]
+Points = Sequence[P23]
 
-def thread(outline_pts, inner_rad, pitch, length, external=True,
-           segments_per_rot=32, neck_in_degrees=0, neck_out_degrees=0):
+
+def thread(outline_pts: Points,
+           inner_rad: float,
+           pitch: float,
+           length: float,
+           external: bool = True,
+           segments_per_rot: int = 32,
+           neck_in_degrees: float = 0,
+           neck_out_degrees: float = 0):
     """
     Sweeps outline_pts (an array of points describing a closed polygon in XY)
     through a spiral.
@@ -59,12 +71,12 @@ def thread(outline_pts, inner_rad, pitch, length, external=True,
     threads, (i.e., pitch=tooth_height), I use pitch= tooth_height+EPSILON,
     since pitch=tooth_height will self-intersect for rotations >=1
     """
-    rotations = float(length) / pitch
+    rotations = length / pitch
 
-    total_angle = 360.0 * rotations
-    up_step = float(length) / (rotations * segments_per_rot)
+    total_angle = 360 * rotations
+    up_step = length / (rotations * segments_per_rot)
     # Add one to total_steps so we have total_steps *segments*
-    total_steps = int(ceil(rotations * segments_per_rot)) + 1
+    total_steps = ceil(rotations * segments_per_rot) + 1
     step_angle = total_angle / (total_steps - 1)
 
     all_points = []
@@ -151,7 +163,7 @@ def thread(outline_pts, inner_rad, pitch, length, external=True,
     return render()(a)
 
 
-def default_thread_section(tooth_height, tooth_depth):
+def default_thread_section(tooth_height: float, tooth_depth: float):
     """
     An isosceles triangle, tooth_height vertically, tooth_depth wide:
     """
@@ -163,11 +175,11 @@ def default_thread_section(tooth_height, tooth_depth):
 
 
 def assembly():
-    pts = [[0, -1, 0],
-           [1, 0, 0],
-           [0, 1, 0],
-           [-1, 0, 0],
-           [-1, -1, 0]]
+    pts = [(0, -1, 0),
+           (1, 0, 0),
+           (0, 1, 0),
+           (-1, 0, 0),
+           (-1, -1, 0)]
 
     a = thread(pts, inner_rad=10, pitch=6, length=2, segments_per_rot=31,
                neck_in_degrees=30, neck_out_degrees=30)
