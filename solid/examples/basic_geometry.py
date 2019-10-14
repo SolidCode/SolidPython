@@ -16,18 +16,18 @@ def basic_geometry():
 
     # left_piece uses standard OpenSCAD grammar (note the commas between
     # block elements; OpenSCAD doesn't require this)
-    left_piece =  union()(
-                        translate((-15, 0, 0))(
-                            cube([10, 5, 3], center=True)
-                        ),
-                        translate((-10, 0, 0))(
-                            difference()(
-                                cylinder(r=5, h=15, center=True),
-                                cylinder(r=4, h=16, center=True)
-                            )
-                        )
+    left_piece = union()(
+            translate((-15, 0, 0))(
+                    cube([10, 5, 3], center=True)
+            ),
+            translate((-10, 0, 0))(
+                    difference()(
+                            cylinder(r=5, h=15, center=True),
+                            cylinder(r=4, h=16, center=True)
                     )
-    
+            )
+    )
+
     # Right piece uses a more Pythonic grammar.  + (plus) is equivalent to union(), 
     # - (minus) is equivalent to difference() and * (star) is equivalent to intersection
     # solid.utils also defines up(), down(), left(), right(), forward(), and back()
@@ -37,6 +37,7 @@ def basic_geometry():
     right_piece += right(10)(cyl)
 
     return union()(left_piece, right_piece)
+
 
 if __name__ == '__main__':
     out_dir = sys.argv[1] if len(sys.argv) > 1 else None

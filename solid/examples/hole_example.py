@@ -76,9 +76,7 @@ def multipart_hole():
 
     # The section of the bolt inside not_part disappears.  The section
     # of the bolt inside is_part is still there.
-    a = not_part + bolt + right(45)(is_part + bolt)
-
-    return a
+    return not_part + bolt + right(45)(is_part + bolt)
 
 
 if __name__ == '__main__':

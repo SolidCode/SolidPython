@@ -153,7 +153,7 @@ def bottom_part():
     u.add(d)
     top.add(u2)
     for i in range(0, 3):
-        a = i * 2 * pi / 3.0
+        a = i * 2 * pi / 3
         r = innerR + gap + wall / 2
         u.add(translate(((r - 0.3) * cos(a), (r - 0.3) * sin(a), toph - 6)).add(sphere(r=2.4)))
         u2.add(translate(((r + wall - 0.3) * cos(a), (r + wall - 0.3) * sin(a), toph - 6)).add(sphere(r=2.4)))

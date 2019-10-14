@@ -13,8 +13,7 @@ from solid.objects import import_scad, use
 def demo_import_scad():
     scad_path = Path(__file__).parent / 'scad_to_include.scad'
     scad_mod = import_scad(scad_path)
-    a = scad_mod.steps(5)
-    return a
+    return scad_mod.steps(5)
 
 
 # The `use()` function mimics the behavior of OpenSCAD's use()`
@@ -23,9 +22,8 @@ def demo_scad_use():
     scad_path = Path(__file__).parent / 'scad_to_include.scad'
     # `This adds the SCAD module `steps()` to the global namespace
     use(scad_path)
-
-    a = steps(5)
-    return a
+    
+    return steps(5)
 
 
 if __name__ == '__main__':
