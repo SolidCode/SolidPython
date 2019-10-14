@@ -1,11 +1,9 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-from __future__ import division
-import os
+#! /usr/bin/env python3
 import sys
 
-from solid import *
-from solid.utils import *
+from solid import scad_render_to_file
+from solid.objects import cube, cylinder, difference, translate, union
+from solid.utils import right
 
 SEGMENTS = 48
 
@@ -17,18 +15,18 @@ def basic_geometry():
 
     # left_piece uses standard OpenSCAD grammar (note the commas between
     # block elements; OpenSCAD doesn't require this)
-    left_piece =  union()(
-                        translate([-15, 0, 0])(
-                            cube([10, 5, 3], center=True)
-                        ),
-                        translate([-10, 0, 0])(
-                            difference()(
-                                cylinder(r=5, h=15, center=True),
-                                cylinder(r=4, h=16, center=True)
-                            )
-                        )
+    left_piece = union()(
+            translate((-15, 0, 0))(
+                    cube([10, 5, 3], center=True)
+            ),
+            translate((-10, 0, 0))(
+                    difference()(
+                            cylinder(r=5, h=15, center=True),
+                            cylinder(r=4, h=16, center=True)
                     )
-    
+            )
+    )
+
     # Right piece uses a more Pythonic grammar.  + (plus) is equivalent to union(), 
     # - (minus) is equivalent to difference() and * (star) is equivalent to intersection
     # solid.utils also defines up(), down(), left(), right(), forward(), and back()
@@ -39,16 +37,15 @@ def basic_geometry():
 
     return union()(left_piece, right_piece)
 
+
 if __name__ == '__main__':
-    out_dir = sys.argv[1] if len(sys.argv) > 1 else os.curdir
-    file_out = os.path.join(out_dir, 'basic_geometry.scad')
+    out_dir = sys.argv[1] if len(sys.argv) > 1 else None
 
     a = basic_geometry()
-
-    print("%(__file__)s: SCAD file written to: \n%(file_out)s" % vars())
 
     # Adding the file_header argument as shown allows you to change
     # the detail of arcs by changing the SEGMENTS variable.  This can
     # be expensive when making lots of small curves, but is otherwise
     # useful.
-    scad_render_to_file(a, file_out, file_header='$fn = %s;' % SEGMENTS)
+    file_out = scad_render_to_file(a, out_dir=out_dir, file_header=f'$fn = {SEGMENTS};')
+    print(f"{__file__}: SCAD file written to: \n{file_out}")

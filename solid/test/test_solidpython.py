@@ -347,6 +347,21 @@ class TestSolidPython(DiffOutput):
 
         self.assertTrue(actual.endswith(expected))
 
+        # Test out_dir specification, both using an existing dir & creating one
+        # Using existing directory
+        with TemporaryFileBuffer() as tmp:
+            out_dir = Path(tmp.name).parent
+            expected = (out_dir / 'test_solidpython.scad').as_posix()
+            actual = scad_render_to_file(a, out_dir=out_dir)
+            self.assertEqual(expected, actual)
+
+        # Creating a directory on demand
+        with TemporaryFileBuffer() as tmp:
+            out_dir = Path(tmp.name).parent / 'SCAD'
+            expected = (out_dir / 'test_solidpython.scad').as_posix()
+            actual = scad_render_to_file(a, out_dir=out_dir)
+            self.assertEqual(expected, actual)
+
         # TODO: test include_orig_code=True, but that would have to
         # be done from a separate file, or include everything in this one
 

@@ -1,12 +1,6 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-from __future__ import division
-import os
-import sys
-
-# Assumes SolidPython is in site-packages or elsewhwere in sys.path
-from solid import *
-from solid.utils import *
+#! /usr/bin/env python3
+from solid import scad_render_to_file
+from solid.objects import union
 
 SEGMENTS = 48
 
@@ -17,6 +11,7 @@ def assembly():
 
     return a
 
+
 if __name__ == '__main__':
     a = assembly()
-    scad_render_to_file(a, file_header='$fn = %s;' % SEGMENTS, include_orig_code=True)
+    scad_render_to_file(a, file_header=f'$fn = {SEGMENTS};', include_orig_code=True)

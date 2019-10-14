@@ -1,13 +1,11 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-from __future__ import division
-import os
+#! /usr/bin/env python3
 import sys
+from math import cos, radians, sin
 
-# Assumes SolidPython is in site-packages or elsewhwere in sys.path
-from solid import *
-from solid.utils import *
-from math import sin, cos, radians, degrees
+from euclid3 import Point3
+
+from solid import scad_render_to_file
+from solid.utils import extrude_along_path
 
 SEGMENTS = 48
 
@@ -33,7 +31,6 @@ def star(num_points=5, outer_rad=15, dip_factor=0.5):
 
 
 def extrude_example():
-
     # Note the incorrect triangulation at the two ends of the path.  This
     # is because star isn't convex, and the triangulation algorithm for
     # the two end caps only works for convex shapes.
@@ -51,11 +48,9 @@ def extrude_example():
 
     return extruded
 
+
 if __name__ == '__main__':
-    out_dir = sys.argv[1] if len(sys.argv) > 1 else os.curdir
-    file_out = os.path.join(out_dir, 'path_extrude_example.scad')
-
+    out_dir = sys.argv[1] if len(sys.argv) > 1 else None
     a = extrude_example()
-
-    print("%(__file__)s: SCAD file written to: \n%(file_out)s" % vars())
-    scad_render_to_file(a, file_out, include_orig_code=True)
+    file_out = scad_render_to_file(a, out_dir=out_dir, include_orig_code=True)
+    print(f"{__file__}: SCAD file written to: \n{file_out}")
