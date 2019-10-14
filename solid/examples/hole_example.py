@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-import os
 import sys
 
 from solid import scad_render_to_file
@@ -92,6 +91,5 @@ if __name__ == '__main__':
     b = up(40)(multipart_hole())
     a += b
 
-    file_out = scad_render_to_file(a, out_dir=out_dir, file_header=f'$fn = {SEGMENTS};',
-                    include_orig_code=True)
+    file_out = scad_render_to_file(a, out_dir=out_dir, file_header=f'$fn = {SEGMENTS};', include_orig_code=True)
     print(f"{__file__}: SCAD file written to: \n{file_out}")

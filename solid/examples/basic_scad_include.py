@@ -22,7 +22,7 @@ def demo_scad_use():
     scad_path = Path(__file__).parent / 'scad_to_include.scad'
     # `This adds the SCAD module `steps()` to the global namespace
     use(scad_path)
-    
+
     return steps(5)
 
 

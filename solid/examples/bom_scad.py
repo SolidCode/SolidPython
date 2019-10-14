@@ -17,7 +17,6 @@
 #
 #       -ETJ 08 Mar 2011
 
-import os
 import sys
 
 from solid import scad_render_to_file

@@ -1,6 +1,4 @@
 #! /usr/bin/env python3
-# -*- coding: utf-8 -*-
-import os
 import sys
 
 from solid import scad_render_to_file
@@ -25,5 +23,5 @@ if __name__ == '__main__':
     # = bottom of the generated OpenSCAD code, so the final document
     # = contains the easy-to-read python code as well as the SCAD.
     # = ------------------------------------------------------------ =
-    file_out = scad_render_to_file(a, out_dir=out_dir,  include_orig_code=True)
+    file_out = scad_render_to_file(a, out_dir=out_dir, include_orig_code=True)
     print(f"{__file__}: SCAD file written to: \n{file_out}")

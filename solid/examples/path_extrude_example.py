@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-import os
 import sys
 from math import cos, radians, sin
 

@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
-import os
 import sys
+from pathlib import Path
 
 from euclid3 import LineSegment2, LineSegment3, Point2, Point3
 
@@ -138,9 +138,9 @@ def main_3d(out_dir):
         # Do the SCAD
         edges = [list(range(len(points)))]
         all_polys.add(
-            up(h)(
-                polyhedron(points=points, faces=faces)
-        )
+                up(h)(
+                        polyhedron(points=points, faces=faces)
+                )
         )
 
     file_out = Path(out_dir) / 'koch_3d.scad'

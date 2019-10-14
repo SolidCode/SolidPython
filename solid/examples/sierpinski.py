@@ -1,8 +1,8 @@
 #! /usr/bin/env python3
 import math
-import os
 import random
 import sys
+from pathlib import Path
 
 from solid import scad_render_to_file
 from solid.objects import cube, polyhedron, translate, union
