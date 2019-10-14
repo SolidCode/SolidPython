@@ -1,15 +1,16 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-import os
-import sys
+#! /usr/bin/env python3
+from math import ceil
 
-from solid import *
-from solid.utils import *
-from euclid3 import *
+from euclid3 import Point3, Vector3
+
+import solid.patch_euclid
+from solid import scad_render_to_file
+from solid.objects import cylinder, polyhedron, render, union
+from solid.utils import EPSILON, UP_VEC, bounding_box, radians
+
 # NOTE: The PyEuclid on PyPi doesn't include several elements added to
 # the module as of 13 Feb 2013.  Add them here until euclid supports them
 # TODO: when euclid updates, remove this cruft. -ETJ 13 Feb 2013
-import solid.patch_euclid
 solid.patch_euclid.run_patch()
 
 
