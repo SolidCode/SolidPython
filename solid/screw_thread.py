@@ -16,48 +16,49 @@ solid.patch_euclid.run_patch()
 
 def thread(outline_pts, inner_rad, pitch, length, external=True,
            segments_per_rot=32, neck_in_degrees=0, neck_out_degrees=0):
-    '''Sweeps outline_pts (an array of points describing a closed polygon in XY)
-    through a spiral. 
+    """
+    Sweeps outline_pts (an array of points describing a closed polygon in XY)
+    through a spiral.
 
     :param outline_pts: a list of points (NOT an OpenSCAD polygon) that define the cross section of the thread
     :type outline_pts: list
-    
+
     :param inner_rad: radius of cylinder the screw will wrap around
     :type inner_rad: number
-    
+
     :param pitch: height for one revolution; must be <= the height of outline_pts bounding box to avoid self-intersection
     :type pitch: number
-    
+
     :param length: distance from bottom-most point of screw to topmost
     :type length: number
-    
+
     :param external: if True, the cross-section is external to a cylinder. If False,the segment is internal to it, and outline_pts will be mirrored right-to-left
     :type external: bool
-    
+
     :param segments_per_rot: segments per rotation
     :type segments_per_rot: int
-    
+
     :param neck_in_degrees: degrees through which the outer edge of the screw thread will move from a thickness of zero (inner_rad) to its full thickness
     :type neck_in_degrees: number
-    
+
     :param neck_out_degrees: degrees through which outer edge of the screw thread will move from full thickness back to zero
     :type neck_out_degrees: number
-    
-    NOTE: This functions works by creating and returning one huge polyhedron, with 
-    potentially thousands of faces.  An alternate approach would make one single 
-    polyhedron,then repeat it over and over in the spiral shape, unioning them 
-    all together.  This would create a similar number of SCAD objects and 
-    operations, but still require a lot of transforms and unions to be done 
-    in the SCAD code rather than in the python, as here.  Also would take some 
-    doing to make the neck-in work as well.  Not sure how the two approaches 
-    compare in terms of render-time. -ETJ 16 Mar 2011     
 
-    NOTE: if pitch is less than or equal to the height of each tooth (outline_pts), 
-    OpenSCAD will likely crash, since the resulting screw would self-intersect 
-    all over the place.  For screws with essentially no space between 
-    threads, (i.e., pitch=tooth_height), I use pitch= tooth_height+EPSILON, 
+    NOTE: This functions works by creating and returning one huge polyhedron, with
+    potentially thousands of faces.  An alternate approach would make one single
+    polyhedron,then repeat it over and over in the spiral shape, unioning them
+    all together.  This would create a similar number of SCAD objects and
+    operations, but still require a lot of transforms and unions to be done
+    in the SCAD code rather than in the python, as here.  Also would take some
+    doing to make the neck-in work as well.  Not sure how the two approaches
+    compare in terms of render-time. -ETJ 16 Mar 2011
+
+    NOTE: if pitch is less than or equal to the height of each tooth (outline_pts),
+    OpenSCAD will likely crash, since the resulting screw would self-intersect
+    all over the place.  For screws with essentially no space between
+    threads, (i.e., pitch=tooth_height), I use pitch= tooth_height+EPSILON,
     since pitch=tooth_height will self-intersect for rotations >=1
-    '''
+    """
     a = union()
     rotations = float(length) / pitch
 
@@ -152,7 +153,9 @@ def thread(outline_pts, inner_rad, pitch, length, external=True,
 
 
 def default_thread_section(tooth_height, tooth_depth):
-    # An isoceles triangle, tooth_height vertically, tooth_depth wide:
+    """
+    An isosceles triangle, tooth_height vertically, tooth_depth wide:
+    """
     res = [[0, -tooth_height / 2],
            [tooth_depth, 0],
            [0, tooth_height / 2]
