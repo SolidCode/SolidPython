@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from solid.objects import background, circle, cube, cylinder, debug, disable, hole, import_scad, include, part, root, rotate, sphere, square, translate, use
+from solid.objects import *
 from solid.solidpython import scad_render, scad_render_animated_file, scad_render_to_file
 from solid.test.ExpandedTestCase import DiffOutput
 
@@ -420,7 +420,7 @@ def single_test(test_dict):
 def generate_cases_from_templates():
     for test_dict in scad_test_case_templates:
         test = single_test(test_dict)
-        test_name = "test_{name}".format(test_dict)
+        test_name = f"test_{test_dict['name']}"
         setattr(TestSolidPython, test_name, test)
 
 
