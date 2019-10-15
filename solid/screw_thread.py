@@ -1,69 +1,82 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-import os
-import sys
+#! /usr/bin/env python3
+from math import ceil
+from typing import Sequence, Tuple, Union
 
-from solid import *
-from solid.utils import *
-from euclid3 import *
+from euclid3 import Point3, Vector3
+
+import solid.patch_euclid
+from solid import scad_render_to_file
+from solid.objects import cylinder, polyhedron, render
+from solid.utils import EPSILON, UP_VEC, bounding_box, radians
+
 # NOTE: The PyEuclid on PyPi doesn't include several elements added to
 # the module as of 13 Feb 2013.  Add them here until euclid supports them
 # TODO: when euclid updates, remove this cruft. -ETJ 13 Feb 2013
-import solid.patch_euclid
 solid.patch_euclid.run_patch()
 
+P2 = Tuple[float, float]
+P3 = Tuple[float, float, float]
+P23 = Union[P2, P3]
+Points = Sequence[P23]
 
-def thread(outline_pts, inner_rad, pitch, length, external=True, 
-            segments_per_rot=32, neck_in_degrees=0, neck_out_degrees=0):
-    '''Sweeps outline_pts (an array of points describing a closed polygon in XY)
-    through a spiral. 
+
+def thread(outline_pts: Points,
+           inner_rad: float,
+           pitch: float,
+           length: float,
+           external: bool = True,
+           segments_per_rot: int = 32,
+           neck_in_degrees: float = 0,
+           neck_out_degrees: float = 0):
+    """
+    Sweeps outline_pts (an array of points describing a closed polygon in XY)
+    through a spiral.
 
     :param outline_pts: a list of points (NOT an OpenSCAD polygon) that define the cross section of the thread
     :type outline_pts: list
-    
+
     :param inner_rad: radius of cylinder the screw will wrap around
     :type inner_rad: number
-    
+
     :param pitch: height for one revolution; must be <= the height of outline_pts bounding box to avoid self-intersection
     :type pitch: number
-    
+
     :param length: distance from bottom-most point of screw to topmost
     :type length: number
-    
+
     :param external: if True, the cross-section is external to a cylinder. If False,the segment is internal to it, and outline_pts will be mirrored right-to-left
     :type external: bool
-    
+
     :param segments_per_rot: segments per rotation
     :type segments_per_rot: int
-    
+
     :param neck_in_degrees: degrees through which the outer edge of the screw thread will move from a thickness of zero (inner_rad) to its full thickness
     :type neck_in_degrees: number
-    
+
     :param neck_out_degrees: degrees through which outer edge of the screw thread will move from full thickness back to zero
     :type neck_out_degrees: number
-    
-    NOTE: This functions works by creating and returning one huge polyhedron, with 
-    potentially thousands of faces.  An alternate approach would make one single 
-    polyhedron,then repeat it over and over in the spiral shape, unioning them 
-    all together.  This would create a similar number of SCAD objects and 
-    operations, but still require a lot of transforms and unions to be done 
-    in the SCAD code rather than in the python, as here.  Also would take some 
-    doing to make the neck-in work as well.  Not sure how the two approaches 
-    compare in terms of render-time. -ETJ 16 Mar 2011     
 
-    NOTE: if pitch is less than or equal to the height of each tooth (outline_pts), 
-    OpenSCAD will likely crash, since the resulting screw would self-intersect 
-    all over the place.  For screws with essentially no space between 
-    threads, (i.e., pitch=tooth_height), I use pitch= tooth_height+EPSILON, 
+    NOTE: This functions works by creating and returning one huge polyhedron, with
+    potentially thousands of faces.  An alternate approach would make one single
+    polyhedron,then repeat it over and over in the spiral shape, unioning them
+    all together.  This would create a similar number of SCAD objects and
+    operations, but still require a lot of transforms and unions to be done
+    in the SCAD code rather than in the python, as here.  Also would take some
+    doing to make the neck-in work as well.  Not sure how the two approaches
+    compare in terms of render-time. -ETJ 16 Mar 2011
+
+    NOTE: if pitch is less than or equal to the height of each tooth (outline_pts),
+    OpenSCAD will likely crash, since the resulting screw would self-intersect
+    all over the place.  For screws with essentially no space between
+    threads, (i.e., pitch=tooth_height), I use pitch= tooth_height+EPSILON,
     since pitch=tooth_height will self-intersect for rotations >=1
-    '''
-    a = union()
-    rotations = float(length) / pitch
+    """
+    rotations = length / pitch
 
-    total_angle = 360.0 * rotations
-    up_step = float(length) / (rotations * segments_per_rot)
+    total_angle = 360 * rotations
+    up_step = length / (rotations * segments_per_rot)
     # Add one to total_steps so we have total_steps *segments*
-    total_steps = int(ceil(rotations * segments_per_rot)) + 1
+    total_steps = ceil(rotations * segments_per_rot) + 1
     step_angle = total_angle / (total_steps - 1)
 
     all_points = []
@@ -81,7 +94,7 @@ def thread(outline_pts, inner_rad, pitch, length, external=True,
 
     # outline_pts, since they were created in 2D , are in the XY plane.
     # But spirals move a profile in XZ around the Z-axis.  So swap Y and Z
-    # co-ords... and hope users know about this
+    # coordinates... and hope users know about this
     # Also add inner_rad to the profile
     euc_points = []
     for p in outline_pts:
@@ -109,7 +122,7 @@ def thread(outline_pts, inner_rad, pitch, length, external=True,
 
         if neck_in_degrees != 0 and angle < neck_in_degrees:
             rad = neck_in_rad + int_ext_mult * angle / neck_in_degrees * outline_w
-        elif neck_out_degrees != 0 and  angle > total_angle - neck_out_degrees:
+        elif neck_out_degrees != 0 and angle > total_angle - neck_out_degrees:
             rad = neck_in_rad + int_ext_mult * (total_angle - angle) / neck_out_degrees * outline_w
 
         elev_vec = Vector3(rad, 0, elevation)
@@ -123,7 +136,7 @@ def thread(outline_pts, inner_rad, pitch, length, external=True,
         if i < total_steps - 1:
             ind = i * poly_sides
             for j in range(ind, ind + poly_sides - 1):
-                all_tris.append([j, j + 1,   j + poly_sides])
+                all_tris.append([j, j + 1, j + poly_sides])
                 all_tris.append([j + 1, j + poly_sides + 1, j + poly_sides])
             all_tris.append([ind, ind + poly_sides - 1 + poly_sides, ind + poly_sides - 1])
             all_tris.append([ind, ind + poly_sides, ind + poly_sides - 1 + poly_sides])
@@ -131,7 +144,7 @@ def thread(outline_pts, inner_rad, pitch, length, external=True,
     # End triangle fans for beginning and end
     last_loop = len(all_points) - poly_sides
     for i in range(poly_sides - 2):
-        all_tris.append([0,  i + 2, i + 1])
+        all_tris.append([0, i + 2, i + 1])
         all_tris.append([last_loop, last_loop + i + 1, last_loop + i + 2])
 
     # Make the polyhedron
@@ -150,8 +163,10 @@ def thread(outline_pts, inner_rad, pitch, length, external=True,
     return render()(a)
 
 
-def default_thread_section(tooth_height, tooth_depth):
-    # An isoceles triangle, tooth_height vertically, tooth_depth wide:
+def default_thread_section(tooth_height: float, tooth_depth: float):
+    """
+    An isosceles triangle, tooth_height vertically, tooth_depth wide:
+    """
     res = [[0, -tooth_height / 2],
            [tooth_depth, 0],
            [0, tooth_height / 2]
@@ -160,20 +175,17 @@ def default_thread_section(tooth_height, tooth_depth):
 
 
 def assembly():
-    # Scad code here
-    a = union()
-
-    rad = 5
-    pts = [[0, -1, 0],
-           [1,  0, 0],
-           [0,  1, 0],
-           [-1, 0, 0],
-           [-1, -1, 0]]
+    pts = [(0, -1, 0),
+           (1, 0, 0),
+           (0, 1, 0),
+           (-1, 0, 0),
+           (-1, -1, 0)]
 
     a = thread(pts, inner_rad=10, pitch=6, length=2, segments_per_rot=31,
                neck_in_degrees=30, neck_out_degrees=30)
 
     return a + cylinder(10 + EPSILON, 2)
+
 
 if __name__ == '__main__':
     a = assembly()
