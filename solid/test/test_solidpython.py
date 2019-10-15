@@ -4,7 +4,14 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from solid.objects import *
+from solid.objects import background, circle, cube, cylinder, debug, disable
+from solid.objects import hole, import_scad, include, part, root, rotate, sphere
+from solid.objects import square, translate, use, color, difference, hull
+from solid.objects import import_, intersection, intersection_for, linear_extrude, import_dxf
+from solid.objects import import_stl, minkowski, mirror, multmatrix, offset, polygon
+from solid.objects import polyhedron, projection, render, resize, rotate_extrude
+from solid.objects import scale, surface, union
+
 from solid.solidpython import scad_render, scad_render_animated_file, scad_render_to_file
 from solid.test.ExpandedTestCase import DiffOutput
 
