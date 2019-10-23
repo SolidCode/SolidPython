@@ -514,11 +514,11 @@ class rotate_extrude(OpenSCADObject):
 
 
 class dxf_linear_extrude(OpenSCADObject):
-    def __init__(self, file: str, layer: float = None, height: float = None,
+    def __init__(self, file: PathStr, layer: float = None, height: float = None,
                  center: bool = None, convexity: int = None, twist: float = None,
                  slices: int = None) -> None:
         super().__init__('dxf_linear_extrude',
-                         {'file': file, 'layer': layer,
+                         {'file': Path(file).as_posix(), 'layer': layer,
                           'height': height, 'center': center,
                           'convexity': convexity, 'twist': twist,
                           'slices': slices})
@@ -544,7 +544,7 @@ class surface(OpenSCADObject):
     Surface reads information from text or image files.
 
     :param file: The path to the file containing the heightmap data.
-    :type file: string
+    :type file: PathStr
 
     :param center: This determines the positioning of the generated object. If 
     True, object is centered in X- and Y-axis. Otherwise, the object is placed 
@@ -660,9 +660,9 @@ class children(OpenSCADObject):
 
 
 class import_stl(OpenSCADObject):
-    def __init__(self, file: str, origin: P2 = (0, 0), convexity: int = None, layer: int = None) -> None:
+    def __init__(self, file: PathStr, origin: P2 = (0, 0), convexity: int = None, layer: int = None) -> None:
         super().__init__('import',
-                         {'file': file, 'origin': origin,
+                         {'file': Path(file).as_posix(), 'origin': origin,
                           'convexity': convexity, 'layer': layer})
 
 
@@ -679,7 +679,7 @@ class import_(OpenSCADObject):
     supports import of DXF and STL (both ASCII and Binary) files.
 
     :param file: path to the STL or DXF file.
-    :type file: string
+    :type file: PathStr
 
     :param convexity: The convexity parameter specifies the maximum number of 
     front sides (back sides) a ray intersecting the object might penetrate. This 
@@ -688,9 +688,9 @@ class import_(OpenSCADObject):
     :type convexity: int
     """
 
-    def __init__(self, file: str, origin: P2 = (0, 0), convexity: int = None, layer: int = None) -> None:
+    def __init__(self, file: PathStr, origin: P2 = (0, 0), convexity: int = None, layer: int = None) -> None:
         super().__init__('import',
-                         {'file': file, 'origin': origin,
+                         {'file': Path(file).as_posix(), 'origin': origin,
                           'convexity': convexity, 'layer': layer})
 
 
@@ -827,5 +827,5 @@ def use(scad_file_path: PathStr, use_not_include: bool = True, dest_namespace_di
     return True
 
 
-def include(scad_file_path: str) -> bool:
+def include(scad_file_path: PathStr) -> bool:
     return use(scad_file_path, use_not_include=False)
