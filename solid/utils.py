@@ -530,10 +530,10 @@ def bom_part(description='', per_unit_price=None, currency='US$', *args, **kwarg
 
         g_parts_dict[name] = elements
 
-        def wrapped_f(*wargs):
+        def wrapped_f(*wargs, **wkwargs):
             name = description if description else f.__name__
             g_parts_dict[name]['Count'] += 1
-            return f(*wargs)
+            return f(*wargs, **wkwargs)
 
         return wrapped_f
 

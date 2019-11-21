@@ -20,7 +20,7 @@
 import sys
 
 from solid import scad_render_to_file
-from solid.objects import cube, cylinder, difference, translate, union
+from solid.objects import cube, color, cylinder, difference, translate, union
 from solid.utils import EPSILON
 from solid.utils import bill_of_materials, bom_part, set_bom_headers
 
@@ -79,7 +79,7 @@ def m3_nut():
 
 
 @bom_part()
-def doohickey():
+def doohickey(c):
     hole_cyl = translate((0, 0, -EPSILON))(
             cylinder(r=m3_rad, h=doohickey_h + 2 * EPSILON)
     )
@@ -89,12 +89,12 @@ def doohickey():
             hole_cyl,
             translate((10, 0, 0))(hole_cyl)
     )
-    return d
+    return color(c)(d)
 
 
 def assembly():
     return union()(
-            doohickey(),
+            doohickey(c='blue'),
             translate((-10, 0, doohickey_h / 2))(m3_12()),
             translate((0, 0, doohickey_h / 2))(m3_16()),
             translate((10, 0, doohickey_h / 2))(m3_12()),
