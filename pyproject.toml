@@ -1,11 +1,21 @@
 [tool.poetry]
 name = "solidpython"
-version = "0.4.4"
+version = "0.4.5"
 description = "Python interface to the OpenSCAD declarative geometry language"
 authors = ["Evan Jones <evan_t_jones@mac.com>"]
-url="https://github.com/SolidCode/SolidPython"
-documentation="https://solidpython.readthedocs.io/en/latest/"
+homepage = "https://github.com/SolidCode/SolidPython"
+repository = "https://github.com/SolidCode/SolidPython"
+documentation = "https://solidpython.readthedocs.io/en/latest/"
 license = "LGPL-2.1"
+keywords = [
+    "3D", 
+    "CAD", 
+    "CSG", 
+    "constructive solid geometry",
+    "geometry",
+    "modeling", 
+    "OpenSCAD", 
+]
 
 classifiers=[
     "Programming Language :: Python",
