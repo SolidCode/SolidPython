@@ -101,7 +101,7 @@ or impossible in pure OpenSCAD. Among these are:
 Installing SolidPython
 ======================
 
--  Install via
+-  Install latest release via
    `PyPI <https://pypi.python.org/pypi/solidpython>`__:
 
    ::
@@ -110,9 +110,14 @@ Installing SolidPython
 
    (You may need to use ``sudo pip install solidpython``, depending on
    your environment. This is commonly discouraged though. You'll be happiest 
-   working in a `virtual environnment <https://docs.python.org/3/tutorial/venv.html>`__ 
+   working in a `virtual environment <https://docs.python.org/3/tutorial/venv.html>`__ 
    where you can easily control dependencies for a given project)
 
+- Install current master straight from Github:
+
+    ::
+
+        pip install git+https://github.com/SolidCode/SolidPython.git
 
 Using SolidPython
 =================
