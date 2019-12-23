@@ -412,6 +412,10 @@ def scad_render(scad_object: OpenSCADObject, file_header: str = '') -> str:
     # and render the string
     includes = ''.join(include_strings) + "\n"
     scad_body = root._render()
+
+    if file_header and not file_header.endswith('\n'): 
+        file_header += '\n'
+
     return file_header + includes + scad_body
 
 

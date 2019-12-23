@@ -197,6 +197,12 @@ class TestSolidPython(DiffOutput):
         expected = f"use <{abs_path}>\n\n\nsteps(howmany = 3);"
         self.assertEqual(expected, actual)
 
+        # Make sure this plays nicely with `scad_render()`'s `file_header` arg
+        header = '$fn = 24;'
+        actual = scad_render(a, file_header=header)
+        expected = f"{header}\nuse <{abs_path}>\n\n\nsteps(howmany = 3);"
+        self.assertEqual(expected, actual)
+
     def test_use_reserved_words(self):
         scad_str = '''module reserved_word_arg(or=3){\n\tcube(or);\n}\nmodule or(arg=3){\n\tcube(arg);\n}\n'''
 
@@ -352,7 +358,7 @@ class TestSolidPython(DiffOutput):
                                 file_header='$fn = 24;')
 
         actual = tmp.contents
-        expected = '$fn = 24;\n\ncircle(r = 10);'
+        expected = '$fn = 24;\n\n\ncircle(r = 10);'
 
         self.assertTrue(actual.endswith(expected))
 

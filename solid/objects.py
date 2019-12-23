@@ -780,8 +780,7 @@ def import_scad(scad_filepath: PathStr) -> Optional[SimpleNamespace]:
 
 
 # use() & include() mimic OpenSCAD's use/include mechanics.
-# -- use() makes methods in scad_file_path.scad available to
-#   be called.
+# -- use() makes methods in scad_file_path.scad available to be called.
 # --include() makes those methods available AND executes all code in
 #   scad_file_path.scad, which may have side effects.
 #   Unless you have a specific need, call use().
