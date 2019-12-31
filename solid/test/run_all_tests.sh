@@ -4,12 +4,8 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 cd $DIR
 
-for i in test_*.py;
-do 
-echo $i;
-python $i;
-echo
-done
+# Let unittest discover all the tests
+python -m unittest discover .
 
 # revert to original dir
 cd -
