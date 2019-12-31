@@ -29,7 +29,6 @@ def catmull_rom_polygon(points: Sequence[Point23],
     object, which OpenSCAD can only combine with other 2D objects 
     (e.g. `square`, `circle`, but not `cube` or `cylinder`). If `extrude_height`
     is nonzero, the object returned will be 3D and only combine with 3D objects.
-
     """
     catmull_points = catmull_rom_points(points, subdivisions, close_loop=True)
     shape = polygon(catmull_points)
@@ -47,13 +46,14 @@ def catmull_rom_points( points: Sequence[Point23],
                         end_tangent: Vec23 = None) -> List[Point23]:
     """
     Return a smooth set of points through `points`, with `subdivision` points 
-    between each pair of supplied points. 
+    between each pair of control points. 
     
     If `close_loop` is False, `start_tangent` and `end_tangent` can specify 
     tangents at the open ends of the returned curve. If not supplied, tangents 
     will be colinear with first and last supplied segments
 
-    Credit due: Largely taken from C# code at: https://www.habrador.com/tutorials/interpolation/1-catmull-rom-splines/
+    Credit due: Largely taken from C# code at: 
+    https://www.habrador.com/tutorials/interpolation/1-catmull-rom-splines/
     retrieved 20190712
     """
     catmull_points: List[Point23] = []
@@ -77,9 +77,6 @@ def catmull_rom_points( points: Sequence[Point23],
         if overflow > 0:
             controls += cat_points[0:overflow]
         catmull_points += _catmull_rom_segment(controls, subdivisions, include_last)
-    # NOTE: if a loop is closed, the interpolated points between point 0 & 1
-    # will come *last* in the returned array, when one might expect them to come first.
-    # In that case, we might want to insert those subdivisions points
 
     return catmull_points
 
@@ -90,7 +87,9 @@ def _catmull_rom_segment(controls: FourPoints,
     Returns `subdivisions` Points between the 2nd & 3rd elements of `controls`,
     on a quadratic curve that passes through all 4 control points.
     If `include_last` is True, return `subdivisions` + 1 points, the last being
-    controls[2]
+    controls[2]. 
+
+    No reason to call this unless you're trying to do something very specific
     """
     pos: Point23 = None
     positions: List[Point23] = []
@@ -112,6 +111,11 @@ def _catmull_rom_segment(controls: FourPoints,
     return positions
 
 def control_points(points: Sequence[Point23], extrude_height:float=0, center:bool=True) -> OpenSCADObject:
+    """
+    Return a list of red cylinders/circles (depending on `extrude_height`) at
+    a supplied set of 2D points. Useful for visualizing and tweaking a curve's 
+    control points
+    """
     # Figure out how big the circles/cylinders should be based on the spread of points
     min_bb, max_bb = bounding_box(points)
     outline_w = max_bb[0] - min_bb[0]
