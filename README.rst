@@ -31,6 +31,7 @@ SolidPython
    -  `Bill Of Materials <#bill-of-materials>`__
 
 -  `solid.screw\_thread <#solidscrew_thread>`__
+-  `solid.splines <#solidsplines>`__
 -  `Jupyter Renderer <#jupyter-renderer>`__
 -  `Contact <#contact>`__
 -  `License <#license>`__
@@ -439,6 +440,7 @@ solid.splines
 control points. 
 
 ::
+
     from solid import translate
     from solid.splines import catmull_rom_polygon, bezier_polygon
     from euclid3 import Point2
