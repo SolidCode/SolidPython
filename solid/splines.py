@@ -5,7 +5,7 @@ from solid import circle, cylinder, polygon, color, OpenSCADObject, translate, l
 from solid.utils import bounding_box, right, Red
 from euclid3 import Vector2, Vector3, Point2, Point3
 
-from typing import Sequence, Tuple, Union, List
+from typing import Sequence, Tuple, Union, List, cast
 
 Point23 = Union[Point2, Point3]
 Vec23 = Union[Vector2, Vector3]
@@ -62,14 +62,15 @@ def catmull_rom_points( points: Sequence[Point23],
     """
     catmull_points: List[Point23] = []
     cat_points: List[Point23] = []
+    points_list = cast(List[Point23], points)
 
     if close_loop:
-        cat_points = [points[-1]] + points + [points[0]] 
+        cat_points = [points[-1]] + points_list + [points[0]] 
     else:
         # Use supplied tangents or just continue the ends of the supplied points
         start_tangent = start_tangent or (points[1] - points[0])
         end_tangent = end_tangent or (points[-2] - points[-1])
-        cat_points = [points[0]+ start_tangent] + points + [points[-1] + end_tangent]
+        cat_points = [points[0]+ start_tangent] + points_list + [points[-1] + end_tangent]
 
     last_point_range = len(cat_points) - 2 if close_loop else len(cat_points) - 3
 
@@ -77,10 +78,11 @@ def catmull_rom_points( points: Sequence[Point23],
         include_last = True if i == last_point_range - 1 else False
         controls = cat_points[i:i+4]
         # If we're closing a loop, controls needs to wrap around the end of the array
-        overflow = i+4 - len(cat_points)
-        if overflow > 0:
-            controls += cat_points[0:overflow]
-        catmull_points += _catmull_rom_segment(controls, subdivisions, include_last)
+        points_needed = 4 - len(controls)
+        if points_needed > 0:
+            controls += cat_points[0:points_needed]
+        controls_tuple = cast(FourPoints, controls)
+        catmull_points += _catmull_rom_segment(controls_tuple, subdivisions, include_last)
 
     return catmull_points
 
