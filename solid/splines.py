@@ -1,7 +1,5 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
-import os
-import sys
+from math import pow
 
 from solid import circle, cylinder, polygon, color, OpenSCADObject, translate, linear_extrude
 from solid.utils import bounding_box, right, Red
@@ -14,9 +12,15 @@ Vec23 = Union[Vector2, Vector3]
 FourPoints = Tuple[Point23, Point23, Point23, Point23]
 SEGMENTS = 48
 
+DEFAULT_SUBDIVISIONS = 10
+DEFAULT_EXTRUDE_HEIGHT = 1
+
+# =======================
+# = CATMULL-ROM SPLINES =
+# =======================
 def catmull_rom_polygon(points: Sequence[Point23], 
-                        subdivisions: int = 10, 
-                        extrude_height: int = 1, 
+                        subdivisions: int = DEFAULT_SUBDIVISIONS, 
+                        extrude_height: float = DEFAULT_EXTRUDE_HEIGHT, 
                         show_controls: bool =False,
                         center: bool=True) -> OpenSCADObject:
     """
@@ -110,6 +114,72 @@ def _catmull_rom_segment(controls: FourPoints,
         positions.append(pos)
     return positions
 
+# ==================
+# = BEZIER SPLINES =
+# ==================
+# Ported from William A. Adams' Bezier OpenSCAD code at: 
+# https://www.thingiverse.com/thing:8443
+
+def bezier_polygon( controls: FourPoints, 
+                    subdivisions:int = DEFAULT_SUBDIVISIONS, 
+                    extrude_height:float = DEFAULT_EXTRUDE_HEIGHT,
+                    show_controls: bool = False,
+                    center: bool = True) -> OpenSCADObject:
+    points = bezier_points(controls, subdivisions)
+    shape = polygon(points)
+    if extrude_height != 0:
+        shape = linear_extrude(extrude_height, center=center)(shape)
+
+    if show_controls:
+        control_objs = control_points(controls, extrude_height=extrude_height, center=center)
+        shape += control_objs
+    
+    return shape
+
+def bezier_points(controls: FourPoints, 
+                  subdivisions: int = DEFAULT_SUBDIVISIONS,
+                  include_last: bool = True) -> List[Point2]:
+    """
+    Returns a list of `subdivisions` (+ 1, if `include_last` is True) points
+    on the cubic bezier curve defined by `controls`. The curve passes through 
+    controls[0] and controls[3]
+
+    If `include_last` is True, the last point returned will be controls[3]; if
+    False, (useful for linking several curves together), controls[3] won't be included
+
+    Ported from William A. Adams' Bezier OpenSCAD code at: 
+    https://www.thingiverse.com/thing:8443
+    """
+    # TODO: enable a smooth curve through arbitrarily many points, as described at:
+    # https://www.algosome.com/articles/continuous-bezier-curve-line.html
+
+    points: List[Point2] = []
+    last_elt = 1 if include_last else 0
+    for i in range(subdivisions + last_elt):
+        u = i/subdivisions
+        points.append(_point_along_bez4(*controls, u))
+    return points
+
+def _point_along_bez4(p0: Point23, p1: Point23, p2: Point23, p3: Point23, u:float) -> Point2:
+    x = _bez03(u)*p0.x + _bez13(u)*p1.x + _bez23(u)*p2.x + _bez33(u)*p3.x
+    y = _bez03(u)*p0.y + _bez13(u)*p1.y + _bez23(u)*p2.y + _bez33(u)*p3.y
+    return Point2(x,y)
+
+def _bez03(u:float) -> float:
+    return pow((1-u), 3)
+
+def _bez13(u:float) -> float:
+    return 3*u*(pow((1-u),2))
+
+def _bez23(u:float) -> float:
+    return 3*(pow(u,2))*(1-u)
+
+def _bez33(u:float) -> float:
+    return pow(u,3)
+
+# ===========
+# = HELPERS =
+# ===========
 def control_points(points: Sequence[Point23], extrude_height:float=0, center:bool=True) -> OpenSCADObject:
     """
     Return a list of red cylinders/circles (depending on `extrude_height`) at

@@ -5,12 +5,18 @@ from solid import *
 from solid.utils import Red, right, forward
 
 from solid.splines import catmull_rom_points, catmull_rom_polygon, control_points
+from solid.splines import bezier_polygon, bezier_points
 from euclid3 import Vector2, Vector3, Point2, Point3
 
 def assembly():
+    # Catmull-Rom Splines
     a = basic_catmull_rom()
     a += forward(4)(catmull_rom_spline_variants())
     a += forward(6)(bottle_shape(width=2, height=6))
+
+    # Bezier Splines
+    a += forward(12)(basic_bezier())
+    a += forward(18)(bezier_points_variants())
     return a
 
 def basic_catmull_rom():
@@ -108,13 +114,40 @@ def bottle_shape(width: float, height: float, neck_width:float=None, neck_height
     a += controls
     return a
 
+def basic_bezier():
+    # A basic cubic Bezier curve will pass through its first and last 
+    # points, but not through the central control points
+    controls = [
+        Point2(0, 3),
+        Point2(1, 1),
+        Point2(2, 1),
+        Point2(3, 3)
+    ]
+    shape = bezier_polygon(controls, show_controls=True)
+    return shape
+
+def bezier_points_variants():
+    controls = [
+        Point2(0,0),
+        Point2(1,2),
+        Point2(2, -1),
+        Point2(3,0),
+    ]
+    points = bezier_points(controls, subdivisions=20)
+    # For non-smooth curves, add extra points
+    points += [
+        Point2(2, -2),
+        Point2(1, -2)
+    ]
+    shape = polygon(points) + control_points(controls, extrude_height=0)
+    return shape
+
 
 if __name__ == '__main__':
     out_dir = sys.argv[1] if len(sys.argv) > 1 else os.curdir
-    file_out = os.path.join(out_dir, 'spline_example.scad')
 
     a = assembly()
 
-    out_path = scad_render_to_file(a, file_out, include_orig_code=True)
-    print("%(__file__)s: SCAD file written to: \n%(file_out)s" % vars())
+    out_path = scad_render_to_file(a, out_dir=out_dir, include_orig_code=True)
+    print(f"{__file__}: SCAD file written to: \n{out_path}")
 
