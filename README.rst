@@ -432,6 +432,23 @@ See
 `solid/examples/screw_thread_example.py <https://github.com/SolidCode/SolidPython/blob/master/solid/examples/screw_thread_example.py>`__
 for more details.
 
+solid.splines
+-------------
+
+`solid.splines` contains functions to generate smooth Catmull-Rom curves through
+control points. 
+
+::
+    from solid.splines import catmull_rom_polygon
+    from euclid3 import Point2
+
+    points = [ Point2(0,0), Point2(1,1), Point2(2,1), Point2(2,-1) ]  
+    shape = catmull_rom_extrusion(points, show_controls=True)
+    
+See 
+`solid/examples/splines_example.py <https://github.com/SolidCode/SolidPython/blob/master/solid/examples/splines_example.py>`__ 
+for more details and options.
+
 Jupyter Renderer
 ----------------
 
