@@ -2,7 +2,7 @@
 from math import pow
 
 from solid import circle, cylinder, polygon, color, OpenSCADObject, translate, linear_extrude
-from solid.utils import bounding_box, right, Red
+from solid.utils import bounding_box, right, Red, Tuple3
 from euclid3 import Vector2, Vector3, Point2, Point3
 
 from typing import Sequence, Tuple, Union, List, cast
@@ -182,7 +182,7 @@ def _bez33(u:float) -> float:
 # ===========
 # = HELPERS =
 # ===========
-def control_points(points: Sequence[Point23], extrude_height:float=0, center:bool=True) -> OpenSCADObject:
+def control_points(points: Sequence[Point23], extrude_height:float=0, center:bool=True, points_color:Tuple3=Red) -> OpenSCADObject:
     """
     Return a list of red cylinders/circles (depending on `extrude_height`) at
     a supplied set of 2D points. Useful for visualizing and tweaking a curve's 
@@ -198,5 +198,5 @@ def control_points(points: Sequence[Point23], extrude_height:float=0, center:boo
     else:
         h = extrude_height * 1.1
         c = cylinder(r=r, h=h, center=center)
-    controls = color(Red)([translate([p.x, p.y])(c) for p in points])
+    controls = color(points_color)([translate([p.x, p.y])(c) for p in points])
     return controls
