@@ -33,7 +33,8 @@ def thread(outline_pts: Points,
            segments_per_rot: int = 32,
            neck_in_degrees: float = 0,
            neck_out_degrees: float = 0,
-           rad_2: float=None):
+           rad_2: float=None,
+           inverse_thread_direction:bool=False):
     """
     Sweeps outline_pts (an array of points describing a closed polygon in XY)
     through a spiral.
@@ -80,6 +81,13 @@ def thread(outline_pts: Points,
     threads, (i.e., pitch=tooth_height), I use pitch= tooth_height+EPSILON,
     since pitch=tooth_height will self-intersect for rotations >=1
     """
+    # FIXME: For small segments_per_rot where length is not a multiple of
+    # pitch, the the generated spiral will have irregularities, since we 
+    # don't ensure that each level's segments are in line with those above or
+    # below. This would require a change in logic to fix. For now, larger values
+    # of segments_per_rot and length that divides pitch evenly should avoid this issue
+    # -ETJ 02 January 2020
+
     rad_2 = rad_2 or inner_rad
     rotations = length / pitch
 
@@ -148,7 +156,8 @@ def thread(outline_pts: Points,
 
         # create new points
         for p in euc_points:
-            pt = (p + elev_vec).rotate_around(axis=euc_up, theta=radians(angle))
+            theta = radians(angle) * (-1 if inverse_thread_direction else 1)
+            pt = (p + elev_vec).rotate_around(axis=euc_up, theta=theta)
             all_points.append(pt.as_arr())
 
         # Add the connectivity information
@@ -166,8 +175,13 @@ def thread(outline_pts: Points,
         all_tris.append([0, i + 2, i + 1])
         all_tris.append([last_loop, last_loop + i + 1, last_loop + i + 2])
 
-    # Make the polyhedron
-    a = polyhedron(points=all_points, faces=all_tris)
+    # Moving in the opposite direction, we need to reverse the order of
+    # corners in each face so the OpenSCAD preview renders correctly
+    if inverse_thread_direction:
+        all_tris = list([reversed(trio) for trio in all_tris])
+
+    # Make the polyhedron; convexity info needed for correct OpenSCAD render
+    a = polyhedron(points=all_points, faces=all_tris, convexity=2)
 
     if external:
         # Intersect with a cylindrical tube to make sure we fit into
@@ -178,11 +192,8 @@ def thread(outline_pts: Points,
         # If the threading is internal, intersect with a central cylinder
         # to make sure nothing else remains
         tube = cylinder(r1=inner_rad, r2=rad_2, h=length, segments=segments_per_rot)
-    # FIXME: For reasons I haven't yet sussed out, the cylinder `tube` doesn't 
-    # line up perfectly with the polyhedron `a`, which creates tiny extra facets
-    # at joints. These aren't large enough to mess up 3D prints, but they
-    # do make the shape messier than it needs to be. -ETJ 30 December 2019
-    a *= tube
+    a *= tube 
+
     return a
 
 def default_thread_section(tooth_height: float, tooth_depth: float):
