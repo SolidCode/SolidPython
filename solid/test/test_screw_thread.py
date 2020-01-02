@@ -8,9 +8,6 @@ from solid.test.ExpandedTestCase import DiffOutput
 
 SEGMENTS = 4
 
-def remove_whitespace(a_str):
-    return re.subn(r'[\s\n]','', a_str)[0]
-
 class TestScrewThread(DiffOutput):
     def setUp(self):
         self.tooth_height = 10
@@ -18,6 +15,7 @@ class TestScrewThread(DiffOutput):
         self.outline = default_thread_section(tooth_height=self.tooth_height, tooth_depth=self.tooth_depth)
 
     def assertEqualNoWhitespace(self, a, b):
+        remove_whitespace = lambda s: re.subn(r'[\s\n]','', s)[0]
         self.assertEqual(remove_whitespace(a), remove_whitespace(b))
 
     def test_thread(self):
@@ -71,7 +69,7 @@ class TestScrewThread(DiffOutput):
                             neck_in_degrees=45,
                             neck_out_degrees=45,
                             external=True)
-        actual = remove_whitespace(scad_render(actual_obj))
+        actual = scad_render(actual_obj)
         expected = '''intersection(){
             polyhedron(
                 faces=[[0,1,3],[1,4,3],[1,2,4],[2,5,4],[0,5,2],[0,3,5],[3,4,6],[4,7,6],[4,5,7],[5,8,7],[3,8,5],[3,6,8],[6,7,9],[7,10,9],[7,8,10],[8,11,10],[6,11,8],[6,9,11],[0,2,1],[9,10,11]],
