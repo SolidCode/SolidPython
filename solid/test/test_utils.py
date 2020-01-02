@@ -1,13 +1,15 @@
 #! /usr/bin/env python
 import difflib
 import unittest
-
-from euclid3 import Point3, Vector3
+import re
+from euclid3 import Point3, Vector3, Point2
 
 from solid import scad_render
 from solid.objects import cube, polygon, sphere, translate
 from solid.test.ExpandedTestCase import DiffOutput
-from solid.utils import BoundingBox, arc, arc_inverted, euc_to_arr, euclidify, extrude_along_path, fillet_2d, is_scad, offset_points, split_body_planar, transform_to_point
+from solid.utils import BoundingBox, arc, arc_inverted, euc_to_arr, euclidify 
+from solid.utils import extrude_along_path, fillet_2d, is_scad, offset_points
+from solid.utils import split_body_planar, transform_to_point, project_to_2D
 from solid.utils import FORWARD_VEC, RIGHT_VEC, UP_VEC
 from solid.utils import back, down, forward, left, right, up
 
@@ -52,6 +54,9 @@ other_test_cases = [
 class TestSPUtils(DiffOutput):
     # Test cases will be dynamically added to this instance
     # using the test case arrays above
+    def assertEqualNoWhitespace(self, a, b):
+        remove_whitespace = lambda s: re.subn(r'[\s\n]','', s)[0]
+        self.assertEqual(remove_whitespace(a), remove_whitespace(b))
 
     def test_split_body_planar(self):
         offset = [10, 10, 10]
@@ -78,21 +83,20 @@ class TestSPUtils(DiffOutput):
     def test_fillet_2d_add(self):
         pts = [[0, 5], [5, 5], [5, 0], [10, 0], [10, 10], [0, 10], ]
         p = polygon(pts)
-        newp = fillet_2d(euclidify(pts[0:3], Point3), orig_poly=p, fillet_rad=2, remove_material=False)
-        expected = '\n\nunion() {\n\tpolygon(paths = [[0, 1, 2, 3, 4, 5]], points = [[0, 5], [5, 5], [5, 0], [10, 0], [10, 10], [0, 10]]);\n\ttranslate(v = [3.0000000000, 3.0000000000, 0.0000000000]) {\n\t\tdifference() {\n\t\t\tintersection() {\n\t\t\t\trotate(a = 358.0000000000) {\n\t\t\t\t\ttranslate(v = [-998, 0, 0]) {\n\t\t\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\trotate(a = 452.0000000000) {\n\t\t\t\t\ttranslate(v = [-998, -1000, 0]) {\n\t\t\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t\tcircle(r = 2);\n\t\t}\n\t}\n}'
+        three_points = [euclidify(pts[0:3], Point2)]
+        newp = fillet_2d(three_points, orig_poly=p, fillet_rad=2, remove_material=False)
+        expected = 'union(){polygon(paths=[[0,1,2,3,4,5]],points=[[0,5],[5,5],[5,0],[10,0],[10,10],[0,10]]);translate(v=[3.0000000000,3.0000000000]){difference(){intersection(){rotate(a=359.9000000000){translate(v=[-998,0,0]){square(center=false,size=[1000,1000]);}}rotate(a=450.1000000000){translate(v=[-998,-1000,0]){square(center=false,size=[1000,1000]);}}}circle(r=2);}}}'
         actual = scad_render(newp)
-        self.assertEqual(expected, actual)
+        self.assertEqualNoWhitespace(expected, actual)
 
     def test_fillet_2d_remove(self):
-        pts = tri
-        poly = polygon(euc_to_arr(tri))
-
-        newp = fillet_2d(tri, orig_poly=poly, fillet_rad=2, remove_material=True)
-        expected = '\n\ndifference() {\n\tpolygon(paths = [[0, 1, 2]], points = [[0, 0, 0], [10, 0, 0], [0, 10, 0]]);\n\ttranslate(v = [5.1715728753, 2.0000000000, 0.0000000000]) {\n\t\tdifference() {\n\t\t\tintersection() {\n\t\t\t\trotate(a = 268.0000000000) {\n\t\t\t\t\ttranslate(v = [-998, 0, 0]) {\n\t\t\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\trotate(a = 407.0000000000) {\n\t\t\t\t\ttranslate(v = [-998, -1000, 0]) {\n\t\t\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t\tcircle(r = 2);\n\t\t}\n\t}\n}'
+        pts = list((project_to_2D(p) for p in tri))
+        poly = polygon(euc_to_arr(pts))
+        newp = fillet_2d([pts], orig_poly=poly, fillet_rad=2, remove_material=True)
+        expected = 'difference(){polygon(paths=[[0,1,2]],points=[[0,0],[10,0],[0,10]]);translate(v=[5.1715728753,2.0000000000]){difference(){intersection(){rotate(a=-90.1000000000){translate(v=[-998,0,0]){square(center=false,size=[1000,1000]);}}rotate(a=45.1000000000){translate(v=[-998,-1000,0]){square(center=false,size=[1000,1000]);}}}circle(r=2);}}}'
         actual = scad_render(newp)
-        if expected != actual:
-            print(''.join(difflib.unified_diff(expected, actual)))
-        self.assertEqual(expected, actual)
+
+        self.assertEqualNoWhitespace(expected, actual)
 
 
 def test_generator_scad(func, args, expected):

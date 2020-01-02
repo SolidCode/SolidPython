@@ -1,29 +1,39 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
-from __future__ import division
-import sys
 from itertools import zip_longest
 from math import pi, ceil, floor, sqrt, atan2, degrees, radians
 
 from solid import union, cube, translate, rotate, square, circle, polyhedron
-from solid import difference, intersection, multmatrix
+from solid import difference, intersection, multmatrix, cylinder, color
 from solid import run_euclid_patch
 
 from solid import OpenSCADObject, P2, P3, P4, Vec3 , Vec4, Vec34, P3s, P23
 from solid import Points, Indexes, ScadSize
 
-from typing import Union, Tuple, Sequence, List, Optional, Callable
-
-
 from euclid3 import Point2, Point3, Vector2, Vector3, Line2, Line3
 from euclid3 import LineSegment2, LineSegment3, Matrix4
 run_euclid_patch()
 
+# ==========
+# = TYPING =
+# ==========
+from typing import Union, Tuple, Sequence, List, Optional, Callable, Dict, cast
+Point23 = Union[Point2, Point3]
+Vector23 = Union[Vector2, Vector3]
+Line23 = Union[Line2, Line3]
+LineSegment23 = Union[LineSegment2, LineSegment3]
+
+Tuple2 = Tuple[float, float]
+Tuple3 = Tuple[float, float, float]
 EucOrTuple = Union[Point3, 
                 Vector3, 
-                Tuple[float, float], 
-                Tuple[float, float, float]
+                Tuple2, 
+                Tuple3
             ]
+DirectionLR = float # LEFT or RIGHT in 2D
+
+# =============
+# = CONSTANTS =
+# =============
 
 EPSILON = 0.01
 RIGHT, TOP, LEFT, BOTTOM = range(4)
@@ -138,31 +148,23 @@ def distribute_in_grid(objects:Sequence[OpenSCADObject],
 # ==============
 # = Directions =
 # ==============
-
-
 def up(z:float) -> OpenSCADObject:
     return translate((0, 0, z))
-
 
 def down(z: float) -> OpenSCADObject:
     return translate((0, 0, -z))
 
-
 def right(x: float) -> OpenSCADObject:
     return translate((x, 0, 0))
-
 
 def left(x: float) -> OpenSCADObject:
     return translate((-x, 0, 0))
 
-
 def forward(y: float) -> OpenSCADObject:
     return translate((0, y, 0))
 
-
 def back(y: float) -> OpenSCADObject:
     return translate((0, -y, 0))
-
 
 # ===========================
 # = Box-alignment rotations =
@@ -171,26 +173,20 @@ def rot_z_to_up(obj:OpenSCADObject) -> OpenSCADObject:
     # NOTE: Null op
     return rotate(a=0, v=FORWARD_VEC)(obj)
 
-
 def rot_z_to_down(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=180, v=FORWARD_VEC)(obj)
-
 
 def rot_z_to_right(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=90, v=FORWARD_VEC)(obj)
 
-
 def rot_z_to_left(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=-90, v=FORWARD_VEC)(obj)
-
 
 def rot_z_to_forward(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=-90, v=RIGHT_VEC)(obj)
 
-
 def rot_z_to_back(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=90, v=RIGHT_VEC)(obj)
-
 
 # ================================
 # = Box-aligment and translation =
@@ -219,26 +215,20 @@ def box_align(obj:OpenSCADObject,
 # = 90-degree Rotations =
 # =======================
 
-
 def rot_z_to_x(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=90, v=FORWARD_VEC)(obj)
-
 
 def rot_z_to_neg_x(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=-90, v=FORWARD_VEC)(obj)
 
-
 def rot_z_to_neg_y(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=90, v=RIGHT_VEC)(obj)
-
 
 def rot_z_to_y(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=-90, v=RIGHT_VEC)(obj)
 
-
 def rot_x_to_y(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=90, v=UP_VEC)(obj)
-
 
 def rot_x_to_neg_y(obj:OpenSCADObject) -> OpenSCADObject:
     return rotate(a=-90, v=UP_VEC)(obj)
@@ -246,8 +236,6 @@ def rot_x_to_neg_y(obj:OpenSCADObject) -> OpenSCADObject:
 # =======
 # = Arc =
 # =======
-
-
 def arc(rad:float, start_degrees:float, end_degrees:float, segments:int=None) -> OpenSCADObject:
     # Note: the circle that this arc is drawn from gets segments,
     # not the arc itself.  That means a quarter-circle arc will
@@ -275,7 +263,6 @@ def arc(rad:float, start_degrees:float, end_degrees:float, segments:int=None) ->
         )
 
     return ret
-
 
 def arc_inverted(rad:float, start_degrees:float, end_degrees:float, segments:int=None) -> OpenSCADObject:
     # Return the segment of an arc *outside* the circle of radius rad,
@@ -336,8 +323,6 @@ def arc_inverted(rad:float, start_degrees:float, end_degrees:float, segments:int
 # ======================
 # = Bounding Box Class =
 # ======================
-
-
 class BoundingBox(object):
     # A basic Bounding Box representation to enable some more introspection about
     # objects.  For instance, a BB will let us say "put this new object on top of
@@ -349,26 +334,29 @@ class BoundingBox(object):
     # Basically you can use a BoundingBox to describe the extents of an object
     # the moment it's created, but once you perform any CSG operation on it, it's
     # more or less useless.
-    def __init__(self, size, loc=None):
+    def __init__(self, size:List[float], loc: List[float]=None):
         loc = loc if loc else [0, 0, 0]
         # self.w, self.h, self.d = size
         # self.x, self.y, self.z = loc
         self.set_size(size)
         self.set_position(loc)
 
-    def size(self):
+    def size(self) -> List[float]:
         return [self.w, self.h, self.d]
 
-    def position(self):
+    def position(self) -> List[float]:
         return [self.x, self.y, self.z]
 
-    def set_position(self, position):
+    def set_position(self, position: Sequence[float]):
         self.x, self.y, self.z = position
 
-    def set_size(self, size):
+    def set_size(self, size:Sequence[float]):
         self.w, self.h, self.d = size
 
-    def split_planar(self, cutting_plane_normal=RIGHT_VEC, cut_proportion=0.5, add_wall_thickness=0):
+    def split_planar(self, 
+                     cutting_plane_normal: Vec3=RIGHT_VEC, 
+                     cut_proportion: float=0.5, 
+                     add_wall_thickness:float=0) -> List['BoundingBox']:
         cpd = {RIGHT_VEC: 0, LEFT_VEC: 0, FORWARD_VEC: 1,
                BACK_VEC: 1, UP_VEC: 2, DOWN_VEC: 2}
         cutting_plane = cpd.get(cutting_plane_normal, 2)
@@ -382,7 +370,7 @@ class BoundingBox(object):
 
         # Now create bounding boxes with the appropriate sizes
         part_bbs = []
-        a_sum = 0
+        a_sum = 0.0
         for i, part in enumerate([cut_proportion, (1 - cut_proportion)]):
             part_size = self.size()
             part_size[cutting_plane] = part_size[cutting_plane] * part
@@ -410,32 +398,24 @@ class BoundingBox(object):
 
         return part_bbs
 
-    def cube(self, larger=False):
+    def cube(self, larger: bool=False) -> OpenSCADObject:
         c_size = self.size() if not larger else [s + 2 * EPSILON for s in self.size()]
         c = translate(self.position())(
             cube(c_size, center=True)
         )
         return c
 
-    def min(self, which_dim=None):
-        min_pt = [p - s / 2 for p, s in zip(self.position(), self.size())]
-        if which_dim:
-            return min_pt[which_dim]
-        else:
-            return min_pt
-
-    def max(self, which_dim=None):
-        max_pt = [p + s / 2 for p, s in zip(self.position(), self.size())]
-        if which_dim:
-            return max_pt[which_dim]
-        else:
-            return max_pt
-
-
 # ===================
 # = Model Splitting =
 # ===================
-def split_body_planar(obj, obj_bb, cutting_plane_normal=UP_VEC, cut_proportion=0.5, dowel_holes=False, dowel_rad=4.5, hole_depth=15, add_wall_thickness=0):
+def split_body_planar(obj: OpenSCADObject, 
+                      obj_bb: BoundingBox, 
+                      cutting_plane_normal: Vec3=UP_VEC, 
+                      cut_proportion: float=0.5, 
+                      dowel_holes: bool=False, 
+                      dowel_rad: float=4.5, 
+                      hole_depth: float=15, 
+                      add_wall_thickness=0) -> Tuple[OpenSCADObject, BoundingBox, OpenSCADObject, BoundingBox]:
     # Split obj along the specified plane, returning two pieces and
     # general bounding boxes for each.
     # Note that the bounding boxes are NOT accurate to the sections,
@@ -486,11 +466,10 @@ def split_body_planar(obj, obj_bb, cutting_plane_normal=UP_VEC, cut_proportion=0
         # subtract dowels from each slice
         slices = [s - dowels for s in slices]
 
-    slices_and_bbs = [slices[0], part_bbs[0], slices[1], part_bbs[1]]
+    slices_and_bbs = (slices[0], part_bbs[0], slices[1], part_bbs[1])
     return slices_and_bbs
 
-
-def section_cut_xz(body, y_cut_point=0):
+def section_cut_xz(body: OpenSCADObject, y_cut_point:float=0) -> OpenSCADObject:
     big_w = 10000
     d = 2
     c = forward(d / 2 + y_cut_point)(cube([big_w, d, big_w], center=True))
@@ -518,7 +497,7 @@ def set_bom_headers(*args):
     global g_bom_headers
     g_bom_headers += args
 
-def bom_part(description='', per_unit_price=None, currency='US$', *args, **kwargs):
+def bom_part(description: str='', per_unit_price:float=None, currency: str='US$', *args, **kwargs) -> Callable:
     def wrap(f):
         name = description if description else f.__name__
 
@@ -539,13 +518,13 @@ def bom_part(description='', per_unit_price=None, currency='US$', *args, **kwarg
 
     return wrap
 
-def bill_of_materials(csv=False):
+def bill_of_materials(csv:bool=False) -> str:
     field_names = ["Description", "Count", "Unit Price", "Total Price"]
     field_names += g_bom_headers
     
     rows = []
     
-    all_costs = {}
+    all_costs: Dict[str, float] = {}
     for desc, elements in g_parts_dict.items():
         count = elements['Count']
         currency = elements['currency']
@@ -584,10 +563,10 @@ def bill_of_materials(csv=False):
 
     return res
 
-def _currency_str(value, currency="$"):
+def _currency_str(value:float, currency: str="$") -> str:
     return "{currency:>4} {value:.2f}".format(**vars())
     
-def _table_string(field_names, rows, csv=False):
+def _table_string(field_names: Sequence[str], rows:Sequence[Sequence[float]], csv:bool=False) -> str:
     # Output a justified table string using the prettytable module.
     # Fall back to Excel-ready tab-separated values if prettytable's not found 
     # or CSV is requested
@@ -614,9 +593,7 @@ def _table_string(field_names, rows, csv=False):
 # ================
 # = Bounding Box =
 # ================
-
-
-def bounding_box(points):
+def bounding_box(points: Sequence[EucOrTuple]) -> Tuple[Tuple3, Tuple3]:
     all_x = []
     all_y = []
     all_z = []
@@ -624,12 +601,11 @@ def bounding_box(points):
         all_x.append(p[0])
         all_y.append(p[1])
         if len(p) > 2:
-            all_z.append(p[2])
+            all_z.append(p[2]) # type:ignore 
         else:
             all_z.append(0)
 
-    return [[min(all_x), min(all_y), min(all_z)], [max(all_x), max(all_y), max(all_z)]]
-
+    return ((min(all_x), min(all_y), min(all_z)), (max(all_x), max(all_y), max(all_z)))
 
 # =======================
 # = Hardware dimensions =
@@ -638,7 +614,6 @@ screw_dimensions = {
     'm3': {'nut_thickness': 2.4, 'nut_inner_diam': 5.4, 'nut_outer_diam': 6.1, 'screw_outer_diam': 3.0, 'cap_diam': 5.5, 'cap_height': 3.0},
     'm4': {'nut_thickness': 3.1, 'nut_inner_diam': 7.0, 'nut_outer_diam': 7.9, 'screw_outer_diam': 4.0, 'cap_diam': 6.9, 'cap_height': 3.9},
     'm5': {'nut_thickness': 4.7, 'nut_inner_diam': 7.9, 'nut_outer_diam': 8.8, 'screw_outer_diam': 5.0, 'cap_diam': 8.7, 'cap_height': 5},
-
 }
 bearing_dimensions = {
     '608': {'inner_d':8, 'outer_d':22, 'thickness':7},
@@ -652,7 +627,7 @@ bearing_dimensions = {
     '633': {'inner_d':3, 'outer_d':13, 'thickness':5},
 }
 
-def screw(screw_type='m3', screw_length=16):
+def screw(screw_type:str='m3', screw_length:float=16) -> OpenSCADObject:
     dims = screw_dimensions[screw_type.lower()]
     shaft_rad = dims['screw_outer_diam'] / 2
     cap_rad = dims['cap_diam'] / 2
@@ -666,7 +641,7 @@ def screw(screw_type='m3', screw_length=16):
     )
     return ret
 
-def nut(screw_type='m3'):
+def nut(screw_type:str='m3') -> OpenSCADObject:
     dims = screw_dimensions[screw_type.lower()]
     outer_rad = dims['nut_outer_diam']
     inner_rad = dims['screw_outer_diam']
@@ -677,7 +652,7 @@ def nut(screw_type='m3'):
     )
     return ret
 
-def bearing(bearing_type='624'):
+def bearing(bearing_type: str='624') -> OpenSCADObject:
     dims = bearing_dimensions[bearing_type.lower()]
     outerR = dims['outer_d']/2
     innerR = dims['inner_d']/2
@@ -694,9 +669,9 @@ def bearing(bearing_type='624'):
 
 # ==================
 # = PyEuclid Utils =
-# = -------------- =
+# ==================
 def euclidify(an_obj:EucOrTuple, 
-                intended_class=Vector3) -> Union[Point3, Vector3]:
+              intended_class=Vector3) -> Union[Point23, Vector23]:
     # If an_obj is an instance of the appropriate PyEuclid class,
     # return it.  Otherwise, try to turn an_obj into the appropriate
     # class and throw an exception on failure
@@ -745,6 +720,22 @@ def euc_to_arr(euc_obj_or_list: EucOrTuple) -> List[float]:  # Inverse of euclid
         result = euc_obj_or_list # type: ignore
     return result
 
+def project_to_2D(euc_obj:Union[Point23, Vector23]) -> Union[Vector2, Point2]:
+    """
+    Given a Point3/Vector3, return a Point2/Vector2 ignoring the original Z coordinate
+    """
+    result:Union[Vector2, Point2] = None
+    if isinstance(euc_obj, (Point2, Vector2)):
+        result = euc_obj
+    elif isinstance(euc_obj, Point3):
+        result = Point2(euc_obj.x, euc_obj.y)
+    elif isinstance(euc_obj, Vector3):
+        result = Vector2(euc_obj.x, euc_obj.y)
+    else:
+        raise ValueError(f"Can't transform object {euc_obj} to a Point2 or Vector2")
+
+    return result
+
 def is_scad(obj:OpenSCADObject) -> bool:
     return isinstance(obj, OpenSCADObject)
 
@@ -759,7 +750,12 @@ def scad_matrix(euclid_matrix4):
 # ==============
 # = Transforms =
 # ==============
-def transform_to_point(body, dest_point, dest_normal, src_point=Point3(0, 0, 0), src_normal=Vector3(0, 1, 0), src_up=Vector3(0, 0, 1)):
+def transform_to_point( body: OpenSCADObject, 
+                        dest_point: Point3, 
+                        dest_normal: Vector3, 
+                        src_point: Point3=Point3(0, 0, 0), 
+                        src_normal: Vector3=Vector3(0, 1, 0), 
+                        src_up: Vector3=Vector3(0, 0, 1)) -> OpenSCADObject:
     # Transform body to dest_point, looking at dest_normal.
     # Orientation & offset can be changed by supplying the src arguments
 
@@ -814,13 +810,14 @@ def transform_to_point(body, dest_point, dest_normal, src_point=Point3(0, 0, 0),
             res = look_at_matrix * body
     return res
     
-
-
 # ========================================
 # = Vector drawing: 3D arrow from a line =
-# = -------------- =======================
-def draw_segment(euc_line=None, endless=False, arrow_rad=7, vec_color=None):
-    # Draw a tradtional arrow-head vector in 3-space.
+# ========================================
+def draw_segment(euc_line: Union[Vector3, Line3]=None, 
+                 endless:bool=False, 
+                 arrow_rad:float=7, 
+                 vec_color: Union[str, Tuple3]=None) -> OpenSCADObject:
+    # Draw a traditional arrow-head vector in 3-space.
     vec_arrow_rad = arrow_rad
     vec_arrow_head_rad = vec_arrow_rad * 1.5
     vec_arrow_head_length = vec_arrow_rad * 3
@@ -856,141 +853,152 @@ def draw_segment(euc_line=None, endless=False, arrow_rad=7, vec_color=None):
 
 # ==========
 # = Offset =
-# = ------ =
-LEFT, RIGHT = radians(90), radians(-90)
+# ==========
+# TODO: Make a NamedTuple for LEFT_DIR and RIGHT_DIR
+LEFT_DIR, RIGHT_DIR =  1,2
 
-def offset_points(point_arr, offset, inside=True, closed_poly=True):
-    # Given a set of points, return a set of points offset from
-    # them.
-    # To get reasonable results, the points need to be all in a plane.
-    # (Non-planar point_arr will still return results, but what constitutes
-    # 'inside' or 'outside' would be different in that situation.)
-    #
-    # What direction inside and outside lie in is determined by the first
-    # three points (first corner).  In a convex closed shape, this corresponds
-    # to inside and outside.  If the first three points describe a concave
-    # portion of a closed shape, inside and outside will be switched.
-    #
-    # Basically this means that if you're offsetting a complicated shape,
-    # you'll likely have to try both directions (inside=True/False) to
-    # figure out which direction you're offsetting to.
-    #
-    # CAD programs generally require an interactive user choice about which
-    # side is outside and which is inside.  Robust behavior with this
-    # function will require similar checking.
+def offset_point(a:Point2, b:Point2, c:Point2, offset:float, direction:DirectionLR=LEFT_DIR) -> Point2:
+    ab_perp = perpendicular_vector(b-a, direction, length=offset)
+    bc_perp = perpendicular_vector(c-b, direction, length=offset)
 
-    # Also note that short segments or narrow areas can cause problems
-    # as well.  This method suffices for most planar convex figures where
-    # segment length is greater than offset, but changing any of those
-    # assumptions will cause unattractive results.  If you want real
-    # offsets, use SolidWorks.
+    ab_par = Line2(a + ab_perp, b + ab_perp)
+    bc_par = Line2(b + bc_perp, c + bc_perp)
+    result = ab_par.intersect(bc_par)
+    return result
 
-    # TODO: check for self-intersections in the line connecting the
-    # offset points, and remove them.
+def offset_points(points:Sequence[Point2], 
+                  offset:float, 
+                  internal:bool=True, 
+                  closed:bool=False) -> List[Point2]:
+    """
+    Given a set of points, return a set of points offset by `offset`, in the
+    direction specified by `internal`. 
 
-    # Using the first three points in point_arr, figure out which direction
-    # is inside and what plane to put the points in
-    point_arr = euclidify(point_arr[:], Point3)
-    in_dir = _inside_direction(*point_arr[0:3])
-    normal = _three_point_normal(*point_arr[0:3])
-    direction = in_dir if inside else _other_dir(in_dir)
+    What is internal or external is defined by by the direction of curvature
+    between the first and second points; for non-convex shapes, we will return
+    an incorrect (internal points are all external, or vice versa) if the first
+    segment pair is concave. This could be mitigated with a point_is_in_polygon()
+    function, but I haven't written that yet.
+    """
+    # Note that we could just call offset_point() repeatedly, but we'd do 
+    # a lot of repeated calculations that way
+    src_points = list(points)
+    if closed:
+        src_points.append(points[0])
+    # src_points = cast(points, List) + [points[0]] if closed else points
 
-    # Generate offset points for the correct direction
-    # for all of point_arr.
-    segs = []
-    offset_pts = []
-    point_arr += point_arr[0:2]  # Add first two points to the end as well
-    if closed_poly:
-        for i in range(len(point_arr) - 1):
-            a, b = point_arr[i:i + 2]
-            par_seg = _parallel_seg(a, b, normal=normal, offset=offset, direction=direction)
-            segs.append(par_seg)
-            if len(segs) > 1:
-                int_pt = segs[-2].intersect(segs[-1])
-                if int_pt:
-                    offset_pts.append(int_pt)
+    vecs = vectors_between_points(src_points)
+    direction = direction_of_bend(*src_points[:3])
+    if not internal:
+        direction = opposite_direction(direction)
 
-        # When calculating based on a closed curve, we can't find the
-        # first offset point until all others have been calculated.
-        # Now that we've done so, put the last point back to first place
-        last = offset_pts[-1]
-        offset_pts.insert(0, last)
-        del(offset_pts[-1])
+    perp_vecs = list((perpendicular_vector(v, direction=direction, length=offset) for v in vecs))
 
+    lines: List[Line2] = []
+    for perp, a, b in zip(perp_vecs, src_points[:-1], src_points[1:]):
+        lines.append(Line2(a+perp, b+perp))
+    
+    intersections = list((a.intersect(b) for a,b in zip(lines[:-1], lines[1:])))
+    if closed:
+
+        intersections.append(lines[0].intersect(lines[-1]))
     else:
-        for i in range(len(point_arr) - 2):
-            a, b = point_arr[i:i + 2]
-            par_seg = _parallel_seg(a, b, normal=normal, offset=offset, direction=direction)
-            segs.append(par_seg)
-            # In an open poly, first and last points will be parallel
-            # to the first and last segments, not intersecting other segs
-            if i == 0:
-                offset_pts.append(par_seg.p1)
-            elif i == len(point_arr) - 3:
-                offset_pts.append(segs[-2].p2)
-            else:
-                int_pt = segs[-2].intersect(segs[-1])
-                if int_pt:
-                    offset_pts.append(int_pt)
-
-    return offset_pts
+        # Include offset points at start and end of shape
+        intersections = [src_points[0] + perp_vecs[0], *intersections, src_points[-1] + perp_vecs[-1]]
+    return intersections
 
 # ==================
 # = Offset helpers =
 # ==================
-def _parallel_seg(p, q, offset, normal=Vector3(0, 0, 1), direction=LEFT):
-    # returns a PyEuclid Line3 parallel to pq, in the plane determined
-    # by p,normal, to the left or right of pq.
-    v = q - p
-    angle = direction
 
-    rot_v = v.rotate_around(axis=normal, theta=angle)
-    rot_v.set_length(offset)
-    return Line3(p + rot_v, v)
+def pairwise_zip(l:Sequence) -> zip: # type:ignore
+    return zip(l[:-1], l[1:])
 
-def _inside_direction(a, b, c, offset=10):
-    # determines which direction (LEFT, RIGHT) is 'inside' the triangle
-    # made by a, b, c.  If ab and bc are parallel, return LEFT
-    x = _three_point_normal(a, b, c)
+def cross_2d(a:Vector2, b:Vector2) -> float:
+    """
+    scalar value; tells direction of rotation from a to b; 
+    see direction_of_bend()
+    # See http://www.allenchou.net/2013/07/cross-product-of-2d-vectors/
+    """
+    return a.x * b.y - a.y * b.x
 
-    # Make two vectors (left & right) for each segment.
-    l_segs = [_parallel_seg(p, q, normal=x, offset=offset, direction=LEFT) for p, q in ((a, b), (b, c))]
-    r_segs = [_parallel_seg(p, q, normal=x, offset=offset, direction=RIGHT) for p, q in ((a, b), (b, c))]
+def direction_of_bend(a:Point2, b:Point2, c:Point2) -> DirectionLR:
+    """ 
+    Return LEFT_DIR if angle abc is a turn to the left, otherwise RIGHT_DIR
+    Returns RIGHT_DIR if ab and bc are colinear
+    """
+    direction = LEFT_DIR if cross_2d(b-a, c-b) > 0 else RIGHT_DIR
+    return direction
 
-    # Find their intersections.
-    p1 = l_segs[0].intersect(l_segs[1])
-    p2 = r_segs[0].intersect(r_segs[1])
+def opposite_direction(direction:DirectionLR) -> DirectionLR:
+    return LEFT_DIR if direction == RIGHT_DIR else RIGHT_DIR
 
-    # The only way I've figured out to determine which direction is
-    # 'inside' or 'outside' a joint is to calculate both inner and outer
-    # vectors and then to find the intersection point closest to point a.
-    # This ought to work but it seems like there ought to be a more direct
-    # way to figure this out. -ETJ 21 Dec 2012
+def perpendicular_vector(v:Vector2, direction:DirectionLR=RIGHT_DIR, length:float=None) -> Vector2:
+    perp_vec = v.cross()  # Perpendicular right turn
+    result = perp_vec if direction == RIGHT_DIR else -perp_vec
+    if length is not None:
+        result.set_length(length)
+    return result
 
-    # The point that's closer to point a is the inside point.
-    if a.distance(p1) <= a.distance(p2):
-        return LEFT
-    else:
-        return RIGHT
-
-def _other_dir(left_or_right:int) -> int:
-    if left_or_right == LEFT:
-        return RIGHT
-    else:
-        return LEFT
-
-def _three_point_normal(a:Point3, b:Point3, c:Point3) -> Vector3:
-    ab = b - a
-    bc = c - b
-
-    seg_ab = Line3(a, ab)
-    seg_bc = Line3(b, bc)
-    x = seg_ab.v.cross(seg_bc.v)
-    return x
+def vectors_between_points(points: Sequence[Point23]) -> List[Vector23]:
+    """
+    Return a list of the vectors from each point in points to the point that follows
+    """
+    vecs = list((b-a for a,b in pairwise_zip(points))) # type:ignore
+    return vecs
 
 # =============
 # = 2D Fillet =
 # =============
+
+def fillet_2d(three_point_sets: Sequence[Tuple[Point23, Point23, Point23]], 
+              orig_poly: OpenSCADObject, 
+              fillet_rad: float, 
+              remove_material: bool=True) -> OpenSCADObject:
+    """
+    Return a polygon with arcs of radius `fillet_rad` added/removed (according to
+    `remove_material`) to corners specified in `three_point_sets`. 
+
+    e.g. Turn a sharp external corner to a rounded one, or add material
+    to a sharp interior corner to smooth it out.
+    """
+    arc_objs: List[OpenSCADObject] = []
+    # TODO: accept Point3s, and project them all to z==0
+    for three_points in three_point_sets:
+        a, b, c = (project_to_2D(p) for p in three_points)
+        ab = a - b
+        bc = b - c
+
+        direction = direction_of_bend(a, b, c)
+
+        # center lies at the intersection of two lines parallel to
+        # ab and bc, respectively, each offset from their respective 
+        # line by fillet_rad
+        ab_perp = perpendicular_vector(ab, direction, length=fillet_rad)
+        bc_perp = perpendicular_vector(bc, direction, length=fillet_rad)
+        center = offset_point(a,b,c, offset=fillet_rad, direction=direction)
+        # start_pt = center + ab_perp
+        # end_pt = center + bc_perp
+
+        start_degrees = degrees(atan2(ab_perp.y, ab_perp.x))
+        end_degrees   = degrees(atan2(bc_perp.y, bc_perp.x))
+
+        # Widen start_degrees and end_degrees slightly so they overlap the areas
+        # they're supposed to join/ remove.
+        start_degrees, end_degrees = _widen_angle_for_fillet(start_degrees, end_degrees)
+
+        arc_obj = translate(center.as_arr())(
+            arc_inverted(rad=fillet_rad, start_degrees=start_degrees, end_degrees=end_degrees)
+        )
+        arc_objs.append(arc_obj)
+
+    if remove_material:
+        poly = orig_poly - arc_objs 
+    else:
+        poly = orig_poly + arc_objs 
+
+    return poly 
+
 def _widen_angle_for_fillet(start_degrees:float, end_degrees:float) -> Tuple[float, float]:
     # Fix start/end degrees as needed; find a way to make an acute angle
     if end_degrees < start_degrees:
@@ -999,92 +1007,13 @@ def _widen_angle_for_fillet(start_degrees:float, end_degrees:float) -> Tuple[flo
     if end_degrees - start_degrees >= 180:
         start_degrees, end_degrees = end_degrees, start_degrees
 
-    epsilon_degrees = 2
+    epsilon_degrees = 0.1
     return start_degrees - epsilon_degrees, end_degrees + epsilon_degrees
-
-def fillet_2d(three_point_sets:Sequence[Tuple[Point2, Point2, Point2]], 
-                orig_poly:OpenSCADObject, 
-                fillet_rad:float, 
-                remove_material:bool=True) -> OpenSCADObject:
-    # NOTE: three_point_sets must be a list of sets of three points
-    # (i.e., a list of 3-tuples of points), even if only one fillet is being done:
-    # e.g.  [[a, b, c]]
-    # a, b, and c are three points that form a corner at b.
-    # Return a negative arc (the area NOT covered by a circle) of radius rad
-    # in the direction of the more acute angle between
-
-    # Note that if rad is greater than a.distance(b) or c.distance(b), for a
-    # 90-degree corner, the returned shape will include a jagged edge.
-
-    # TODO: use fillet_rad = min(fillet_rad, a.distance(b), c.distance(b))
-
-    # If a shape is being filleted in several places, it is FAR faster
-    # to add/ remove its set of shapes all at once rather than
-    # to cycle through all the points, since each method call requires
-    # a relatively complex boolean with the original polygon.
-    # So... three_point_sets is either a list of three Euclid points that
-    # determine the corner to be filleted, OR, a list of those lists, in
-    # which case everything will be removed / added at once.
-    # NOTE that if material is being added (fillets) or removed (rounds)
-    # each must be called separately.
-
-    if len(three_point_sets) == 3 and isinstance(three_point_sets[0], (Vector2, Vector3)):
-        three_point_sets = [three_point_sets] # type: ignore
-
-    arc_objs = []
-    for three_points in three_point_sets:
-
-        assert len(three_points) in (2, 3)
-        # make two vectors out of the three points passed in
-        a, b, c = euclidify(three_points, Point3)
-
-        # Find the center of the arc we'll have to make
-        offset = offset_points([a, b, c], offset=fillet_rad, inside=True)
-        center_pt = offset[1]
-
-        a2, b2, c2, cp2 = [Point2(p.x, p.y) for p in (a, b, c, center_pt)]
-
-        a2b2 = LineSegment2(a2, b2)
-        c2b2 = LineSegment2(c2, b2)
-
-        # Find the point on each segment where the arc starts; Point2.connect()
-        # returns a segment with two points; Take the one that's not the
-        # center
-        afs = cp2.connect(a2b2)
-        cfs = cp2.connect(c2b2)
-
-        afp, cfp = [
-            seg.p1 if seg.p1 != cp2 else seg.p2 for seg in (afs, cfs)]
-
-        a_degs, c_degs = [
-            (degrees(atan2(seg.v.y, seg.v.x))) % 360 for seg in (afs, cfs)]
-
-        start_degs = a_degs
-        end_degs = c_degs
-
-        # Widen start_degs and end_degs slightly so they overlap the areas
-        # they're supposed to join/ remove.
-        start_degs, end_degs = _widen_angle_for_fillet(start_degs, end_degs)
-
-        arc_obj = translate(center_pt.as_arr())(
-            arc_inverted(
-                rad=fillet_rad, start_degrees=start_degs, end_degrees=end_degs)
-        )
-
-        arc_objs.append(arc_obj)
-
-    if remove_material:
-        poly = orig_poly - arc_objs # type: ignore
-    else:
-        poly = orig_poly + arc_objs # type: ignore
-
-    return poly
 
 # ==========================
 # = Extrusion along a path =
-# = ---------------------- =
-# Possible: twist
-def extrude_along_path(shape_pts:Points, 
+# ==========================
+def extrude_along_path( shape_pts:Points, 
                         path_pts:Points, 
                         scale_factors:Sequence[float]=None) -> OpenSCADObject:
     # Extrude the convex curve defined by shape_pts along path_pts.
@@ -1163,13 +1092,10 @@ def extrude_along_path(shape_pts:Points,
 
     return polyhedron(points=euc_to_arr(polyhedron_pts), faces=facet_indices) # type: ignore
 
-
-
-# {{{ http://code.activestate.com/recipes/577068/ (r1)
-
-
 def frange(*args):
-    """frange([start, ] end [, step [, mode]]) -> generator
+    """
+    # {{{ http://code.activestate.com/recipes/577068/ (r1)
+    frange([start, ] end [, step [, mode]]) -> generator
 
     A float range generator. If not specified, the default start is 0.0
     and the default step is 1.0.
@@ -1224,13 +1150,9 @@ def frange(*args):
         i += 1
         x = start + i * step
 
-# end of http://code.activestate.com/recipes/577068/ }}}
-
 # =====================
 # = D e b u g g i n g =
 # =====================
-
-
 def obj_tree_str(sp_obj:OpenSCADObject, vars_to_print:Sequence[str]=None) -> str:
     # For debugging.  This prints a string of all of an object's
     # children, with whatever attributes are specified in vars_to_print
