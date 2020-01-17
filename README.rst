@@ -47,7 +47,7 @@ simple example:
 
 This Python code:
 
-::
+.. code:: python
 
     from solid import *
     d = difference()(
@@ -58,7 +58,7 @@ This Python code:
 
 Generates this OpenSCAD code:
 
-::
+.. code:: python
 
     difference(){
         cube(10);
@@ -68,7 +68,7 @@ Generates this OpenSCAD code:
 That doesn't seem like such a savings, but the following SolidPython
 code is a lot shorter (and I think clearer) than the SCAD code it compiles to:
 
-::
+.. code:: python
 
     from solid import *
     from solid.utils import *
@@ -76,7 +76,7 @@ code is a lot shorter (and I think clearer) than the SCAD code it compiles to:
 
 Generates this OpenSCAD code:
 
-::
+.. code::
 
     difference(){
         union(){
@@ -105,7 +105,7 @@ Installing SolidPython
 -  Install latest release via
    `PyPI <https://pypi.python.org/pypi/solidpython>`__:
 
-   ::
+   .. code:: bash
 
        pip install solidpython
 
@@ -116,19 +116,19 @@ Installing SolidPython
 
 - Install current master straight from Github:
 
-    ::
+  .. code:: bash
 
-        pip install git+https://github.com/SolidCode/SolidPython.git
+      pip install git+https://github.com/SolidCode/SolidPython.git
 
 Using SolidPython
 =================
 
 -  Include SolidPython at the top of your Python file:
 
-   ::
+   .. code:: python
 
-        from solid import *
-        from solid.utils import *  # Not required, but the utils module is useful
+       from solid import *
+       from solid.utils import *  # Not required, but the utils module is useful
 
    (See `this issue <https://github.com/SolidCode/SolidPython/issues/114>`__ for 
    a discussion of other import styles
@@ -138,7 +138,7 @@ Using SolidPython
    
    **OpenSCAD:**
 
-   ::
+   .. code::
 
        difference(){
            cube(10);
@@ -147,7 +147,7 @@ Using SolidPython
 
    **SolidPython:**
 
-   ::
+   .. code::
 
        d = difference()(
            cube(10),  # Note the comma between each element!
@@ -167,19 +167,22 @@ Using SolidPython
 
 Importing OpenSCAD code
 =======================
+
 - Use ``solid.import_scad(path)`` to import OpenSCAD code.
 
 **Ex:** 
 
 ``scadfile.scad``
-:: 
+
+.. code::
 
     module box(w,h,d){
         cube([w,h,d]);
     }
 
 ``your_file.py``
-::
+
+.. code:: python
 
     from solid import *
 
@@ -189,7 +192,7 @@ Importing OpenSCAD code
 
 - Recursively import OpenSCAD code by calling ``import_scad()`` with a directory argument.
 
-::
+.. code:: python
 
     from solid import *
 
@@ -204,15 +207,18 @@ Importing OpenSCAD code
 - OpenSCAD has the ``use()`` and ``include()`` statements for importing SCAD code, and SolidPython has them, too. They pollute the global namespace, though, and you may have better luck with ``import_scad()``,
 
 **Ex:**
+
 ``scadfile.scad``
-:: 
+
+.. code::
 
     module box(w,h,d){
         cube([w,h,d]);
     }
 
 ``your_file.py``
-::
+
+.. code:: python
 
     from solid import *
 
@@ -229,7 +235,7 @@ The best way to learn how SolidPython works is to look at the included
 example code. If you've installed SolidPython, the following line of
 Python will print(the location of ) the examples directory:
 
-::
+.. code:: python
 
     import os, solid; print(os.path.dirname(solid.__file__) + '/examples')
         
@@ -250,13 +256,13 @@ Basic operators
 Following Elmo Mäntynen's suggestion, SCAD objects override the basic
 operators + (union), - (difference), and \* (intersection). So
 
-::
+.. code:: python
 
     c = cylinder(r=10, h=5) + cylinder(r=2, h=30)
 
 is the same as:
 
-::
+.. code:: python
 
     c = union()(
         cylinder(r=10, h=5),
@@ -265,14 +271,14 @@ is the same as:
 
 Likewise:
 
-::
+.. code:: python
 
     c = cylinder(r=10, h=5)
     c -= cylinder(r=2, h=30)
 
 is the same as:
 
-::
+.. code:: python
 
     c = difference()(
         cylinder(r=10, h=5),
@@ -297,7 +303,7 @@ structure.
 
 Example:
 
-::
+.. code:: python
 
     outer = cylinder(r=pipe_od, h=seg_length)
     inner = cylinder(r=pipe_id, h=seg_length)
@@ -333,7 +339,7 @@ Currently these include:
 Directions: (up, down, left, right, forward, back) for arranging things:
 ------------------------------------------------------------------------
 
-::
+.. code:: python
 
     up(10)(
         cylinder()
@@ -341,7 +347,7 @@ Directions: (up, down, left, right, forward, back) for arranging things:
 
 seems a lot clearer to me than:
 
-::
+.. code:: python
 
     translate( [0,0,10])(
         cylinder()
@@ -356,13 +362,13 @@ Arcs
 
 I've found this useful for fillets and rounds.
 
-::
+.. code:: python
 
     arc(rad=10, start_degrees=90, end_degrees=210)
 
 draws an arc of radius 10 counterclockwise from 90 to 210 degrees.
 
-::
+.. code:: python
 
     arc_inverted(rad=10, start_degrees=0, end_degrees=90) 
 
@@ -385,7 +391,7 @@ Basic color library
 You can change an object's color by using the OpenSCAD
 ``color([rgba_array])`` function:
 
-::
+.. code:: python
 
     transparent_blue = color([0,0,1, 0.5])(cube(10))  # Specify with RGB[A]
     red_obj = color(Red)(cube(10))                    # Or use predefined colors
@@ -458,7 +464,8 @@ Jupyter Renderer
 ----------------
 
 Render SolidPython or OpenSCAD code in Jupyter notebooks using `ViewSCAD <https://github.com/nickc92/ViewSCAD>`__, or install directly via:
-:: 
+
+.. code:: bash
 
     pip install viewscad
 
