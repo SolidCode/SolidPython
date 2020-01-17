@@ -12,6 +12,7 @@ from solid.utils import extrude_along_path, fillet_2d, is_scad, offset_points
 from solid.utils import split_body_planar, transform_to_point, project_to_2D
 from solid.utils import FORWARD_VEC, RIGHT_VEC, UP_VEC
 from solid.utils import back, down, forward, left, right, up
+from solid.utils import label
 
 tri = [Point3(0, 0, 0), Point3(10, 0, 0), Point3(0, 10, 0)]
 scad_test_cases = [
@@ -67,8 +68,7 @@ class TestSPUtils(DiffOutput):
             actual_tuple = split_body_planar(body, body_bb, cutting_plane_normal=split_dir, cut_proportion=0.25)
             actual.append(actual_tuple)
 
-        # Ignore the bounding box object that come back, taking only the SCAD
-        # objects
+        # Ignore the bounding box object that come back, taking only the SCAD objects
         actual = [scad_render(a) for splits in actual for a in splits[::2]]
 
         expected = ['\n\nintersection() {\n\ttranslate(v = [10, 10, 10]) {\n\t\tsphere(r = 20);\n\t}\n\ttranslate(v = [-5.0000000000, 10, 10]) {\n\t\tcube(center = true, size = [10.0000000000, 40, 40]);\n\t}\n}',
@@ -96,6 +96,11 @@ class TestSPUtils(DiffOutput):
         expected = 'difference(){polygon(paths=[[0,1,2]],points=[[0,0],[10,0],[0,10]]);translate(v=[5.1715728753,2.0000000000]){difference(){intersection(){rotate(a=-90.1000000000){translate(v=[-998,0,0]){square(center=false,size=[1000,1000]);}}rotate(a=45.1000000000){translate(v=[-998,-1000,0]){square(center=false,size=[1000,1000]);}}}circle(r=2);}}}'
         actual = scad_render(newp)
 
+        self.assertEqualNoWhitespace(expected, actual)
+    
+    def test_label(self):
+        expected = 'translate(v=[0,5.0000000000,0]){resize(newsize=[15,0,0.5000000000]){union(){translate(v=[0,0.0000000000,0]){linear_extrude(height=1){text($fn=40,font="MgOpenModata:style=Bold",halign="left",spacing=1,text="Hello,",valign="baseline");}}translate(v=[0,-11.5000000000,0]){linear_extrude(height=1){text($fn=40,font="MgOpenModata:style=Bold",halign="left",spacing=1,text="World",valign="baseline");}}}}}'
+        actual = scad_render(label("Hello,\nWorld"))
         self.assertEqualNoWhitespace(expected, actual)
 
 

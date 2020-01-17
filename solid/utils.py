@@ -4,6 +4,7 @@ from math import pi, ceil, floor, sqrt, atan2, degrees, radians
 
 from solid import union, cube, translate, rotate, square, circle, polyhedron
 from solid import difference, intersection, multmatrix, cylinder, color
+from solid import text, linear_extrude, resize
 from solid import run_euclid_patch
 
 from solid import OpenSCADObject, P2, P3, P4, Vec3 , Vec4, Vec34, P3s, P23
@@ -667,6 +668,39 @@ def bearing(bearing_type: str='624') -> OpenSCADObject:
     )
     return bearing
 
+# =========
+# = LABEL =
+# =========
+def label(a_str:str, width:float=15, halign:str="left", valign:str="baseline", 
+          size:int=10, depth:float=0.5, lineSpacing:float=1.15, 
+          font:str="MgOpen Modata:style=Bold", segments:int=40, spacing:int=1) -> OpenSCADObject:
+    """Renders a multi-line string into a single 3D object.
+    
+    __author__    = 'NerdFever.com'
+    __copyright__ = 'Copyright 2018-2019 NerdFever.com'
+    __version__   = ''
+    __email__     = 'dave@nerdfever.com'
+    __status__    = 'Development'
+    __license__   = Copyright 2018-2019 NerdFever.com
+    """
+
+    lines = a_str.splitlines()
+
+    texts = []
+
+    for idx, l in enumerate(lines):
+        t = text(text=l, halign=halign, valign=valign, font=font, spacing=spacing).add_param('$fn', segments)
+        t = linear_extrude(height=1)(t)
+        t = translate([0, -size * idx * lineSpacing, 0])(t)
+
+        texts.append(t)
+
+    result = union()(texts)
+    result = resize([width, 0, depth])(result)
+    result = translate([0, (len(lines)-1)*size / 2, 0])(result)
+
+    return result
+
 # ==================
 # = PyEuclid Utils =
 # ==================
@@ -934,7 +968,7 @@ def opposite_direction(direction:DirectionLR) -> DirectionLR:
     return LEFT_DIR if direction == RIGHT_DIR else RIGHT_DIR
 
 def perpendicular_vector(v:Vector2, direction:DirectionLR=RIGHT_DIR, length:float=None) -> Vector2:
-    perp_vec = v.cross()  # Perpendicular right turn
+    perp_vec = Vector2(v.y, -v.x)
     result = perp_vec if direction == RIGHT_DIR else -perp_vec
     if length is not None:
         result.set_length(length)
