@@ -900,13 +900,20 @@ def offset_point(a:Point2, b:Point2, c:Point2, offset:float, direction:Direction
     result = ab_par.intersect(bc_par)
     return result
 
-def offset_points(points:Sequence[Point2], 
+def offset_points(points:Sequence[Point23], 
                   offset:float, 
-                  internal:bool=True, 
-                  closed:bool=False) -> List[Point2]:
+                  internal:bool=True) -> List[Point2]:
     """
     Given a set of points, return a set of points offset by `offset`, in the
     direction specified by `internal`. 
+
+    NOTE: OpenSCAD has the native `offset()` function that generates offset 
+    polygons nicely as well as doing fillets & rounds. If you just need a shape,
+    prefer using the native `offset()`.  If you need the actual points for some
+    purpose, use this function.
+    See: https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Transformations#offset
+
+    # NOTE: We accept Point2s or Point3s, but ignore all Z values and return Point2s
 
     What is internal or external is defined by by the direction of curvature
     between the first and second points; for non-convex shapes, we will return
@@ -916,10 +923,7 @@ def offset_points(points:Sequence[Point2],
     """
     # Note that we could just call offset_point() repeatedly, but we'd do 
     # a lot of repeated calculations that way
-    src_points = list(points)
-    if closed:
-        src_points.append(points[0])
-    # src_points = cast(points, List) + [points[0]] if closed else points
+    src_points = list((Point2(p.x, p.y) for p in (*points, points[0])))
 
     vecs = vectors_between_points(src_points)
     direction = direction_of_bend(*src_points[:3])
@@ -933,12 +937,9 @@ def offset_points(points:Sequence[Point2],
         lines.append(Line2(a+perp, b+perp))
     
     intersections = list((a.intersect(b) for a,b in zip(lines[:-1], lines[1:])))
-    if closed:
+    # First point is determined by intersection of first and last lines
+    intersections.insert(0, lines[0].intersect(lines[-1]))
 
-        intersections.append(lines[0].intersect(lines[-1]))
-    else:
-        # Include offset points at start and end of shape
-        intersections = [src_points[0] + perp_vecs[0], *intersections, src_points[-1] + perp_vecs[-1]]
     return intersections
 
 # ==================

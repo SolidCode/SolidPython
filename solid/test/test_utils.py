@@ -15,15 +15,17 @@ from solid.utils import back, down, forward, left, right, up
 from solid.utils import label
 
 tri = [Point3(0, 0, 0), Point3(10, 0, 0), Point3(0, 10, 0)]
+
 scad_test_cases = [
-    (up, [2], '\n\ntranslate(v = [0, 0, 2]);'),
-    (down, [2], '\n\ntranslate(v = [0, 0, -2]);'),
-    (left, [2], '\n\ntranslate(v = [-2, 0, 0]);'),
-    (right, [2], '\n\ntranslate(v = [2, 0, 0]);'),
-    (forward, [2], '\n\ntranslate(v = [0, 2, 0]);'),
-    (back, [2], '\n\ntranslate(v = [0, -2, 0]);'),
-    (arc, [10, 0, 90, 24], '\n\ndifference() {\n\tcircle($fn = 24, r = 10);\n\trotate(a = 0) {\n\t\ttranslate(v = [0, -10, 0]) {\n\t\t\tsquare(center = true, size = [30, 20]);\n\t\t}\n\t}\n\trotate(a = -90) {\n\t\ttranslate(v = [0, -10, 0]) {\n\t\t\tsquare(center = true, size = [30, 20]);\n\t\t}\n\t}\n}'),
-    (arc_inverted, [10, 0, 90, 24], '\n\ndifference() {\n\tintersection() {\n\t\trotate(a = 0) {\n\t\t\ttranslate(v = [-990, 0, 0]) {\n\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t}\n\t\t}\n\t\trotate(a = 90) {\n\t\t\ttranslate(v = [-990, -1000, 0]) {\n\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t}\n\t\t}\n\t}\n\tcircle($fn = 24, r = 10);\n}'),
+    # Test name, function, args, expected value
+    ('up', up, [2], '\n\ntranslate(v = [0, 0, 2]);'),
+    ('down', down, [2], '\n\ntranslate(v = [0, 0, -2]);'),
+    ('left', left, [2], '\n\ntranslate(v = [-2, 0, 0]);'),
+    ('right', right, [2], '\n\ntranslate(v = [2, 0, 0]);'),
+    ('forward', forward, [2], '\n\ntranslate(v = [0, 2, 0]);'),
+    ('back', back, [2], '\n\ntranslate(v = [0, -2, 0]);'),
+    ('arc', arc, [10, 0, 90, 24], '\n\ndifference() {\n\tcircle($fn = 24, r = 10);\n\trotate(a = 0) {\n\t\ttranslate(v = [0, -10, 0]) {\n\t\t\tsquare(center = true, size = [30, 20]);\n\t\t}\n\t}\n\trotate(a = -90) {\n\t\ttranslate(v = [0, -10, 0]) {\n\t\t\tsquare(center = true, size = [30, 20]);\n\t\t}\n\t}\n}'),
+    ('arc_inverted', arc_inverted, [10, 0, 90, 24], '\n\ndifference() {\n\tintersection() {\n\t\trotate(a = 0) {\n\t\t\ttranslate(v = [-990, 0, 0]) {\n\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t}\n\t\t}\n\t\trotate(a = 90) {\n\t\t\ttranslate(v = [-990, -1000, 0]) {\n\t\t\t\tsquare(center = false, size = [1000, 1000]);\n\t\t\t}\n\t\t}\n\t}\n\tcircle($fn = 24, r = 10);\n}'),
     ('transform_to_point_scad', transform_to_point, [cube(2), [2, 2, 2], [3, 3, 1]], '\n\nmultmatrix(m = [[0.7071067812, -0.1622214211, -0.6882472016, 2], [-0.7071067812, -0.1622214211, -0.6882472016, 2], [0.0000000000, 0.9733285268, -0.2294157339, 2], [0, 0, 0, 1.0000000000]]) {\n\tcube(size = 2);\n}'),
     ('extrude_along_path', extrude_along_path, [tri, [[0, 0, 0], [0, 20, 0]]], '\n\npolyhedron(faces = [[0, 3, 1], [1, 3, 4], [1, 4, 2], [2, 4, 5], [0, 2, 5], [0, 5, 3], [0, 1, 2], [3, 5, 4]], points = [[0.0000000000, 0.0000000000, 0.0000000000], [10.0000000000, 0.0000000000, 0.0000000000], [0.0000000000, 0.0000000000, 10.0000000000], [0.0000000000, 20.0000000000, 0.0000000000], [10.0000000000, 20.0000000000, 0.0000000000], [0.0000000000, 20.0000000000, 10.0000000000]]);'),
     ('extrude_along_path_vertical', extrude_along_path, [tri, [[0, 0, 0], [0, 0, 20]]], '\n\npolyhedron(faces = [[0, 3, 1], [1, 3, 4], [1, 4, 2], [2, 4, 5], [0, 2, 5], [0, 5, 3], [0, 1, 2], [3, 5, 4]], points = [[0.0000000000, 0.0000000000, 0.0000000000], [-10.0000000000, 0.0000000000, 0.0000000000], [0.0000000000, 10.0000000000, 0.0000000000], [0.0000000000, 0.0000000000, 20.0000000000], [-10.0000000000, 0.0000000000, 20.0000000000], [0.0000000000, 10.0000000000, 20.0000000000]]);'),
@@ -31,24 +33,24 @@ scad_test_cases = [
 ]
 
 other_test_cases = [
-    (euclidify, [[0, 0, 0]], 'Vector3(0.00, 0.00, 0.00)'),
+    # Test name, function, args, expected value
+    ('euclidify', euclidify, [[0, 0, 0]], 'Vector3(0.00, 0.00, 0.00)'),
     ('euclidify_recursive', euclidify, [[[0, 0, 0], [1, 0, 0]]], '[Vector3(0.00, 0.00, 0.00), Vector3(1.00, 0.00, 0.00)]'),
     ('euclidify_Vector', euclidify, [Vector3(0, 0, 0)], 'Vector3(0.00, 0.00, 0.00)'),
     ('euclidify_recursive_Vector', euclidify, [[Vector3(0, 0, 0), Vector3(0, 0, 1)]], '[Vector3(0.00, 0.00, 0.00), Vector3(0.00, 0.00, 1.00)]'),
-    (euc_to_arr, [Vector3(0, 0, 0)], '[0, 0, 0]'),
+    ('euc_to_arr', euc_to_arr, [Vector3(0, 0, 0)], '[0, 0, 0]'),
     ('euc_to_arr_recursive', euc_to_arr, [[Vector3(0, 0, 0), Vector3(0, 0, 1)]], '[[0, 0, 0], [0, 0, 1]]'),
     ('euc_to_arr_arr', euc_to_arr, [[0, 0, 0]], '[0, 0, 0]'),
     ('euc_to_arr_arr_recursive', euc_to_arr, [[[0, 0, 0], [1, 0, 0]]], '[[0, 0, 0], [1, 0, 0]]'),
-    (is_scad, [cube(2)], 'True'),
+    ('is_scad', is_scad, [cube(2)], 'True'),
     ('is_scad_false', is_scad, [2], 'False'),
     ('transform_to_point_single_arr', transform_to_point, [[1, 0, 0], [2, 2, 2], [3, 3, 1]], 'Point3(2.71, 1.29, 2.00)'),
     ('transform_to_point_single_pt3', transform_to_point, [Point3(1, 0, 0), [2, 2, 2], [3, 3, 1]], 'Point3(2.71, 1.29, 2.00)'),
     ('transform_to_point_arr_arr', transform_to_point, [[[1, 0, 0], [0, 1, 0], [0, 0, 1]], [2, 2, 2], [3, 3, 1]], '[Point3(2.71, 1.29, 2.00), Point3(1.84, 1.84, 2.97), Point3(1.31, 1.31, 1.77)]'),
     ('transform_to_point_pt3_arr', transform_to_point, [[Point3(1, 0, 0), Point3(0, 1, 0), Point3(0, 0, 1)], [2, 2, 2], [3, 3, 1]], '[Point3(2.71, 1.29, 2.00), Point3(1.84, 1.84, 2.97), Point3(1.31, 1.31, 1.77)]'),
     ('transform_to_point_redundant', transform_to_point, [[Point3(0, 0, 0), Point3(10, 0, 0), Point3(0, 10, 0)], [2, 2, 2], Vector3(0, 0, 1), Point3(0, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, 1)], '[Point3(2.00, 2.00, 2.00), Point3(-8.00, 2.00, 2.00), Point3(2.00, 12.00, 2.00)]'),
-    ('offset_points_inside', offset_points, [tri, 2, True], '[Point3(2.00, 2.00, 0.00), Point3(5.17, 2.00, 0.00), Point3(2.00, 5.17, 0.00)]'),
-    ('offset_points_outside', offset_points, [tri, 2, False], '[Point3(-2.00, -2.00, 0.00), Point3(14.83, -2.00, 0.00), Point3(-2.00, 14.83, 0.00)]'),
-    ('offset_points_open_poly', offset_points, [tri, 2, False, False], '[Point3(0.00, -2.00, 0.00), Point3(14.83, -2.00, 0.00), Point3(1.41, 11.41, 0.00)]'),
+    ('offset_points_inside', offset_points, [tri, 2, True], '[Point2(2.00, 2.00), Point2(5.17, 2.00), Point2(2.00, 5.17)]'),
+    ('offset_points_outside', offset_points, [tri, 2, False], '[Point2(-2.00, -2.00), Point2(14.83, -2.00), Point2(-2.00, 14.83)]'),
 ]
 
 
@@ -97,6 +99,11 @@ class TestSPUtils(DiffOutput):
         actual = scad_render(newp)
 
         self.assertEqualNoWhitespace(expected, actual)
+    
+    # def test_offset_points_inside(self):
+    #     expected = ''
+    #     actual = scad_render(offset_points(tri2d, offset=2, internal=True))
+    #     self.assertEqualNoWhitespace(expected, actual)
     
     def test_label(self):
         expected = 'translate(v=[0,5.0000000000,0]){resize(newsize=[15,0,0.5000000000]){union(){translate(v=[0,0.0000000000,0]){linear_extrude(height=1){text($fn=40,font="MgOpenModata:style=Bold",halign="left",spacing=1,text="Hello,",valign="baseline");}}translate(v=[0,-11.5000000000,0]){linear_extrude(height=1){text($fn=40,font="MgOpenModata:style=Bold",halign="left",spacing=1,text="World",valign="baseline");}}}}}'
