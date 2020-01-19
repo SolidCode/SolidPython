@@ -4,8 +4,15 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 cd $DIR
 
-# Let unittest discover all the tests
-python -m unittest discover .
+# Run all tests. Note that unittest's built-in discovery doesn't run the dynamic 
+# testcase generation they contain
+for i in test_*.py;
+do 
+    echo $i;
+    python $i;
+    echo
+done
+
 
 # revert to original dir
 cd -
