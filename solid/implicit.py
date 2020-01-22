@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import solid.objects
-from solid.solidpython import calling_module, OpenSCADObject, scad_render_to_file, PathStr
+from solid.solidpython import scad_render_to_file, scad_render
+from solid.solidpython import calling_module, OpenSCADObject, PathStr
 
 from textwrap import dedent
 from typing import  Dict, Callable
@@ -55,6 +56,9 @@ def _method_args_dict(method:Callable) -> Dict:
     default_vals = method.__defaults__ or [None] # type:ignore
 
     return dict(zip(var_names, default_vals))
+
+def implicitcad_render(scad_object: OpenSCADObject, file_header: str = '') -> str:
+    return scad_render(scad_object, file_header)
 
 def implicitcad_render_to_file(scad_object: OpenSCADObject,
                         filepath: PathStr=None, 
