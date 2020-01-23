@@ -6,7 +6,7 @@ from solid.solidpython import calling_module, OpenSCADObject, PathStr
 from textwrap import dedent
 from typing import  Dict, Callable
 
-def _implicitCAD_patch_objects():
+def _implicitcad_patch_objects():
     """
     Usage: 
     `from solid.implicit import *`, (rather than `from solid import *`)
@@ -70,4 +70,4 @@ def implicitcad_render_to_file(scad_object: OpenSCADObject,
             
 
 
-_implicitCAD_patch_objects()
+_implicitcad_patch_objects()
