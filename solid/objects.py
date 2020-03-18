@@ -402,15 +402,21 @@ class offset(OpenSCADObject):
         should be chamfered (cut off with a straight line) or not (extended to 
         their intersection).
     :type chamfer: bool
+
+    :param segments: Resolution of any radial curves
+    :type segments: int
     """
 
-    def __init__(self, r: float = None, delta: float = None, chamfer: bool = False) -> None:
+    def __init__(self, r: float = None, delta: float = None, chamfer: bool = False,
+                segments: int=None) -> None:
         if r:
             kwargs = {'r': r}
         elif delta:
             kwargs = {'delta': delta, 'chamfer': chamfer}
         else:
             raise ValueError("offset(): Must supply r or delta")
+        if segments:
+            kwargs['segments'] = segments
         super().__init__('offset', kwargs)
 
 

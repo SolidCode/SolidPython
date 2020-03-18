@@ -16,40 +16,41 @@ from solid.solidpython import scad_render, scad_render_animated_file, scad_rende
 from solid.test.ExpandedTestCase import DiffOutput
 
 scad_test_case_templates = [
-    {'name': 'polygon', 'kwargs': {'paths': [[0, 1, 2]]}, 'expected': '\n\npolygon(paths = [[0, 1, 2]], points = [[0, 0, 0], [1, 0, 0], [0, 1, 0]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]]}, },
-    {'name': 'circle', 'kwargs': {'segments': 12, 'r': 1}, 'expected': '\n\ncircle($fn = 12, r = 1);', 'args': {}, },
-    {'name': 'circle', 'kwargs': {'segments': 12, 'd': 1}, 'expected': '\n\ncircle($fn = 12, d = 1);', 'args': {}, },
-    {'name': 'square', 'kwargs': {'center': False, 'size': 1}, 'expected': '\n\nsquare(center = false, size = 1);', 'args': {}, },
-    {'name': 'sphere', 'kwargs': {'segments': 12, 'r': 1}, 'expected': '\n\nsphere($fn = 12, r = 1);', 'args': {}, },
-    {'name': 'sphere', 'kwargs': {'segments': 12, 'd': 1}, 'expected': '\n\nsphere($fn = 12, d = 1);', 'args': {}, },
-    {'name': 'cube', 'kwargs': {'center': False, 'size': 1}, 'expected': '\n\ncube(center = false, size = 1);', 'args': {}, },
-    {'name': 'cylinder', 'kwargs': {'r1': None, 'r2': None, 'h': 1, 'segments': 12, 'r': 1, 'center': False}, 'expected': '\n\ncylinder($fn = 12, center = false, h = 1, r = 1);', 'args': {}, },
-    {'name': 'cylinder', 'kwargs': {'d1': 4, 'd2': 2, 'h': 1, 'segments': 12, 'center': False}, 'expected': '\n\ncylinder($fn = 12, center = false, d1 = 4, d2 = 2, h = 1);', 'args': {}, },
-    {'name': 'polyhedron', 'kwargs': {'convexity': None}, 'expected': '\n\npolyhedron(faces = [[0, 1, 2]], points = [[0, 0, 0], [1, 0, 0], [0, 1, 0]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]], 'faces': [[0, 1, 2]]}, },
-    {'name': 'union', 'kwargs': {}, 'expected': '\n\nunion();', 'args': {}, },
-    {'name': 'intersection', 'kwargs': {}, 'expected': '\n\nintersection();', 'args': {}, },
-    {'name': 'difference', 'kwargs': {}, 'expected': '\n\ndifference();', 'args': {}, },
-    {'name': 'translate', 'kwargs': {'v': [1, 0, 0]}, 'expected': '\n\ntranslate(v = [1, 0, 0]);', 'args': {}, },
-    {'name': 'scale', 'kwargs': {'v': 0.5}, 'expected': '\n\nscale(v = 0.5000000000);', 'args': {}, },
-    {'name': 'rotate', 'kwargs': {'a': 45, 'v': [0, 0, 1]}, 'expected': '\n\nrotate(a = 45, v = [0, 0, 1]);', 'args': {}, },
-    {'name': 'mirror', 'kwargs': {}, 'expected': '\n\nmirror(v = [0, 0, 1]);', 'args': {'v': [0, 0, 1]}, },
-    {'name': 'resize', 'kwargs': {'newsize': [5, 5, 5], 'auto': [True, True, False]}, 'expected': '\n\nresize(auto = [true, true, false], newsize = [5, 5, 5]);', 'args': {}, },
-    {'name': 'multmatrix', 'kwargs': {}, 'expected': '\n\nmultmatrix(m = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);', 'args': {'m': [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]}, },
-    {'name': 'color', 'kwargs': {}, 'expected': '\n\ncolor(c = [1, 0, 0]);', 'args': {'c': [1, 0, 0]}, },
-    {'name': 'minkowski', 'kwargs': {}, 'expected': '\n\nminkowski();', 'args': {}, },
-    {'name': 'offset', 'kwargs': {'r': 1}, 'expected': '\n\noffset(r = 1);', 'args': {}, },
-    {'name': 'offset', 'kwargs': {'delta': 1}, 'expected': '\n\noffset(chamfer = false, delta = 1);', 'args': {}, },
-    {'name': 'hull', 'kwargs': {}, 'expected': '\n\nhull();', 'args': {}, },
-    {'name': 'render', 'kwargs': {'convexity': None}, 'expected': '\n\nrender();', 'args': {}, },
-    {'name': 'projection', 'kwargs': {'cut': None}, 'expected': '\n\nprojection();', 'args': {}, },
-    {'name': 'surface', 'kwargs': {'center': False, 'convexity': None}, 'expected': '\n\nsurface(center = false, file = "/Path/to/dummy.dxf");', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
-    {'name': 'import_stl', 'kwargs': {'layer': None, 'origin': (0, 0)}, 'expected': '\n\nimport(file = "/Path/to/dummy.stl", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.stl'"}, },
-    {'name': 'import_dxf', 'kwargs': {'layer': None, 'origin': (0, 0)}, 'expected': '\n\nimport(file = "/Path/to/dummy.dxf", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
-    {'name': 'import_', 'kwargs': {'layer': None, 'origin': (0, 0)}, 'expected': '\n\nimport(file = "/Path/to/dummy.dxf", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
-    {'name': 'import_', 'kwargs': {'layer': None, 'origin': (0, 0), 'convexity': 2}, 'expected': '\n\nimport(convexity = 2, file = "/Path/to/dummy.dxf", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
-    {'name': 'linear_extrude', 'kwargs': {'twist': None, 'slices': None, 'center': False, 'convexity': None, 'height': 1, 'scale': 0.9}, 'expected': '\n\nlinear_extrude(center = false, height = 1, scale = 0.9000000000);', 'args': {}, },
-    {'name': 'rotate_extrude', 'kwargs': {'angle': 90, 'segments': 4, 'convexity': None}, 'expected': '\n\nrotate_extrude($fn = 4, angle = 90);', 'args': {}, },
-    {'name': 'intersection_for', 'kwargs': {}, 'expected': '\n\nintersection_for(n = [0, 1, 2]);', 'args': {'n': [0, 1, 2]}, },
+    {'name': 'polygon', 'class': 'polygon' , 'kwargs': {'paths': [[0, 1, 2]]}, 'expected': '\n\npolygon(paths = [[0, 1, 2]], points = [[0, 0, 0], [1, 0, 0], [0, 1, 0]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]]}, },
+    {'name': 'circle', 'class': 'circle' , 'kwargs': {'segments': 12, 'r': 1}, 'expected': '\n\ncircle($fn = 12, r = 1);', 'args': {}, },
+    {'name': 'circle_diam', 'class': 'circle' , 'kwargs': {'segments': 12, 'd': 1}, 'expected': '\n\ncircle($fn = 12, d = 1);', 'args': {}, },
+    {'name': 'square', 'class': 'square' , 'kwargs': {'center': False, 'size': 1}, 'expected': '\n\nsquare(center = false, size = 1);', 'args': {}, },
+    {'name': 'sphere', 'class': 'sphere' , 'kwargs': {'segments': 12, 'r': 1}, 'expected': '\n\nsphere($fn = 12, r = 1);', 'args': {}, },
+    {'name': 'sphere_diam', 'class': 'sphere' , 'kwargs': {'segments': 12, 'd': 1}, 'expected': '\n\nsphere($fn = 12, d = 1);', 'args': {}, },
+    {'name': 'cube', 'class': 'cube' , 'kwargs': {'center': False, 'size': 1}, 'expected': '\n\ncube(center = false, size = 1);', 'args': {}, },
+    {'name': 'cylinder', 'class': 'cylinder' , 'kwargs': {'r1': None, 'r2': None, 'h': 1, 'segments': 12, 'r': 1, 'center': False}, 'expected': '\n\ncylinder($fn = 12, center = false, h = 1, r = 1);', 'args': {}, },
+    {'name': 'cylinder_d1d2', 'class': 'cylinder' , 'kwargs': {'d1': 4, 'd2': 2, 'h': 1, 'segments': 12, 'center': False}, 'expected': '\n\ncylinder($fn = 12, center = false, d1 = 4, d2 = 2, h = 1);', 'args': {}, },
+    {'name': 'polyhedron', 'class': 'polyhedron' , 'kwargs': {'convexity': None}, 'expected': '\n\npolyhedron(faces = [[0, 1, 2]], points = [[0, 0, 0], [1, 0, 0], [0, 1, 0]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]], 'faces': [[0, 1, 2]]}, },
+    {'name': 'union', 'class': 'union' , 'kwargs': {}, 'expected': '\n\nunion();', 'args': {}, },
+    {'name': 'intersection', 'class': 'intersection' , 'kwargs': {}, 'expected': '\n\nintersection();', 'args': {}, },
+    {'name': 'difference', 'class': 'difference' , 'kwargs': {}, 'expected': '\n\ndifference();', 'args': {}, },
+    {'name': 'translate', 'class': 'translate' , 'kwargs': {'v': [1, 0, 0]}, 'expected': '\n\ntranslate(v = [1, 0, 0]);', 'args': {}, },
+    {'name': 'scale', 'class': 'scale' , 'kwargs': {'v': 0.5}, 'expected': '\n\nscale(v = 0.5000000000);', 'args': {}, },
+    {'name': 'rotate', 'class': 'rotate' , 'kwargs': {'a': 45, 'v': [0, 0, 1]}, 'expected': '\n\nrotate(a = 45, v = [0, 0, 1]);', 'args': {}, },
+    {'name': 'mirror', 'class': 'mirror' , 'kwargs': {}, 'expected': '\n\nmirror(v = [0, 0, 1]);', 'args': {'v': [0, 0, 1]}, },
+    {'name': 'resize', 'class': 'resize' , 'kwargs': {'newsize': [5, 5, 5], 'auto': [True, True, False]}, 'expected': '\n\nresize(auto = [true, true, false], newsize = [5, 5, 5]);', 'args': {}, },
+    {'name': 'multmatrix', 'class': 'multmatrix' , 'kwargs': {}, 'expected': '\n\nmultmatrix(m = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);', 'args': {'m': [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]}, },
+    {'name': 'color', 'class': 'color' , 'kwargs': {}, 'expected': '\n\ncolor(c = [1, 0, 0]);', 'args': {'c': [1, 0, 0]}, },
+    {'name': 'minkowski', 'class': 'minkowski' , 'kwargs': {}, 'expected': '\n\nminkowski();', 'args': {}, },
+    {'name': 'offset', 'class': 'offset' , 'kwargs': {'r': 1}, 'expected': '\n\noffset(r = 1);', 'args': {}, },
+    {'name': 'offset_segments', 'class': 'offset' , 'kwargs': {'r': 1, 'segments': 12}, 'expected': '\n\noffset($fn = 12, r = 1);', 'args': {}, },
+    {'name': 'offset_chamfer', 'class': 'offset' , 'kwargs': {'delta': 1}, 'expected': '\n\noffset(chamfer = false, delta = 1);', 'args': {}, },
+    {'name': 'hull', 'class': 'hull' , 'kwargs': {}, 'expected': '\n\nhull();', 'args': {}, },
+    {'name': 'render', 'class': 'render' , 'kwargs': {'convexity': None}, 'expected': '\n\nrender();', 'args': {}, },
+    {'name': 'projection', 'class': 'projection' , 'kwargs': {'cut': None}, 'expected': '\n\nprojection();', 'args': {}, },
+    {'name': 'surface', 'class': 'surface' , 'kwargs': {'center': False, 'convexity': None}, 'expected': '\n\nsurface(center = false, file = "/Path/to/dummy.dxf");', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
+    {'name': 'import_stl', 'class': 'import_stl' , 'kwargs': {'layer': None, 'origin': (0, 0)}, 'expected': '\n\nimport(file = "/Path/to/dummy.stl", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.stl'"}, },
+    {'name': 'import_dxf', 'class': 'import_dxf' , 'kwargs': {'layer': None, 'origin': (0, 0)}, 'expected': '\n\nimport(file = "/Path/to/dummy.dxf", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
+    {'name': 'import_', 'class': 'import_' , 'kwargs': {'layer': None, 'origin': (0, 0)}, 'expected': '\n\nimport(file = "/Path/to/dummy.dxf", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
+    {'name': 'import__convexity', 'class': 'import_' , 'kwargs': {'layer': None, 'origin': (0, 0), 'convexity': 2}, 'expected': '\n\nimport(convexity = 2, file = "/Path/to/dummy.dxf", origin = [0, 0]);', 'args': {'file': "'/Path/to/dummy.dxf'"}, },
+    {'name': 'linear_extrude', 'class': 'linear_extrude' , 'kwargs': {'twist': None, 'slices': None, 'center': False, 'convexity': None, 'height': 1, 'scale': 0.9}, 'expected': '\n\nlinear_extrude(center = false, height = 1, scale = 0.9000000000);', 'args': {}, },
+    {'name': 'rotate_extrude', 'class': 'rotate_extrude' , 'kwargs': {'angle': 90, 'segments': 4, 'convexity': None}, 'expected': '\n\nrotate_extrude($fn = 4, angle = 90);', 'args': {}, },
+    {'name': 'intersection_for', 'class': 'intersection_for' , 'kwargs': {}, 'expected': '\n\nintersection_for(n = [0, 1, 2]);', 'args': {'n': [0, 1, 2]}, },
 ]
 
 
@@ -412,10 +413,10 @@ class TestSolidPython(DiffOutput):
 
 
 def single_test(test_dict):
-    name, args, kwargs, expected = test_dict['name'], test_dict['args'], test_dict['kwargs'], test_dict['expected']
+    name, cls, args, kwargs, expected = test_dict['name'], test_dict['class'], test_dict['args'], test_dict['kwargs'], test_dict['expected']
 
     def test(self):
-        call_str = name + "("
+        call_str = cls + "("
         for k, v in args.items():
             call_str += f"{k}={v}, "
         for k, v in kwargs.items():
