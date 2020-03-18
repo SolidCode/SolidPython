@@ -65,6 +65,8 @@ def implicitcad_render_to_file(scad_object: OpenSCADObject,
                         out_dir: PathStr=None,
                         file_header: str='', 
                         include_orig_code: bool=True) -> str:
+    # FIXME: filepath interpolation is incorrect here, and needs to look
+    # one frame farther back to find the actual desired filename
     return scad_render_to_file(scad_object, filepath, out_dir, file_header, 
                                 include_orig_code, suffix='.escad')
             
