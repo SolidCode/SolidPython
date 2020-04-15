@@ -2,14 +2,15 @@
 from math import pow
 
 from solid import circle, cylinder, polygon, color, OpenSCADObject, translate, linear_extrude
-from solid.utils import bounding_box, right, Red, Tuple3
+from solid.utils import bounding_box, right, Red, Tuple3, euclidify
 from euclid3 import Vector2, Vector3, Point2, Point3
 
 from typing import Sequence, Tuple, Union, List, cast
 
 Point23 = Union[Point2, Point3]
+Point23List = Union[Point23, Tuple[float, float], Tuple[float, float, float]]
 Vec23 = Union[Vector2, Vector3]
-FourPoints = Tuple[Point23, Point23, Point23, Point23]
+FourPoints = Tuple[Point23List, Point23List, Point23List, Point23List]
 SEGMENTS = 48
 
 DEFAULT_SUBDIVISIONS = 10
@@ -18,7 +19,7 @@ DEFAULT_EXTRUDE_HEIGHT = 1
 # =======================
 # = CATMULL-ROM SPLINES =
 # =======================
-def catmull_rom_polygon(points: Sequence[Point23], 
+def catmull_rom_polygon(points: Sequence[Point23List], 
                         subdivisions: int = DEFAULT_SUBDIVISIONS, 
                         extrude_height: float = DEFAULT_EXTRUDE_HEIGHT, 
                         show_controls: bool =False,
@@ -43,7 +44,7 @@ def catmull_rom_polygon(points: Sequence[Point23],
         shape += control_points(points, extrude_height, center)
     return shape
 
-def catmull_rom_points( points: Sequence[Point23], 
+def catmull_rom_points( points: Sequence[Point23List], 
                         subdivisions:int = 10, 
                         close_loop: bool=False,
                         start_tangent: Vec23 = None,
@@ -62,15 +63,17 @@ def catmull_rom_points( points: Sequence[Point23],
     """
     catmull_points: List[Point23] = []
     cat_points: List[Point23] = []
-    points_list = cast(List[Point23], points)
+    # points_list = cast(List[Point23], points)
+
+    points_list = list([euclidify(p, Point2) for p in points])
 
     if close_loop:
-        cat_points = [points[-1]] + points_list + [points[0]] 
+        cat_points = [points_list[-1]] + points_list + [points_list[0]] 
     else:
         # Use supplied tangents or just continue the ends of the supplied points
-        start_tangent = start_tangent or (points[1] - points[0])
-        end_tangent = end_tangent or (points[-2] - points[-1])
-        cat_points = [points[0]+ start_tangent] + points_list + [points[-1] + end_tangent]
+        start_tangent = start_tangent or (points_list[1] - points_list[0])
+        end_tangent = end_tangent or (points_list[-2] - points_list[-1])
+        cat_points = [points_list[0]+ start_tangent] + points_list + [points_list[-1] + end_tangent]
 
     last_point_range = len(cat_points) - 2 if close_loop else len(cat_points) - 3
 
@@ -104,7 +107,7 @@ def _catmull_rom_segment(controls: FourPoints,
     if include_last:
         num_points += 1
 
-    p0, p1, p2, p3 = controls
+    p0, p1, p2, p3 = [euclidify(p, Point2) for p in controls]
     a = 2 * p1
     b = p2 - p0
     c = 2* p0 - 5*p1 + 4*p2 - p3
@@ -113,7 +116,7 @@ def _catmull_rom_segment(controls: FourPoints,
     for i in range(num_points):
         t = i/subdivisions
         pos = 0.5 * (a + (b * t) + (c * t * t) + (d * t * t * t))
-        positions.append(pos)
+        positions.append(Point2(*pos))
     return positions
 
 # ==================
@@ -162,7 +165,12 @@ def bezier_points(controls: FourPoints,
         points.append(_point_along_bez4(*controls, u))
     return points
 
-def _point_along_bez4(p0: Point23, p1: Point23, p2: Point23, p3: Point23, u:float) -> Point2:
+def _point_along_bez4(p0: Point23List, p1: Point23List, p2: Point23List, p3: Point23List, u:float) -> Point2:
+    p0 = euclidify(p0)
+    p1 = euclidify(p1)
+    p2 = euclidify(p2)
+    p3 = euclidify(p3)
+
     x = _bez03(u)*p0.x + _bez13(u)*p1.x + _bez23(u)*p2.x + _bez33(u)*p3.x
     y = _bez03(u)*p0.y + _bez13(u)*p1.y + _bez23(u)*p2.y + _bez33(u)*p3.y
     return Point2(x,y)
