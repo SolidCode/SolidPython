@@ -48,7 +48,7 @@ def catmull_rom_points( points: Sequence[Point23List],
                         subdivisions:int = 10, 
                         close_loop: bool=False,
                         start_tangent: Vec23 = None,
-                        end_tangent: Vec23 = None) -> List[Point23]:
+                        end_tangent: Vec23 = None) -> List[Point3]:
     """
     Return a smooth set of points through `points`, with `subdivision` points 
     between each pair of control points. 
@@ -61,14 +61,14 @@ def catmull_rom_points( points: Sequence[Point23List],
     https://www.habrador.com/tutorials/interpolation/1-catmull-rom-splines/
     retrieved 20190712
     """
-    catmull_points: List[Point23] = []
-    cat_points: List[Point23] = []
+    catmull_points: List[Point3] = []
+    cat_points: List[Point3] = []
     # points_list = cast(List[Point23], points)
 
-    points_list = list([euclidify(p, Point2) for p in points])
+    points_list = list([euclidify(p, Point3) for p in points])
 
     if close_loop:
-        cat_points = [points_list[-1]] + points_list + [points_list[0]] 
+        cat_points = euclidify([points_list[-1]] + points_list + [points_list[0]], Point3)
     else:
         # Use supplied tangents or just continue the ends of the supplied points
         start_tangent = start_tangent or (points_list[1] - points_list[0])
@@ -91,7 +91,7 @@ def catmull_rom_points( points: Sequence[Point23List],
 
 def _catmull_rom_segment(controls: FourPoints, 
                          subdivisions: int, 
-                         include_last=False) -> List[Point23]: 
+                         include_last=False) -> List[Point3]: 
     """
     Returns `subdivisions` Points between the 2nd & 3rd elements of `controls`,
     on a quadratic curve that passes through all 4 control points.
@@ -107,7 +107,7 @@ def _catmull_rom_segment(controls: FourPoints,
     if include_last:
         num_points += 1
 
-    p0, p1, p2, p3 = [euclidify(p, Point2) for p in controls]
+    p0, p1, p2, p3 = [euclidify(p, Point3) for p in controls]
     a = 2 * p1
     b = p2 - p0
     c = 2* p0 - 5*p1 + 4*p2 - p3
@@ -116,7 +116,7 @@ def _catmull_rom_segment(controls: FourPoints,
     for i in range(num_points):
         t = i/subdivisions
         pos = 0.5 * (a + (b * t) + (c * t * t) + (d * t * t * t))
-        positions.append(Point2(*pos))
+        positions.append(Point3(*pos))
     return positions
 
 # ==================
@@ -130,8 +130,19 @@ def bezier_polygon( controls: FourPoints,
                     extrude_height:float = DEFAULT_EXTRUDE_HEIGHT,
                     show_controls: bool = False,
                     center: bool = True) -> OpenSCADObject:
+    '''
+    Return an OpenSCAD representing a closed quadratic Bezier curve.
+    If extrude_height == 0, return a 2D `polygon()` object. 
+    If extrude_height > 0, return a 3D extrusion of specified height. 
+    Note that OpenSCAD won't render 2D & 3D objects together correctly, so pick
+    one and use that.
+    '''                
     points = bezier_points(controls, subdivisions)
-    shape = polygon(points)
+    # OpenSCAD can'ts handle Point3s in creating a polygon. Convert them to Point2s
+    # Note that this prevents us from making polygons outside of the XY plane, 
+    # even though a polygon could reasonably be in some other plane while remaining 2D
+    points = list((Point2(p.x, p.y) for p in points))
+    shape: OpenSCADObject = polygon(points)
     if extrude_height != 0:
         shape = linear_extrude(extrude_height, center=center)(shape)
 
@@ -143,7 +154,7 @@ def bezier_polygon( controls: FourPoints,
 
 def bezier_points(controls: FourPoints, 
                   subdivisions: int = DEFAULT_SUBDIVISIONS,
-                  include_last: bool = True) -> List[Point2]:
+                  include_last: bool = True) -> List[Point3]:
     """
     Returns a list of `subdivisions` (+ 1, if `include_last` is True) points
     on the cubic bezier curve defined by `controls`. The curve passes through 
@@ -158,14 +169,14 @@ def bezier_points(controls: FourPoints,
     # TODO: enable a smooth curve through arbitrarily many points, as described at:
     # https://www.algosome.com/articles/continuous-bezier-curve-line.html
 
-    points: List[Point2] = []
+    points: List[Point3] = []
     last_elt = 1 if include_last else 0
     for i in range(subdivisions + last_elt):
         u = i/subdivisions
         points.append(_point_along_bez4(*controls, u))
     return points
 
-def _point_along_bez4(p0: Point23List, p1: Point23List, p2: Point23List, p3: Point23List, u:float) -> Point2:
+def _point_along_bez4(p0: Point23List, p1: Point23List, p2: Point23List, p3: Point23List, u:float) -> Point3:
     p0 = euclidify(p0)
     p1 = euclidify(p1)
     p2 = euclidify(p2)
@@ -173,7 +184,8 @@ def _point_along_bez4(p0: Point23List, p1: Point23List, p2: Point23List, p3: Poi
 
     x = _bez03(u)*p0.x + _bez13(u)*p1.x + _bez23(u)*p2.x + _bez33(u)*p3.x
     y = _bez03(u)*p0.y + _bez13(u)*p1.y + _bez23(u)*p2.y + _bez33(u)*p3.y
-    return Point2(x,y)
+    z = _bez03(u)*p0.z + _bez13(u)*p1.z + _bez23(u)*p2.z + _bez33(u)*p3.z
+    return Point3(x, y, z)
 
 def _bez03(u:float) -> float:
     return pow((1-u), 3)
