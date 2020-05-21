@@ -3,8 +3,10 @@
 import unittest
 from solid.test.ExpandedTestCase import DiffOutput
 from solid import *
-from solid.splines import catmull_rom_points, bezier_points, bezier_polygon
+from solid.utils import euclidify
+from solid.splines import catmull_rom_points, catmull_rom_prism, bezier_points, bezier_polygon
 from euclid3 import Point2, Point3, Vector2, Vector3
+from math import pi
 
 SEGMENTS = 8
 
@@ -79,7 +81,23 @@ class TestSplines(DiffOutput):
         actual = all((isinstance(p, Point2) for p in poly.params['points']))
         expected = True
         self.assertEqual(expected, actual)
-    
+
+    def test_catmull_rom_prism(self):
+        sides = 3
+        UP = Vector3(0,0,1)
+
+        control_points = [[10, 10, 0], [10, 10, 5], [8, 8, 15]]
+
+        cat_tube = []
+        angle_step = 2*pi/sides
+        for i in range(sides):
+            rotated_controls = list((euclidify(p, Point3).rotate_around(UP, angle_step*i) for p in control_points))
+            cat_tube.append(rotated_controls)
+
+        poly = catmull_rom_prism(cat_tube, self.subdivisions, closed_ring=True, add_caps=True)
+        actual = (len(poly.params['points']), len(poly.params['faces']))
+        expected = (37, 62)
+        self.assertEqual(expected, actual)
       
 
 

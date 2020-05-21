@@ -1,16 +1,25 @@
 #! /usr/bin/env python
 from math import pow
 
-from solid import circle, cylinder, polygon, color, OpenSCADObject, translate, linear_extrude
+from solid import union, circle, cylinder, polygon, color, OpenSCADObject, translate, linear_extrude, polyhedron
 from solid.utils import bounding_box, right, Red, Tuple3, euclidify
 from euclid3 import Vector2, Vector3, Point2, Point3
 
 from typing import Sequence, Tuple, Union, List, cast
 
 Point23 = Union[Point2, Point3]
-Point23List = Union[Point23, Tuple[float, float], Tuple[float, float, float]]
+# These *Input types accept either euclid3.Point* objects, or bare n-tuples
+Point2Input = Union[Point2, Tuple[float, float]]
+Point3Input = Union[Point3, Tuple[float, float, float]]
+Point23Input = Union[Point2Input, Point3Input]
+
+PointInputs = Sequence[Point23Input]
+
+FaceTrio = Tuple[int, int, int]
+CMPatchPoints = Tuple[Sequence[Point3Input], Sequence[Point3Input]]
+
 Vec23 = Union[Vector2, Vector3]
-FourPoints = Tuple[Point23List, Point23List, Point23List, Point23List]
+FourPoints = Tuple[Point23Input, Point23Input, Point23Input, Point23Input]
 SEGMENTS = 48
 
 DEFAULT_SUBDIVISIONS = 10
@@ -19,7 +28,7 @@ DEFAULT_EXTRUDE_HEIGHT = 1
 # =======================
 # = CATMULL-ROM SPLINES =
 # =======================
-def catmull_rom_polygon(points: Sequence[Point23List], 
+def catmull_rom_polygon(points: Sequence[Point23Input], 
                         subdivisions: int = DEFAULT_SUBDIVISIONS, 
                         extrude_height: float = DEFAULT_EXTRUDE_HEIGHT, 
                         show_controls: bool =False,
@@ -44,13 +53,13 @@ def catmull_rom_polygon(points: Sequence[Point23List],
         shape += control_points(points, extrude_height, center)
     return shape
 
-def catmull_rom_points( points: Sequence[Point23List], 
-                        subdivisions:int = 10, 
+def catmull_rom_points( points: Sequence[Point23Input], 
+                        subdivisions:int = DEFAULT_SUBDIVISIONS, 
                         close_loop: bool=False,
                         start_tangent: Vec23 = None,
                         end_tangent: Vec23 = None) -> List[Point3]:
     """
-    Return a smooth set of points through `points`, with `subdivision` points 
+    Return a smooth set of points through `points`, with `subdivisions` points 
     between each pair of control points. 
     
     If `close_loop` is False, `start_tangent` and `end_tangent` can specify 
@@ -119,6 +128,81 @@ def _catmull_rom_segment(controls: FourPoints,
         positions.append(Point3(*pos))
     return positions
 
+def catmull_rom_patch_points(patch:Tuple[PointInputs, PointInputs], 
+                             subdivisions:int = DEFAULT_SUBDIVISIONS,
+                             index_start:int = 0) -> Tuple[List[Point3], List[FaceTrio]]:
+    verts: List[Point3] = []
+    faces: List[FaceTrio] = []
+
+    cm_points_a = catmull_rom_points(patch[0], subdivisions=subdivisions)
+    cm_points_b = catmull_rom_points(patch[1], subdivisions=subdivisions)
+
+    strip_length = len(cm_points_a)
+
+    for i in range(subdivisions + 1):
+        frac = i/subdivisions
+        verts += list([affine_combination(a,b, frac) for a,b in zip(cm_points_a, cm_points_b)])
+        a_start = i*strip_length + index_start
+        b_start = a_start + strip_length
+        # This connects the verts we just created to the verts we'll make on the
+        # next loop. So don't calculate for the last loop
+        if i < subdivisions:
+            faces += face_strip_list(a_start, b_start, strip_length)
+
+    return verts, faces
+
+def catmull_rom_patch(patch:Tuple[PointInputs, PointInputs], subdivisions:int = DEFAULT_SUBDIVISIONS) -> OpenSCADObject:
+
+    faces, vertices = catmull_rom_patch_points(patch, subdivisions)
+    return polyhedron(faces, vertices)
+
+def catmull_rom_prism(  control_curves:Sequence[PointInputs], 
+                        subdivisions:int = DEFAULT_SUBDIVISIONS,
+                        closed_ring:bool = True,
+                        add_caps:bool = True ) -> polyhedron:
+
+    verts: List[Point3] = []
+    faces: List[FaceTrio] = []
+
+    curves = list([euclidify(c) for c in control_curves])
+    if closed_ring:
+        curves.append(curves[0])
+    
+    curve_length = (len(curves[0]) -1) * subdivisions + 1
+    for i, (a, b) in enumerate(zip(curves[:-1], curves[1:])):
+        index_start = len(verts) - curve_length
+        first_new_vert = curve_length
+        if i == 0:
+            index_start = 0
+            first_new_vert = 0
+
+        new_verts, new_faces = catmull_rom_patch_points((a,b), subdivisions=subdivisions, index_start=index_start)
+
+        # new_faces describes all the triangles in the patch we just computed,
+        # but new_verts shares its first curve_length vertices with the last
+        # curve_length vertices; Add on only the new points
+        verts += new_verts[first_new_vert:]
+        faces += new_faces
+
+    if closed_ring and add_caps:
+        bot_indices = range(0, len(verts), curve_length)
+        top_indices = range(curve_length-1, len(verts), curve_length)
+        bot_points = [verts[i] for i in bot_indices]
+        top_points = [verts[i] for i in top_indices]
+
+        # FIXME: This won't work, since it assumes that the points making
+        # up the two end caps are all in order. In fact, that's not the case;
+        # the indexes of the points at the base cap are 0, 41, 82, etc. on a curve
+        # with 5 points and 10 subdivisions.
+        bot_centroid, bot_faces = centroid_endcap(bot_points, bot_indices, len(verts))
+        top_centroid, top_faces = centroid_endcap(top_points, top_indices, len(verts) + 1, invert=True)
+        verts += [bot_centroid, top_centroid]
+        faces += bot_faces
+        faces += top_faces
+    
+    p = polyhedron(faces=faces, points=verts, convexity=3)
+    return p
+
 # ==================
 # = BEZIER SPLINES =
 # ==================
@@ -176,7 +260,7 @@ def bezier_points(controls: FourPoints,
         points.append(_point_along_bez4(*controls, u))
     return points
 
-def _point_along_bez4(p0: Point23List, p1: Point23List, p2: Point23List, p3: Point23List, u:float) -> Point3:
+def _point_along_bez4(p0: Point23Input, p1: Point23Input, p2: Point23Input, p3: Point23Input, u:float) -> Point3:
     p0 = euclidify(p0)
     p1 = euclidify(p1)
     p2 = euclidify(p2)
@@ -199,6 +283,10 @@ def _bez23(u:float) -> float:
 def _bez33(u:float) -> float:
     return pow(u,3)
 
+# ================
+# = HOBBY CURVES =
+# ================
+
 # ===========
 # = HELPERS =
 # ===========
@@ -218,5 +306,90 @@ def control_points(points: Sequence[Point23], extrude_height:float=0, center:boo
     else:
         h = extrude_height * 1.1
         c = cylinder(r=r, h=h, center=center)
-    controls = color(points_color)([translate([p.x, p.y])(c) for p in points])
+    controls = color(points_color)([translate((p.x, p.y, 0))(c) for p in points])
     return controls
+
+def face_strip_list(a_start:int,  b_start:int, length:int, close_loop:bool=False) -> List[FaceTrio]:
+    # If a_start is the index of the vertex at one end of a row of points in a surface,
+    # and b_start is the index of the vertex at the same end of the next row of points,
+    # return a list of lists of indices describing faces for the whole row:
+    # face_strip_list(a_start = 0, b_start = 3, length=3) => [[0,3,4], [0,4,1], [1,4,5], [1,5,2]]
+    #   3-4-5
+    #   |/|/|
+    #   0-1-2  =>  [[0,3,4], [0,4,1], [1,4,5], [1,5,2]]
+    #
+    # If close_loop is true, add one more pair of faces connecting the far
+    # edge of the strip to the near edge, in this case [[2,5,3], [2,3,0]]
+    faces: List[FaceTrio] = []
+    for a, b in zip(range(a_start, a_start + length-1), range(b_start, b_start + length-1)):
+        faces.append((a, b+1, b))
+        faces.append((a, a+1, b+1))
+    if close_loop:
+        faces.append((a+length-1, b+length-1, b))
+        faces.append((a+length-1, b, a))
+    return faces
+
+def fan_endcap_list(cap_points:int=3, index_start:int=0) -> List[FaceTrio]:
+    '''
+    Return a face-triangles list for the endpoint of a tube with cap_points points
+    We construct a fan of triangles all starting at point index_start and going
+    to each point in turn. 
+    
+    NOTE that this would not work for non-convex rings. 
+    In that case, it would probably be better to create a new centroid point and have
+    all triangle reach out from it. That wouldn't handle all polygons, but would
+    work with mildly concave ones like a star, for example.
+
+    So fan_endcap_list(cap_points=6, index_start=0), like so:
+           0   
+         /   \
+       5      1
+       |      | 
+       4      2
+         \   /
+           3      
+    
+           returns:  [(0,1,2), (0,2,3), (0,3,4), (0,4,5)]      
+    '''
+    faces: List[FaceTrio] = []
+    for i in range(index_start + 1, index_start + cap_points - 1):
+        faces.append((index_start, i, i+1))
+    return faces
+
+def centroid_endcap(points:Sequence[Point3], indices:Sequence[int], total_vert_count:int, invert:bool = False) -> Tuple[Point3, List[FaceTrio]]:
+    # Given a list of points at one end of a polyhedron tube, and their
+    # accompanying indices, make a centroid point, and return all the triangle
+    # information needed to make an endcap polyhedron. 
+
+    # `total_vert_count` should be the number of vertices in the existing shape
+    # *before* calling this function; we'll return a point that should be appended
+    # to the total vertex list for the polyhedron-to-be
+
+    # This is sufficient for some moderately concave polygonal endcaps, 
+    # (a star shape, say), but wouldn't be enough for more irregularly convex
+    # polygons (anyplace where a segment from the centroid to a point on the 
+    # polygon crosses an edge of the polygon)
+    faces: List[FaceTrio] = []
+    center = centroid(points)
+    centroid_index = total_vert_count
+    
+    for a,b in zip(indices[:-1], indices[1:]):
+        faces.append((centroid_index, a, b))
+    faces.append((centroid_index, indices[-1], indices[0]))
+
+    if invert:
+        faces = list((reversed(f) for f in faces)) # type: ignore
+
+    return (center, faces)
+
+def centroid(points:Sequence[Point23]) -> Point23:
+    total = Point3(0,0,0)
+    for p in points:
+        total += p
+    total /= len(points)
+    return total
+
+def affine_combination(a:Point23, b:Point23, fraction:float) -> Point23:
+    # Return a Point[23] between a & b, where fraction==0 => a, fraction==1 => b
+    return (1-fraction) * a + fraction*b
+
