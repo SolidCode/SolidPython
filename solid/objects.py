@@ -3,7 +3,7 @@ Classes for OpenSCAD builtins
 """
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Dict, Optional, Sequence, Tuple, Union
+from typing import Dict, Optional, Sequence, Tuple, Union, List
 
 from .solidpython import OpenSCADObject
 
@@ -22,6 +22,9 @@ Indexes = Union[Sequence[int], Sequence[Sequence[int]]]
 ScadSize = Union[int, Sequence[float]]
 OpenSCADObjectPlus = Union[OpenSCADObject, Sequence[OpenSCADObject]]
 
+def _to_point2s(points:Points) -> List[P3]:
+    return list([(p[0], p[1]) for p in points])
+
 
 class polygon(OpenSCADObject):
     """
@@ -36,13 +39,16 @@ class polygon(OpenSCADObject):
     polygon has holes. The parameter is optional and if omitted the points are 
     assumed in order. (The 'pN' components of the *paths* vector are 0-indexed 
     references to the elements of the *points* vector.)
+
+    NOTE: OpenSCAD accepts only 2D points for `polygon()`. Convert any 3D points
+    to 2D before compiling
     """
 
     def __init__(self, points: Points, paths: Indexes = None) -> None:
         if not paths:
             paths = [list(range(len(points)))]
         super().__init__('polygon',
-                         {'points': points, 'paths': paths})
+                         {'points': _to_point2s(points), 'paths': paths})
 
 
 class circle(OpenSCADObject):
