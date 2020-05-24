@@ -2,7 +2,7 @@
 import os
 import sys
 from solid import *
-from solid.utils import Red, right, forward
+from solid.utils import Red, right, forward, back
 
 from solid.splines import catmull_rom_points, catmull_rom_polygon, control_points
 from solid.splines import bezier_polygon, bezier_points
@@ -10,13 +10,18 @@ from euclid3 import Vector2, Vector3, Point2, Point3
 
 def assembly():
     # Catmull-Rom Splines
-    a = basic_catmull_rom()
-    a += forward(4)(catmull_rom_spline_variants())
-    a += forward(6)(bottle_shape(width=2, height=6))
+    a = basic_catmull_rom()                         # Top row in OpenSCAD output
+    a += back(4)(catmull_rom_spline_variants())     # Row 2
+    a += back(12)(bottle_shape(width=2, height=6))  # Row 3, the bottle shape
+
+    # # TODO: include examples for 3D surfaces:
+    # a += back(16)(catmull_rom_patches())
+    # a += back(20)(catmull_rom_prism())
+    # a += back(24)(catmull_rom_prism_smooth())
 
     # Bezier Splines
-    a += forward(12)(basic_bezier())
-    a += forward(18)(bezier_points_variants())
+    a += back(16)(basic_bezier())                   # Row 4
+    a += back(20)(bezier_points_variants())         # Row 5
     return a
 
 def basic_catmull_rom():
@@ -66,6 +71,18 @@ def catmull_rom_spline_variants():
     a = closed + right(3)(opened) + right(10)(tangents)
 
     return a
+
+def catmull_rom_patches():
+    # TODO: write this
+    pass
+
+def catmull_rom_prism():
+    # TODO: write this
+    pass
+
+def catmull_rom_prism_smooth():
+    # TODO: write this
+    pass
 
 def bottle_shape(width: float, height: float, neck_width:float=None, neck_height:float=None):
     if neck_width == None:
