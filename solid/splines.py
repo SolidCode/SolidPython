@@ -77,14 +77,16 @@ def catmull_rom_points( points: Sequence[Point23Input],
     points_list = list([euclidify(p, Point3) for p in points])
 
     if close_loop:
-        cat_points = euclidify([points_list[-1]] + points_list + [points_list[0]], Point3)
+        cat_points = euclidify([points_list[-1]] + points_list + points_list[0:2], Point3)
     else:
         # Use supplied tangents or just continue the ends of the supplied points
         start_tangent = start_tangent or (points_list[1] - points_list[0])
+        start_tangent = euclidify(start_tangent, Vector3)
         end_tangent = end_tangent or (points_list[-2] - points_list[-1])
+        end_tangent = euclidify(end_tangent, Vector3)
         cat_points = [points_list[0]+ start_tangent] + points_list + [points_list[-1] + end_tangent]
 
-    last_point_range = len(cat_points) - 2 if close_loop else len(cat_points) - 3
+    last_point_range = len(cat_points) - 3 if close_loop else len(cat_points) - 3
 
     for i in range(0, last_point_range):
         include_last = True if i == last_point_range - 1 else False
@@ -159,7 +161,10 @@ def catmull_rom_patch(patch:Tuple[PointInputs, PointInputs], subdivisions:int = 
 def catmull_rom_prism(  control_curves:Sequence[PointInputs], 
                         subdivisions:int = DEFAULT_SUBDIVISIONS,
                         closed_ring:bool = True,
-                        add_caps:bool = True ) -> polyhedron:
+                        add_caps:bool = True,
+                        smooth_edges: bool = False ) -> polyhedron:
+    if smooth_edges:
+        return catmull_rom_prism_smooth_edges(control_curves, subdivisions, closed_ring, add_caps)
 
     verts: List[Point3] = []
     faces: List[FaceTrio] = []
@@ -187,19 +192,59 @@ def catmull_rom_prism(  control_curves:Sequence[PointInputs],
     if closed_ring and add_caps:
         bot_indices = range(0, len(verts), curve_length)
         top_indices = range(curve_length-1, len(verts), curve_length)
-        bot_points = [verts[i] for i in bot_indices]
-        top_points = [verts[i] for i in top_indices]
 
-        # FIXME: This won't work, since it assumes that the points making
-        # up the two end caps are all in order. In fact, that's not the case;
-        # the indexes of the points at the base cap are 0, 41, 82, etc. on a curve
-        # with 5 points and 10 subdivisions.
-        bot_centroid, bot_faces = centroid_endcap(bot_points, bot_indices, len(verts))
-        top_centroid, top_faces = centroid_endcap(top_points, top_indices, len(verts) + 1, invert=True)
-        verts += [bot_centroid, top_centroid]
+        bot_centroid, bot_faces = centroid_endcap(verts, bot_indices)
+        verts.append(bot_centroid)
         faces += bot_faces
+        # Note that bot_centroid must be added to verts before creating the
+        # top endcap; otherwise both endcaps would point to the same centroid point
+        top_centroid, top_faces = centroid_endcap(verts, top_indices, invert=True)
+        verts.append(top_centroid)
         faces += top_faces
     
+    p = polyhedron(faces=faces, points=verts, convexity=3)
+    return p
+
+def catmull_rom_prism_smooth_edges( control_curves:Sequence[PointInputs], 
+                                    subdivisions:int = DEFAULT_SUBDIVISIONS,
+                                    closed_ring:bool = True,
+                                    add_caps:bool = True ) -> polyhedron:
+
+    verts: List[Point3] = []
+    faces: List[FaceTrio] = []
+
+    # TODO: verify that each control_curve has the same length
+
+    curves = list([euclidify(c) for c in control_curves])
+
+    expanded_curves = [catmull_rom_points(c, subdivisions, close_loop=False) for c in curves]
+    expanded_length = len(expanded_curves[0])
+    for i in range(expanded_length):
+        contour_controls = [c[i] for c in expanded_curves]
+        contour = catmull_rom_points(contour_controls, subdivisions, close_loop=closed_ring)
+        verts += contour
+
+        contour_length = len(contour)
+        # generate the face triangles between the last two rows of vertices
+        if i > 0:
+            a_start = len(verts) - 2 * contour_length
+            b_start = len(verts) - contour_length
+            new_faces = face_strip_list(a_start,  b_start, length=contour_length, close_loop=closed_ring)
+            faces += new_faces
+    
+    if closed_ring and add_caps:
+        bot_indices = range(0, contour_length)
+        top_indices = range(len(verts) - contour_length, len(verts))
+
+        bot_centroid, bot_faces = centroid_endcap(verts, bot_indices)
+        verts.append(bot_centroid)
+        faces += bot_faces
+        # Note that bot_centroid must be added to verts before creating the
+        # top endcap; otherwise both endcaps would point to the same centroid point
+        top_centroid, top_faces = centroid_endcap(verts, top_indices, invert=True)
+        verts.append(top_centroid)
+        faces += top_faces 
+
     p = polyhedron(faces=faces, points=verts, convexity=3)
     return p
 
@@ -215,7 +260,7 @@ def bezier_polygon( controls: FourPoints,
                     show_controls: bool = False,
                     center: bool = True) -> OpenSCADObject:
     '''
-    Return an OpenSCAD representing a closed quadratic Bezier curve.
+    Return an OpenSCAD object representing a closed quadratic Bezier curve.
     If extrude_height == 0, return a 2D `polygon()` object. 
     If extrude_height > 0, return a 3D extrusion of specified height. 
     Note that OpenSCAD won't render 2D & 3D objects together correctly, so pick
@@ -356,22 +401,21 @@ def fan_endcap_list(cap_points:int=3, index_start:int=0) -> List[FaceTrio]:
         faces.append((index_start, i, i+1))
     return faces
 
-def centroid_endcap(points:Sequence[Point3], indices:Sequence[int], total_vert_count:int, invert:bool = False) -> Tuple[Point3, List[FaceTrio]]:
-    # Given a list of points at one end of a polyhedron tube, and their
-    # accompanying indices, make a centroid point, and return all the triangle
-    # information needed to make an endcap polyhedron. 
-
-    # `total_vert_count` should be the number of vertices in the existing shape
-    # *before* calling this function; we'll return a point that should be appended
-    # to the total vertex list for the polyhedron-to-be
-
+def centroid_endcap(tube_points:Sequence[Point3], indices:Sequence[int], invert:bool = False) -> Tuple[Point3, List[FaceTrio]]:
+    # tube_points: all points in a polyhedron tube
+    # indices: the indexes of the points at the desired end of the tube
+    # invert: if True, invert the order of the generated faces. One endcap in 
+    #   each pair should be inverted
+    #
+    # Return all the triangle information needed to make an endcap polyhedron
+    #
     # This is sufficient for some moderately concave polygonal endcaps, 
     # (a star shape, say), but wouldn't be enough for more irregularly convex
     # polygons (anyplace where a segment from the centroid to a point on the 
     # polygon crosses an edge of the polygon)
     faces: List[FaceTrio] = []
-    center = centroid(points)
-    centroid_index = total_vert_count
+    center = centroid([tube_points[i] for i in indices])
+    centroid_index = len(tube_points)
     
     for a,b in zip(indices[:-1], indices[1:]):
         faces.append((centroid_index, a, b))
