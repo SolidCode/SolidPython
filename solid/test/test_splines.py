@@ -73,15 +73,6 @@ class TestSplines(DiffOutput):
         expected = [Point3(-2.00, -1.00, 0.00),Point3(0.00, 0.00, 0.75), Point3(2.00, 1.00, 0.00)]
         self.assertPointsListsEqual(expected, actual)
 
-    def test_bezier_polygon(self):
-        # Notably, OpenSCAD won't render a polygon made of 3-tuples, even if it
-        # lies in the XY plane. Verify that our generated polygon() code contains
-        # only 2-tuples
-        poly = bezier_polygon(self.bezier_controls, extrude_height=0, subdivisions=self.subdivisions)
-        actual = all((isinstance(p, Point2) for p in poly.params['points']))
-        expected = True
-        self.assertEqual(expected, actual)
-
     def test_catmull_rom_prism(self):
         sides = 3
         UP = Vector3(0,0,1)
