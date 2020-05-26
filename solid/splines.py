@@ -229,7 +229,11 @@ def catmull_rom_prism_smooth_edges( control_curves:Sequence[PointInputs],
         if i > 0:
             a_start = len(verts) - 2 * contour_length
             b_start = len(verts) - contour_length
-            new_faces = face_strip_list(a_start,  b_start, length=contour_length, close_loop=closed_ring)
+            # Note the b_start, a_start order here. This makes sure our faces
+            # are pointed outwards for the test cases I ran. I think if control
+            # curves were specified clockwise rather than counter-clockwise, all
+            # of the faces would be pointed inwards
+            new_faces = face_strip_list(b_start,  a_start, length=contour_length, close_loop=closed_ring)
             faces += new_faces
     
     if closed_ring and add_caps:
@@ -358,20 +362,22 @@ def face_strip_list(a_start:int,  b_start:int, length:int, close_loop:bool=False
     # If a_start is the index of the vertex at one end of a row of points in a surface,
     # and b_start is the index of the vertex at the same end of the next row of points,
     # return a list of lists of indices describing faces for the whole row:
-    # face_strip_list(a_start = 0, b_start = 3, length=3) => [[0,3,4], [0,4,1], [1,4,5], [1,5,2]]
+    # face_strip_list(a_start = 0, b_start = 3, length=3) => [[0,4,3], [0,1,4], [1,5,4], [1,2,5]]
     #   3-4-5
     #   |/|/|
-    #   0-1-2  =>  [[0,3,4], [0,4,1], [1,4,5], [1,5,2]]
+    #   0-1-2  =>  [[0,4,3], [0,1,4], [1,5,4], [1,2,5]]
     #
     # If close_loop is true, add one more pair of faces connecting the far
-    # edge of the strip to the near edge, in this case [[2,5,3], [2,3,0]]
+    # edge of the strip to the near edge, in this case [[2,3,5], [2,0,3]]
     faces: List[FaceTrio] = []
-    for a, b in zip(range(a_start, a_start + length-1), range(b_start, b_start + length-1)):
+    loop = length - 1
+
+    for a, b in zip(range(a_start, a_start + loop), range(b_start, b_start + loop)):
         faces.append((a, b+1, b))
         faces.append((a, a+1, b+1))
     if close_loop:
-        faces.append((a+length-1, b+length-1, b))
-        faces.append((a+length-1, b, a))
+        faces.append((a+loop, b, b+loop))
+        faces.append((a+loop, a, b))
     return faces
 
 def fan_endcap_list(cap_points:int=3, index_start:int=0) -> List[FaceTrio]:
