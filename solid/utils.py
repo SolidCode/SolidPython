@@ -1087,7 +1087,7 @@ def path_2d_polygon(points:Sequence[Point23], width:float=1, closed:bool=False) 
     Return an OpenSCAD `polygon()` in an area `width` units wide around `points`
     '''
     path_points = path_2d(points, width, closed)
-    paths = list(range(len(path_points)))
+    paths = [list(range(len(path_points)))]
     if closed:
         paths = [list(range(len(points))), list(range(len(points), len(path_points)))]
     return polygon(path_points, paths=paths)
