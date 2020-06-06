@@ -10,6 +10,7 @@ from solid.test.ExpandedTestCase import DiffOutput
 from solid.utils import BoundingBox, arc, arc_inverted, euc_to_arr, euclidify 
 from solid.utils import extrude_along_path, fillet_2d, is_scad, offset_points
 from solid.utils import split_body_planar, transform_to_point, project_to_2D
+from solid.utils import path_2d, path_2d_polygon
 from solid.utils import FORWARD_VEC, RIGHT_VEC, UP_VEC
 from solid.utils import back, down, forward, left, right, up
 from solid.utils import label
@@ -38,6 +39,7 @@ other_test_cases = [
     ('euclidify_recursive', euclidify, [[[0, 0, 0], [1, 0, 0]]], '[Vector3(0.00, 0.00, 0.00), Vector3(1.00, 0.00, 0.00)]'),
     ('euclidify_Vector', euclidify, [Vector3(0, 0, 0)], 'Vector3(0.00, 0.00, 0.00)'),
     ('euclidify_recursive_Vector', euclidify, [[Vector3(0, 0, 0), Vector3(0, 0, 1)]], '[Vector3(0.00, 0.00, 0.00), Vector3(0.00, 0.00, 1.00)]'),
+    ('euclidify_3_to_2', euclidify, [Point3(0,1,2), Point2], 'Point2(0.00, 1.00)'),
     ('euc_to_arr', euc_to_arr, [Vector3(0, 0, 0)], '[0, 0, 0]'),
     ('euc_to_arr_recursive', euc_to_arr, [[Vector3(0, 0, 0), Vector3(0, 0, 1)]], '[[0, 0, 0], [0, 0, 1]]'),
     ('euc_to_arr_arr', euc_to_arr, [[0, 0, 0]], '[0, 0, 0]'),
@@ -99,6 +101,47 @@ class TestSPUtils(DiffOutput):
         actual = scad_render(newp)
 
         self.assertEqualNoWhitespace(expected, actual)
+    
+    def test_euclidify_non_mutating(self):
+        base_tri = [Point2(0, 0), Point2(10, 0), Point2(0, 10)]
+        next_tri = euclidify(base_tri, Point2)
+        expected = 3
+        actual = len(base_tri)
+        self.assertEqual(expected, actual, 'euclidify should not mutate its arguments')
+
+    def test_offset_points_closed(self):
+        actual = euc_to_arr(offset_points(tri, offset=1, closed=True))
+        expected = [[1.0, 1.0], [7.585786437626904, 1.0], [1.0, 7.585786437626905]]
+        self.assertEqual(expected, actual)
+
+    def test_offset_points_open(self):
+        actual = euc_to_arr(offset_points(tri, offset=1, closed=False))
+        expected = [[0.0, 1.0], [7.585786437626904, 1.0], [-0.7071067811865479, 9.292893218813452]]
+        self.assertEqual(expected, actual)
+
+    def test_path_2d(self):
+        base_tri = [Point2(0, 0), Point2(10, 0), Point2(10, 10)]
+        actual = euc_to_arr(path_2d(base_tri, width=2, closed=False))
+        expected = [
+            [0.0, 1.0], [9.0, 1.0], [9.0, 10.0], 
+            [11.0, 10.0], [11.0, -1.0], [0.0, -1.0]
+        ]
+        self.assertEqual(expected, actual)
+
+    def test_path_2d_polygon(self):
+        base_tri = [Point2(0, 0), Point2(10, 0), Point2(10, 10), Point2(0,10)]
+        poly = path_2d_polygon(base_tri, width=2, closed=True)
+        expected = [
+            (1.0, 1.0), (9.0, 1.0), (9.0, 9.0), (1.0, 9.0), 
+            (-1.0, 11.0), (11.0, 11.0), (11.0, -1.0), (-1.0, -1.0)
+        ]
+        actual = euc_to_arr(poly.params['points'])
+        self.assertEqual(expected, actual)
+
+        # Make sure the inner and outer paths in the polygon are disjoint
+        expected = [[0,1,2,3],[4,5,6,7]]
+        actual = poly.params['paths']
+        self.assertEqual(expected, actual)
     
     # def test_offset_points_inside(self):
     #     expected = ''

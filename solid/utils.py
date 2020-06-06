@@ -2,7 +2,7 @@
 from itertools import zip_longest
 from math import pi, ceil, floor, sqrt, atan2, degrees, radians
 
-from solid import union, cube, translate, rotate, square, circle, polyhedron
+from solid import union, cube, translate, rotate, square, circle, polyhedron, polygon
 from solid import difference, intersection, multmatrix, cylinder, color
 from solid import text, linear_extrude, resize
 from solid import run_euclid_patch
@@ -17,7 +17,7 @@ run_euclid_patch()
 # ==========
 # = TYPING =
 # ==========
-from typing import Union, Tuple, Sequence, List, Optional, Callable, Dict, cast
+from typing import Any, Union, Tuple, Sequence, List, Optional, Callable, Dict, cast
 Point23 = Union[Point2, Point3]
 Vector23 = Union[Vector2, Vector3]
 Line23 = Union[Line2, Line3]
@@ -704,39 +704,49 @@ def label(a_str:str, width:float=15, halign:str="left", valign:str="baseline",
 # ==================
 # = PyEuclid Utils =
 # ==================
-def euclidify(an_obj:EucOrTuple, 
-              intended_class=Vector3) -> Union[Point23, Vector23]:
-    # If an_obj is an instance of the appropriate PyEuclid class,
-    # return it.  Otherwise, try to turn an_obj into the appropriate
-    # class and throw an exception on failure
+def euclidify(an_obj:EucOrTuple, intended_class:type=Vector3) -> Union[Point23, Vector23, List[Union[Point23, Vector23]]]:
+    '''
+    Accept an object or list of objects of any relevant type (2-tuples, 3-tuples, Vector2/3, Point2/3)
+    and return one or more euclid3 objects of intended_class. 
 
-    # Since we often want to convert an entire array
-    # of objects (points, etc.) accept arrays of arrays
+    # -- 3D input has its z-values dropped when intended_class is 2D
+    # -- 2D input has its z-values set to 0 when intended_class is 3D
 
-    ret = an_obj
-
-    # See if this is an array of arrays.  If so, convert all sublists
-    if isinstance(an_obj, (list, tuple)):
-        if isinstance(an_obj[0], (list, tuple)):
-            ret = [intended_class(*p) for p in an_obj]
-        elif isinstance(an_obj[0], intended_class):
-            # this array is already euclidified; return it
-            ret = an_obj
-        else:
-            try:
-                ret = intended_class(*an_obj)
-            except:
-                raise TypeError("Object: %s ought to be PyEuclid class %s or "
-                                "able to form one, but is not."
-                                    % (an_obj, intended_class.__name__))
-    elif not isinstance(an_obj, intended_class):
-        try:
-            ret = intended_class(*an_obj)
-        except:
-            raise TypeError("Object: %s ought to be PyEuclid class %s or "
-                            "able to form one, but is not." 
-                            % (an_obj, intended_class.__name__))
-    return ret # type: ignore
+    The general idea is to take in data in whatever form is handy to users
+    and return euclid3 types with vector math capabilities
+    '''
+    sequence = (list, tuple)
+    euclidable = (list, tuple, Vector2, Vector3, Point2, Point3)
+    numeric = (int, float)
+    # If this is a list of lists, return a list of euclid objects
+    if isinstance(an_obj, sequence) and isinstance(an_obj[0], euclidable):
+        return list((_euc_obj(ao, intended_class) for ao in an_obj))
+    elif isinstance(an_obj, euclidable):
+        return _euc_obj(an_obj, intended_class)
+    else:
+        raise TypeError(f'''Object: {an_obj} ought to be PyEuclid class 
+                        {intended_class.__name__} or able to form one, but is not.''')
+    
+def _euc_obj(an_obj: Any, intended_class:type=Vector3) -> Union[Point23, Vector23]:
+    ''' Take a single object (not a list of them!) and return a euclid type
+        # If given a euclid obj, return the desired type, 
+        # -- 3d types are projected to z=0 when intended_class is 2D
+        # -- 2D types are projected to z=0 when intended class is 3D
+        _euc_obj( Vector3(0,1,2), Vector3) -> Vector3(0,1,2)
+        _euc_obj( Vector3(0,1,2), Point3) -> Point3(0,1,2)
+        _euc_obj( Vector2(0,1), Vector3) -> Vector3(0,1,0)
+        _euc_obj( Vector2(0,1), Point3) -> Point3(0,1,0)
+        _euc_obj( (0,1), Vector3) -> Vector3(0,1,0)
+        _euc_obj( (0,1), Point3) -> Point3(0,1,0)
+        _euc_obj( (0,1), Point2) -> Point2(0,1,0)
+        _euc_obj( (0,1,2), Point2) -> Point2(0,1)
+        _euc_obj( (0,1,2), Point3) -> Point3(0,1,2)
+    '''
+    elts_in_constructor = 3
+    if intended_class in (Point2, Vector2):
+        elts_in_constructor = 2
+    result = intended_class(*an_obj[:elts_in_constructor])
+    return result
 
 def euc_to_arr(euc_obj_or_list: EucOrTuple) -> List[float]:  # Inverse of euclidify()
     # Call as_arr on euc_obj_or_list or on all its members if it's a list
@@ -902,7 +912,8 @@ def offset_point(a:Point2, b:Point2, c:Point2, offset:float, direction:Direction
 
 def offset_points(points:Sequence[Point23], 
                   offset:float, 
-                  internal:bool=True) -> List[Point2]:
+                  internal:bool=True,
+                  closed=True) -> List[Point2]:
     """
     Given a set of points, return a set of points offset by `offset`, in the
     direction specified by `internal`. 
@@ -923,7 +934,9 @@ def offset_points(points:Sequence[Point23],
     """
     # Note that we could just call offset_point() repeatedly, but we'd do 
     # a lot of repeated calculations that way
-    src_points = list((Point2(p.x, p.y) for p in (*points, points[0])))
+    src_points = euclidify(points, Point2)
+    if closed:
+        src_points.append(src_points[0])
 
     vecs = vectors_between_points(src_points)
     direction = direction_of_bend(*src_points[:3])
@@ -937,9 +950,13 @@ def offset_points(points:Sequence[Point23],
         lines.append(Line2(a+perp, b+perp))
     
     intersections = list((a.intersect(b) for a,b in zip(lines[:-1], lines[1:])))
-    # First point is determined by intersection of first and last lines
-    intersections.insert(0, lines[0].intersect(lines[-1]))
-
+    if closed:
+        # First point is determined by intersection of first and last lines
+        intersections.insert(0, lines[0].intersect(lines[-1]))
+    else:
+        # otherwise use first and last points in lines
+        intersections.insert(0, lines[0].p)
+        intersections.append(lines[-1].p + lines[-1].v)
     return intersections
 
 # ==================
@@ -1044,6 +1061,36 @@ def _widen_angle_for_fillet(start_degrees:float, end_degrees:float) -> Tuple[flo
 
     epsilon_degrees = 0.1
     return start_degrees - epsilon_degrees, end_degrees + epsilon_degrees
+
+# ==============
+# = 2D DRAWING =
+# ==============
+def path_2d(points:Sequence[Point23], width:float=1, closed:bool=False) -> List[Point2]:
+    '''
+    Return a set of points describing a path of width `width` around `points`,
+    suitable for use as a polygon().  
+
+    Note that if `closed` is True, the polygon will have a hole in it, meaning
+    that `polygon()` would need to specify its `paths` argument. Assuming 3 elements
+    in the original `points` list, we'd have to call:
+    path_points = path_2d(points, closed=True)
+    poly = polygon(path_points, paths=[[0,1,2],[3,4,5]])
+
+    Or, you know, just call `path_2d_polygon()` and let it do that for you
+    '''
+    p_a = offset_points(points, offset=width/2, internal=True, closed=closed)
+    p_b = list(reversed(offset_points(points, offset=width/2, internal=False, closed=closed)))
+    return p_a + p_b
+
+def path_2d_polygon(points:Sequence[Point23], width:float=1, closed:bool=False) -> polygon:
+    '''
+    Return an OpenSCAD `polygon()` in an area `width` units wide around `points`
+    '''
+    path_points = path_2d(points, width, closed)
+    paths = list(range(len(path_points)))
+    if closed:
+        paths = [list(range(len(points))), list(range(len(points), len(path_points)))]
+    return polygon(path_points, paths=paths)
 
 # ==========================
 # = Extrusion along a path =
