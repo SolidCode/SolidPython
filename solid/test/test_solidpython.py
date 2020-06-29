@@ -40,6 +40,7 @@ scad_test_case_templates = [
     {'name': 'offset', 'class': 'offset' , 'kwargs': {'r': 1}, 'expected': '\n\noffset(r = 1);', 'args': {}, },
     {'name': 'offset_segments', 'class': 'offset' , 'kwargs': {'r': 1, 'segments': 12}, 'expected': '\n\noffset($fn = 12, r = 1);', 'args': {}, },
     {'name': 'offset_chamfer', 'class': 'offset' , 'kwargs': {'delta': 1}, 'expected': '\n\noffset(chamfer = false, delta = 1);', 'args': {}, },
+    {'name': 'offset_zero_delta', 'class': 'offset' , 'kwargs': {'r': 0}, 'expected': '\n\noffset(r = 0);', 'args': {}, },
     {'name': 'hull', 'class': 'hull' , 'kwargs': {}, 'expected': '\n\nhull();', 'args': {}, },
     {'name': 'render', 'class': 'render' , 'kwargs': {'convexity': None}, 'expected': '\n\nrender();', 'args': {}, },
     {'name': 'projection', 'class': 'projection' , 'kwargs': {'cut': None}, 'expected': '\n\nprojection();', 'args': {}, },

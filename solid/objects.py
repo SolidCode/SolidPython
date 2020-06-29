@@ -415,9 +415,9 @@ class offset(OpenSCADObject):
 
     def __init__(self, r: float = None, delta: float = None, chamfer: bool = False,
                 segments: int=None) -> None:
-        if r:
+        if r is not None:
             kwargs = {'r': r}
-        elif delta:
+        elif delta is not None:
             kwargs = {'delta': delta, 'chamfer': chamfer}
         else:
             raise ValueError("offset(): Must supply r or delta")
