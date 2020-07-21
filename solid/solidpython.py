@@ -353,6 +353,12 @@ class OpenSCADObject:
 
         return png_data
 
+    def __hash__(self):
+        return hash(self._render(render_holes=True))
+
+    def __eq__(self, other):
+        return self._render(render_holes=True) == other._render(render_holes=True)
+
 
 class IncludedOpenSCADObject(OpenSCADObject):
     """
