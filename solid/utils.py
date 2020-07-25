@@ -1120,7 +1120,7 @@ def extrude_along_path( shape_pts:Points,
 
     for which_loop in range(len(path_pts)):
         path_pt = path_pts[which_loop]
-        scale = scale_factors[which_loop]
+        scale = float(scale_factors[which_loop])
 
         # calculate the tangent to the curve at this point
         if which_loop > 0 and which_loop < len(path_pts) - 1:
