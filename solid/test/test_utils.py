@@ -147,6 +147,22 @@ class TestSPUtils(DiffOutput):
     #     expected = ''
     #     actual = scad_render(offset_points(tri2d, offset=2, internal=True))
     #     self.assertEqualNoWhitespace(expected, actual)
+
+    def test_extrude_along_path_numpy(self):
+        try: 
+            import numpy as np
+        except ImportError:
+            return
+
+        N = 3
+        thetas=np.linspace(0,np.pi,N) 
+        path=list(zip(3*np.sin(thetas),3*np.cos(thetas),thetas)) 
+        profile=list(zip(np.sin(thetas),np.cos(thetas), [0]*len(thetas))) 
+        scalepts=list(np.linspace(1,.1,N))   
+
+        # in earlier code, this would have thrown an exception
+        a = extrude_along_path(shape_pts=profile, path_pts=path, scale_factors=scalepts)
+ 
     
     def test_label(self):
         expected = 'translate(v=[0,5.0000000000,0]){resize(newsize=[15,0,0.5000000000]){union(){translate(v=[0,0.0000000000,0]){linear_extrude(height=1){text($fn=40,font="MgOpenModata:style=Bold",halign="left",spacing=1,text="Hello,",valign="baseline");}}translate(v=[0,-11.5000000000,0]){linear_extrude(height=1){text($fn=40,font="MgOpenModata:style=Bold",halign="left",spacing=1,text="World",valign="baseline");}}}}}'
