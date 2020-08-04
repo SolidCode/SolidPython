@@ -22,7 +22,7 @@ Indexes = Union[Sequence[int], Sequence[Sequence[int]]]
 ScadSize = Union[int, Sequence[float]]
 OpenSCADObjectPlus = Union[OpenSCADObject, Sequence[OpenSCADObject]]
 
-def _to_point2s(points:Points) -> List[P3]:
+def _to_point2s(points:Points) -> List[P2]:
     return list([(p[0], p[1]) for p in points])
 
 
@@ -747,50 +747,86 @@ def disable(openscad_obj: OpenSCADObject) -> OpenSCADObject:
 # ===========================
 # = IMPORTING OPENSCAD CODE =
 # ===========================
-def import_scad(scad_filepath: PathStr) -> Optional[SimpleNamespace]:
-    """
-    import_scad() is the namespaced, more Pythonic way to import OpenSCAD code.
-    Return a python namespace containing all imported SCAD modules
+def import_scad(scad_file_or_dir: PathStr) -> SimpleNamespace:
+    '''
+    Recursively look in current directory & OpenSCAD library directories for
+        OpenSCAD files. Create Python mappings for all OpenSCAD modules & functions
+    Return a namespace or raise ValueError if no scad files found
+    '''
+    scad = Path(scad_file_or_dir)
+    candidates: List[Path] = [scad]
+    if not scad.is_absolute():
+        candidates = [d/scad for d in _openscad_library_paths()]
 
-    If scad_filepath is a single .scad file, all modules will be imported,
-        e.g. 
-        motors = solid.import_scad('<PATH_TO/MCAD/motors.scad')
-        print(dir(motors)) # => [_stepper_motor_mount', 'stepper_motor_mount']
+    for candidate_path in candidates:
+        namespace = _import_scad(candidate_path)
+        if namespace is not None:
+            return namespace
+    raise ValueError(f'Could not find .scad files at or under {scad}. \nLocations searched were: {candidates}')
 
-    If scad_filepath is a directory, recursively import all scad files below
-        the directory and subdirectories within it.
-        e.g. 
-        mcad = solid.import_scad('<PATH_TO/MCAD')
-        dir(mcad) # => ['bearing', 'boxes', 'constants', 'curves',...]
-        dir(mcad.bearing) # => ['bearing', 'bearingDimensions', ...]
-    """
-    scad = Path(scad_filepath)
-
-    namespace: Optional[SimpleNamespace] = SimpleNamespace()
-    scad_found = False
-
-    if scad.is_file():
-        scad_found = True
-        use(scad.absolute().as_posix(), dest_namespace_dict=namespace.__dict__)
+def _import_scad(scad: Path) -> Optional[SimpleNamespace]:
+    '''
+    cases:
+        single scad file:
+            return a namespace populated with `use()`
+        directory
+            recurse into all subdirectories and *.scad files
+            return namespace if scad files are underneath, otherwise None
+        non-scad file:
+            return None            
+    '''
+    namespace: Optional[SimpleNamespace] = None
+    if scad.is_file() and scad.suffix == '.scad':
+        namespace = SimpleNamespace()
+        use(scad.absolute(), dest_namespace_dict=namespace.__dict__)
     elif scad.is_dir():
-        for f in scad.glob('*.scad'):
-            subspace = import_scad(f.absolute().as_posix())
-            setattr(namespace, f.stem, subspace)
-            scad_found = True
+        subspaces = [(f, _import_scad(f)) for f in scad.iterdir() if f.is_dir() or f.suffix == '.scad']
+        for f, subspace in subspaces:
+            if subspace:
+                if namespace is None:
+                    namespace = SimpleNamespace()
+                # Add a subspace to namespace named by the file/dir it represents
+                setattr(namespace, f.stem, subspace)
 
-        # recurse through subdirectories, adding namespaces only if they have
-        # valid scad code under them.
-        subdirs = list([d for d in scad.iterdir() if d.is_dir()])
-        for subd in subdirs:
-            subspace = import_scad(subd.absolute().as_posix())
-            if subspace is not None:
-                setattr(namespace, subd.stem, subspace)
-                scad_found = True
-
-    namespace = namespace if scad_found else None
     return namespace
+   
+def _openscad_library_paths() -> List[Path]:
+    """
+    Return system-dependent OpenSCAD library paths or paths defined in os.environ['OPENSCADPATH']
+    """
+    import platform
+    import os
+    import re
 
+    paths = [Path('.')]
 
+    user_path = os.environ.get('OPENSCADPATH')
+    if user_path:
+        for s in re.split(r'\s*[;:]\s*', user_path):
+            paths.append(Path(s))
+
+    default_paths = {
+        'Linux':   Path.home() / '.local/share/OpenSCAD/libraries',
+        'Darwin':  Path.home() / 'Documents/OpenSCAD/libraries',
+        'Windows': Path('My Documents\OpenSCAD\libraries')
+    }
+
+    paths.append(default_paths[platform.system()])
+    return paths
+
+def _find_library(library_name: PathStr) -> Path:
+    result = Path(library_name)
+
+    if not result.is_absolute():
+        paths = _openscad_library_paths()
+        for p in paths:
+            f = p / result
+            # print(f'Checking {f} -> {f.exists()}')
+            if f.exists():
+                result = f
+
+    return result
+ 
 # use() & include() mimic OpenSCAD's use/include mechanics.
 # -- use() makes methods in scad_file_path.scad available to be called.
 # --include() makes those methods available AND executes all code in
@@ -807,7 +843,7 @@ def use(scad_file_path: PathStr, use_not_include: bool = True, dest_namespace_di
     from .solidpython import new_openscad_class_str
     from .solidpython import calling_module
 
-    scad_file_path = Path(scad_file_path)
+    scad_file_path = _find_library(scad_file_path) 
 
     contents = None
     try:
@@ -837,6 +873,6 @@ def use(scad_file_path: PathStr, use_not_include: bool = True, dest_namespace_di
 
     return True
 
-
 def include(scad_file_path: PathStr) -> bool:
     return use(scad_file_path, use_not_include=False)
+

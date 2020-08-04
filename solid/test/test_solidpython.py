@@ -205,6 +205,20 @@ class TestSolidPython(DiffOutput):
         expected = f"{header}\nuse <{abs_path}>\n\n\nsteps(howmany = 3);"
         self.assertEqual(expected, actual)
 
+        # Make sure we throw ValueError on nonexistent imports
+        self.assertRaises(ValueError, import_scad, 'path/doesnt/exist.scad')
+
+        # Test that we recursively import directories correctly
+        examples = import_scad(include_file.parent)
+        self.assertTrue(hasattr(examples, 'scad_to_include'))
+        self.assertTrue(hasattr(examples.scad_to_include, 'steps'))
+
+        # TODO: we should test that:
+        # A) scad files in the designated OpenSCAD library directories 
+        #       (path-dependent, see: solid.objects._openscad_library_paths()) 
+        #       are imported correctly. Not sure how to do this without writing
+        #       temp files to those directories. Seems like overkill for the moment
+        
     def test_use_reserved_words(self):
         scad_str = '''module reserved_word_arg(or=3){\n\tcube(or);\n}\nmodule or(arg=3){\n\tcube(arg);\n}\n'''
 

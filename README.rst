@@ -168,7 +168,8 @@ Using SolidPython
 Importing OpenSCAD code
 =======================
 
-- Use ``solid.import_scad(path)`` to import OpenSCAD code.
+- Use ``solid.import_scad(path)`` to import OpenSCAD code. Relative paths will 
+check current location designated `OpenSCAD library directories <https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Libraries>`.
 
 **Ex:** 
 
@@ -197,7 +198,8 @@ Importing OpenSCAD code
     from solid import *
 
     # MCAD is OpenSCAD's most common utility library: https://github.com/openscad/MCAD
-    mcad = import_scad('/path/to/MCAD')
+    # If it's installed for OpenSCAD (on MacOS, at: ``$HOME/Documents/OpenSCAD/libraries``)
+    mcad = import_scad('MCAD')
 
     # MCAD contains about 15 separate packages, each included as its own namespace
     print(dir(mcad)) # => ['bearing', 'bitmap', 'boxes', etc...]
