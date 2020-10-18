@@ -416,6 +416,14 @@ These colors are pre-defined in solid.utils:
 | FiberBoard |         |              |
 +------------+---------+--------------+
 
+One can also add a alpha value in a new definition of a color in the local file. For example the existing definition of
+Cyan is shown below followed by a new transparent version:
+
+.. code:: python
+
+Cyan        = (0, 1, 1)       # alpha is 1 if not specified
+TranCyan    = (0, 1, 1, 0.3)
+
 They're a conversion of the materials in the `MCAD OpenSCAD
 library <https://github.com/openscad/MCAD>`__, as seen [here]
 (https://github.com/openscad/MCAD/blob/master/materials.scad).
