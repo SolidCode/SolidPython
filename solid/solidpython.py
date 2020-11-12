@@ -400,7 +400,6 @@ def _find_include_strings(obj: Union[IncludedOpenSCADObject, OpenSCADObject]) ->
         include_strings.update(_find_include_strings(child))
     return include_strings
 
-
 def scad_render(scad_object: OpenSCADObject, file_header: str = '') -> str:
     # Make this object the root of the tree
     root = scad_object
@@ -417,7 +416,6 @@ def scad_render(scad_object: OpenSCADObject, file_header: str = '') -> str:
         file_header += '\n'
 
     return file_header + includes + scad_body
-
 
 def scad_render_animated(func_to_animate: AnimFunc, 
                          steps: int =20, 
@@ -480,7 +478,6 @@ def scad_render_animated(func_to_animate: AnimFunc,
                            f"   {scad_str}\n" \
                            f"}}\n"
     return rendered_string
-
 
 def scad_render_animated_file(func_to_animate:AnimFunc, 
                               steps: int=20, 
@@ -553,7 +550,6 @@ def _write_code_to_file(rendered_string: str,
     out_path.write_text(rendered_string)
     return out_path.absolute().as_posix()
 
-
 def _get_version() -> str:
     """
     Returns SolidPython version
@@ -607,7 +603,6 @@ def extract_callable_signatures(scad_file_path: PathStr) -> List[dict]:
     scad_code_str = Path(scad_file_path).read_text()
     return parse_scad_callables(scad_code_str)
 
-
 def parse_scad_callables(scad_code_str: str) -> List[dict]:
     callables = []
 
@@ -655,7 +650,6 @@ def parse_scad_callables(scad_code_str: str) -> List[dict]:
 
     return callables
 
-
 def calling_module(stack_depth: int = 2) -> ModuleType:
     """
     Returns the module *2* back in the frame stack.  That means:
@@ -677,7 +671,6 @@ def calling_module(stack_depth: int = 2) -> ModuleType:
     if not calling_mod:
         import __main__ as calling_mod  # type: ignore
     return calling_mod
-
 
 def new_openscad_class_str(class_name: str,
                            args: Sequence[str] = None,
@@ -731,7 +724,6 @@ def new_openscad_class_str(class_name: str,
 
     return result
 
-
 def _subbed_keyword(keyword: str) -> str:
     """
     Append an underscore to any python reserved word.
@@ -744,7 +736,6 @@ def _subbed_keyword(keyword: str) -> str:
               f"can be accessed with `{new_key}` in SolidPython\n")
     return new_key
 
-
 def _unsubbed_keyword(subbed_keyword: str) -> str:
     """
     Remove trailing underscore for already-subbed python reserved words.
@@ -753,10 +744,8 @@ def _unsubbed_keyword(subbed_keyword: str) -> str:
     shortened = subbed_keyword[:-1]
     return shortened if shortened in PYTHON_ONLY_RESERVED_WORDS else subbed_keyword
 
-
 # now that we have the base class defined, we can do a circular import
 from . import objects
-
 
 def py2openscad(o: Union[bool, float, str, Iterable]) -> str:
     if type(o) == bool:
@@ -779,7 +768,6 @@ def py2openscad(o: Union[bool, float, str, Iterable]) -> str:
         s += "]"
         return s
     return str(o)
-
 
 def indent(s: str) -> str:
     return s.replace("\n", "\n\t")
