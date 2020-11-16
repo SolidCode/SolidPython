@@ -89,7 +89,7 @@ class TestSPUtils(DiffOutput):
         p = polygon(pts)
         three_points = [euclidify(pts[0:3], Point2)]
         newp = fillet_2d(three_points, orig_poly=p, fillet_rad=2, remove_material=False)
-        expected = 'union(){polygon(paths=[[0,1,2,3,4,5]],points=[[0,5],[5,5],[5,0],[10,0],[10,10],[0,10]]);translate(v=[3.0000000000,3.0000000000]){difference(){intersection(){rotate(a=359.9000000000){translate(v=[-998,0,0]){square(center=false,size=[1000,1000]);}}rotate(a=450.1000000000){translate(v=[-998,-1000,0]){square(center=false,size=[1000,1000]);}}}circle(r=2);}}}'
+        expected = 'union(){polygon(points=[[0,5],[5,5],[5,0],[10,0],[10,10],[0,10]]);translate(v=[3.0000000000,3.0000000000]){difference(){intersection(){rotate(a=359.9000000000){translate(v=[-998,0,0]){square(center=false,size=[1000,1000]);}}rotate(a=450.1000000000){translate(v=[-998,-1000,0]){square(center=false,size=[1000,1000]);}}}circle(r=2);}}}'
         actual = scad_render(newp)
         self.assertEqualNoWhitespace(expected, actual)
 
@@ -97,7 +97,7 @@ class TestSPUtils(DiffOutput):
         pts = list((project_to_2D(p) for p in tri))
         poly = polygon(euc_to_arr(pts))
         newp = fillet_2d([pts], orig_poly=poly, fillet_rad=2, remove_material=True)
-        expected = 'difference(){polygon(paths=[[0,1,2]],points=[[0,0],[10,0],[0,10]]);translate(v=[5.1715728753,2.0000000000]){difference(){intersection(){rotate(a=-90.1000000000){translate(v=[-998,0,0]){square(center=false,size=[1000,1000]);}}rotate(a=45.1000000000){translate(v=[-998,-1000,0]){square(center=false,size=[1000,1000]);}}}circle(r=2);}}}'
+        expected = 'difference(){polygon(points=[[0,0],[10,0],[0,10]]);translate(v=[5.1715728753,2.0000000000]){difference(){intersection(){rotate(a=-90.1000000000){translate(v=[-998,0,0]){square(center=false,size=[1000,1000]);}}rotate(a=45.1000000000){translate(v=[-998,-1000,0]){square(center=false,size=[1000,1000]);}}}circle(r=2);}}}'
         actual = scad_render(newp)
 
         self.assertEqualNoWhitespace(expected, actual)
