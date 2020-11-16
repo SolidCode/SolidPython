@@ -398,6 +398,11 @@ def _find_include_strings(obj: Union[IncludedOpenSCADObject, OpenSCADObject]) ->
         include_strings.add(obj.include_string)
     for child in obj.children:
         include_strings.update(_find_include_strings(child))
+    # We also accept IncludedOpenSCADObject instances as parameters to functions, 
+    # so search in obj.params as well
+    for param in obj.params.values():
+        if isinstance(param, OpenSCADObject):
+            include_strings.update(_find_include_strings(param))
     return include_strings
 
 def scad_render(scad_object: OpenSCADObject, file_header: str = '') -> str:
@@ -757,6 +762,8 @@ def py2openscad(o: Union[bool, float, str, Iterable]) -> str:
     if type(o).__name__ == "ndarray":
         import numpy  # type: ignore
         return numpy.array2string(o, separator=",", threshold=1000000000)
+    if isinstance(o, IncludedOpenSCADObject):
+        return o._render()[1:-1]
     if hasattr(o, "__iter__"):
         s = "["
         first = True
