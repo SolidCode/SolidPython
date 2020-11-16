@@ -13,4 +13,6 @@ module steps(howmany=3){
     }
 }
 
+function scad_points() = [[0,0], [1,0], [0,1]];
+
 echo("This text should appear only when called with include(), not use()");

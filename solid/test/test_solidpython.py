@@ -17,6 +17,7 @@ from solid.test.ExpandedTestCase import DiffOutput
 
 scad_test_case_templates = [
     {'name': 'polygon', 'class': 'polygon' , 'kwargs': {'paths': [[0, 1, 2]]}, 'expected': '\n\npolygon(paths = [[0, 1, 2]], points = [[0, 0], [1, 0], [0, 1]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]]}, },
+    {'name': 'polygon', 'class': 'polygon' , 'kwargs': {}, 'expected': '\n\npolygon(points = [[0, 0], [1, 0], [0, 1]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]]}, },
     {'name': 'circle', 'class': 'circle' , 'kwargs': {'segments': 12, 'r': 1}, 'expected': '\n\ncircle($fn = 12, r = 1);', 'args': {}, },
     {'name': 'circle_diam', 'class': 'circle' , 'kwargs': {'segments': 12, 'd': 1}, 'expected': '\n\ncircle($fn = 12, d = 1);', 'args': {}, },
     {'name': 'square', 'class': 'square' , 'kwargs': {'center': False, 'size': 1}, 'expected': '\n\nsquare(center = false, size = 1);', 'args': {}, },
@@ -218,6 +219,16 @@ class TestSolidPython(DiffOutput):
         #       (path-dependent, see: solid.objects._openscad_library_paths()) 
         #       are imported correctly. Not sure how to do this without writing
         #       temp files to those directories. Seems like overkill for the moment
+        
+    def test_imported_scad_arguments(self):
+        include_file = self.expand_scad_path("examples/scad_to_include.scad")
+        mod = import_scad(include_file)
+        points = mod.scad_points();
+        poly = polygon(points);
+        actual = scad_render(poly);
+        abs_path = points._get_include_path(include_file)
+        expected = f'use <{abs_path}>\n\n\npolygon(points = scad_points());'
+        self.assertEqual(expected, actual)
         
     def test_use_reserved_words(self):
         scad_str = '''module reserved_word_arg(or=3){\n\tcube(or);\n}\nmodule or(arg=3){\n\tcube(arg);\n}\n'''
