@@ -5,7 +5,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Dict, Optional, Sequence, Tuple, Union, List
 
-from .solidpython import OpenSCADObject
+from .solidpython import IncludedOpenSCADObject, OpenSCADObject
 
 PathStr = Union[Path, str]
 
@@ -21,10 +21,6 @@ Points = Sequence[P23]
 Indexes = Union[Sequence[int], Sequence[Sequence[int]]]
 ScadSize = Union[int, Sequence[float]]
 OpenSCADObjectPlus = Union[OpenSCADObject, Sequence[OpenSCADObject]]
-
-def _to_point2s(points:Points) -> List[P2]:
-    return list([(p[0], p[1]) for p in points])
-
 
 class polygon(OpenSCADObject):
     """
@@ -44,11 +40,18 @@ class polygon(OpenSCADObject):
     to 2D before compiling
     """
 
-    def __init__(self, points: Points, paths: Indexes = None) -> None:
-        if not paths:
-            paths = [list(range(len(points)))]
-        super().__init__('polygon',
-                         {'points': _to_point2s(points), 'paths': paths})
+    def __init__(self, points: Union[Points, IncludedOpenSCADObject], paths: Indexes = None) -> None:
+        # Force points to 2D if they're defined in Python, pass through if they're
+        # included OpenSCAD code
+        pts = points # type: ignore
+        if not isinstance(points, IncludedOpenSCADObject):
+            pts = list([(p[0], p[1]) for p in points]) # type: ignore
+
+        args = {'points':pts}
+        # If not supplied, OpenSCAD assumes all points in order for paths
+        if paths:
+            args['paths'] = paths # type: ignore
+        super().__init__('polygon', args)
 
 
 class circle(OpenSCADObject):
