@@ -376,11 +376,14 @@ class color(OpenSCADObject):
     not specified.
 
     :param c: RGB color + alpha value.
-    :type c: sequence of 3 or 4 numbers between 0 and 1
+    :type c: sequence of 3 or 4 numbers between 0 and 1, OR 3-, 4-, 6-, or 8-digit RGB/A hex code, OR string color name as described at https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Transformations#color
+
+    :param alpha: Alpha value from 0 to 1
+    :type alpha: float 
     """
 
-    def __init__(self, c: Vec34) -> None:
-        super().__init__('color', {'c': c})
+    def __init__(self, c: Union[Vec34, str], alpha: float = 1.0) -> None:
+        super().__init__('color', {'c': c, 'alpha': alpha})
 
 
 class minkowski(OpenSCADObject):

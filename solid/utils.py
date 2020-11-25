@@ -52,6 +52,8 @@ BACK_VEC    = ( 0,-1, 0)
 # ==========
 # = Colors =
 # ========== 
+# Deprecated, but kept for backwards compatibility . Note that OpenSCAD natively
+# accepts SVG Color names, as seen here: https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Transformations#color
 # From Hans Häggström's materials.scad in MCAD: https://github.com/openscad/MCAD
 Red         = (1, 0, 0)
 Green       = (0, 1, 0)

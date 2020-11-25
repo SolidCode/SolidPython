@@ -387,38 +387,18 @@ See
 `solid/examples/path_extrude_example.py <https://github.com/SolidCode/SolidPython/blob/master/solid/examples/path_extrude_example.py>`__
 for use.
 
-Basic color library
+Color & Transparency Settings
 -------------------
 
 You can change an object's color by using the OpenSCAD
-``color([rgba_array])`` function:
+``color([rgba_array | rgba hex | SVG color name], alpha)`` function:
 
 .. code:: python
 
     transparent_blue = color([0,0,1, 0.5])(cube(10))  # Specify with RGB[A]
-    red_obj = color(Red)(cube(10))                    # Or use predefined colors
+    purple_obj = color('MediumPurple')(cube(10))      # Or use predefined SVG colors
 
-These colors are pre-defined in solid.utils:
-
-+------------+---------+--------------+
-| Red        | Green   |  Blue        |
-+------------+---------+--------------+
-| Cyan       | Magenta |  Yellow      |
-+------------+---------+--------------+
-| Black      | White   |  Transparent |
-+------------+---------+--------------+
-| Oak        | Pine    |  Birch       |
-+------------+---------+--------------+
-| Iron       | Steel   |  Stainless   |
-+------------+---------+--------------+
-| Aluminum   | Brass   |  BlackPaint  |
-+------------+---------+--------------+
-| FiberBoard |         |              |
-+------------+---------+--------------+
-
-They're a conversion of the materials in the `MCAD OpenSCAD
-library <https://github.com/openscad/MCAD>`__, as seen [here]
-(https://github.com/openscad/MCAD/blob/master/materials.scad).
+OpenSCAD natively accepts the W3C's `SVG Color Names <https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Transformations#color>`__
 
 Bill Of Materials
 -----------------

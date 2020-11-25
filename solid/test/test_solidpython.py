@@ -36,7 +36,6 @@ scad_test_case_templates = [
     {'name': 'mirror', 'class': 'mirror' , 'kwargs': {}, 'expected': '\n\nmirror(v = [0, 0, 1]);', 'args': {'v': [0, 0, 1]}, },
     {'name': 'resize', 'class': 'resize' , 'kwargs': {'newsize': [5, 5, 5], 'auto': [True, True, False]}, 'expected': '\n\nresize(auto = [true, true, false], newsize = [5, 5, 5]);', 'args': {}, },
     {'name': 'multmatrix', 'class': 'multmatrix' , 'kwargs': {}, 'expected': '\n\nmultmatrix(m = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);', 'args': {'m': [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]}, },
-    {'name': 'color', 'class': 'color' , 'kwargs': {}, 'expected': '\n\ncolor(c = [1, 0, 0]);', 'args': {'c': [1, 0, 0]}, },
     {'name': 'minkowski', 'class': 'minkowski' , 'kwargs': {}, 'expected': '\n\nminkowski();', 'args': {}, },
     {'name': 'offset', 'class': 'offset' , 'kwargs': {'r': 1}, 'expected': '\n\noffset(r = 1);', 'args': {}, },
     {'name': 'offset_segments', 'class': 'offset' , 'kwargs': {'r': 1, 'segments': 12}, 'expected': '\n\noffset($fn = 12, r = 1);', 'args': {}, },
@@ -114,7 +113,7 @@ class TestSolidPython(DiffOutput):
 
     def test_parse_scad_callables(self):
         test_str = """
-                    module hex (width=10, height=10,    
+                    module hex (width=10, height=10,
                                 flats= true, center=false){}
                     function righty (angle=90) = 1;
                     function lefty(avar) = 2;
@@ -215,11 +214,11 @@ class TestSolidPython(DiffOutput):
         self.assertTrue(hasattr(examples.scad_to_include, 'steps'))
 
         # TODO: we should test that:
-        # A) scad files in the designated OpenSCAD library directories 
-        #       (path-dependent, see: solid.objects._openscad_library_paths()) 
+        # A) scad files in the designated OpenSCAD library directories
+        #       (path-dependent, see: solid.objects._openscad_library_paths())
         #       are imported correctly. Not sure how to do this without writing
         #       temp files to those directories. Seems like overkill for the moment
-        
+
     def test_imported_scad_arguments(self):
         include_file = self.expand_scad_path("examples/scad_to_include.scad")
         mod = import_scad(include_file)
@@ -229,7 +228,7 @@ class TestSolidPython(DiffOutput):
         abs_path = points._get_include_path(include_file)
         expected = f'use <{abs_path}>\n\n\npolygon(points = scad_points());'
         self.assertEqual(expected, actual)
-        
+
     def test_use_reserved_words(self):
         scad_str = '''module reserved_word_arg(or=3){\n\tcube(or);\n}\nmodule or(arg=3){\n\tcube(arg);\n}\n'''
 
@@ -296,6 +295,25 @@ class TestSolidPython(DiffOutput):
         expected = '\n\n!cube(size = 10);'
         actual = scad_render(root(a))
         self.assertEqual(expected, actual)
+
+    def test_color(self):
+        all_args = [
+            {'c': [1, 0, 0]},
+            {'c': [1, 0, 0], 'alpha': 0.5},
+            {'c': "#66F"},
+            {'c': "Teal", 'alpha': 0.5},
+        ]
+
+        expecteds = [
+            '\n\ncolor(alpha = 1.0000000000, c = [1, 0, 0]);',
+            '\n\ncolor(alpha = 0.5000000000, c = [1, 0, 0]);',
+            '\n\ncolor(alpha = 1.0000000000, c = "#66F");',
+            '\n\ncolor(alpha = 0.5000000000, c = "Teal");',
+        ]
+        for args, expected in zip(all_args, expecteds):
+            col = color(**args)
+            actual = scad_render(col)
+            self.assertEqual(expected, actual)
 
     def test_explicit_hole(self):
         a = cube(10, center=True) + hole()(cylinder(2, 20, center=True))
