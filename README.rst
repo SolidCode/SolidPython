@@ -27,7 +27,6 @@ SolidPython
       things: <#directions-up-down-left-right-forward-back-for-arranging-things>`__
    -  `Arcs <#arcs>`__
    -  `Extrude Along Path <#extrude_along_path>`__
-   -  `Basic color library <#basic-color-library>`__
    -  `Bill Of Materials <#bill-of-materials>`__
 
 -  `solid.screw\_thread <#solidscrew_thread>`__
@@ -386,19 +385,6 @@ Extrude Along Path
 See
 `solid/examples/path_extrude_example.py <https://github.com/SolidCode/SolidPython/blob/master/solid/examples/path_extrude_example.py>`__
 for use.
-
-Color & Transparency Settings
--------------------
-
-You can change an object's color by using the OpenSCAD
-``color([rgba_array | rgba hex | SVG color name], alpha)`` function:
-
-.. code:: python
-
-    transparent_blue = color([0,0,1, 0.5])(cube(10))  # Specify with RGB[A]
-    purple_obj = color('MediumPurple')(cube(10))      # Or use predefined SVG colors
-
-OpenSCAD natively accepts the W3C's `SVG Color Names <https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Transformations#color>`__
 
 Bill Of Materials
 -----------------
