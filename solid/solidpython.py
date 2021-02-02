@@ -21,7 +21,7 @@ import keyword
 from typing import Set, Sequence, List, Callable, Optional, Union, Iterable
 
 from types import ModuleType
-from typing import Callable, Iterable, List, Optional, Sequence, Set, Union
+from typing import Callable, Iterable, List, Optional, Sequence, Set, Union, Dict
 
 import pkg_resources
 import regex as re
@@ -52,6 +52,13 @@ class OpenSCADObject:
         self.is_hole = False
         self.has_hole_children = False
         self.is_part_root = False
+        self.traits: Dict[str, Dict[str, float]] = {}
+
+    def add_trait(self, trait_name:str, trait_data:Dict[str, float]):
+        self.traits[trait_name] = trait_data
+
+    def get_trait(self, trait_name:str) -> Optional[Dict[str, float]]:
+        return self.traits.get(trait_name)
 
     def set_hole(self, is_hole: bool = True) -> "OpenSCADObject":
         self.is_hole = is_hole
