@@ -483,7 +483,7 @@ def section_cut_xz(body: OpenSCADObject, y_cut_point:float=0) -> OpenSCADObject:
 # =====================
 # Any part defined in a method can be automatically counted using the
 # `@bom_part()` decorator. After all parts have been created, call
-# `bill_of_materials()`
+# `bill_of_materials(<SCAD_OBJ>)`
 # to generate a report.  See `examples/bom_scad.py` for usage
 #
 # Additional columns can be added (such as leftover material or URL to part)
@@ -493,7 +493,6 @@ def section_cut_xz(body: OpenSCADObject, y_cut_point:float=0) -> OpenSCADObject:
 # populate the new columns in order of their addition via bom_headers, or 
 # keyworded arguments can be used in any order.
 
-g_parts_dict = {}
 g_bom_headers: List[str] = []
 
 def set_bom_headers(*args):
@@ -504,31 +503,53 @@ def bom_part(description: str='', per_unit_price:float=None, currency: str='US$'
     def wrap(f):
         name = description if description else f.__name__
 
-        elements = {}
-        elements.update({'Count':0, 'currency':currency, 'Unit Price':per_unit_price})
+        elements = {'name': name, 'Count':0, 'currency':currency, 'Unit Price':per_unit_price}
         # This update also adds empty key value pairs to prevent key exceptions.
         elements.update(dict(zip_longest(g_bom_headers, args, fillvalue='')))
         elements.update(kwargs)
 
-        g_parts_dict[name] = elements
-
         def wrapped_f(*wargs, **wkwargs):
-            name = description if description else f.__name__
-            g_parts_dict[name]['Count'] += 1
-            return f(*wargs, **wkwargs)
+            scad_obj = f(*wargs, **wkwargs)
+            scad_obj.add_trait('BOM', elements)
+            return scad_obj
 
         return wrapped_f
 
     return wrap
 
-def bill_of_materials(csv:bool=False) -> str:
+def bill_of_materials(root_obj:OpenSCADObject, csv:bool=False) -> str:
+    traits_dicts = _traits_bom_dicts(root_obj)
+    # Build a single dictionary from the ones stored on each child object
+    # (This is an adaptation of an earlier version, and probably not the most
+    # direct way to accomplish this)
+    all_bom_traits = {}
+    for traits_dict in traits_dicts:
+        name = traits_dict['name']
+        if name in all_bom_traits:
+            all_bom_traits[name]['Count'] += 1
+        else:
+            all_bom_traits[name] = traits_dict
+            all_bom_traits[name]['Count'] = 1
+    bom = _make_bom(all_bom_traits, csv)
+    return bom
+
+def _traits_bom_dicts(root_obj:OpenSCADObject) -> List[Dict[str, float]]:
+    all_child_traits = [_traits_bom_dicts(c) for c in root_obj.children]
+    child_traits = [item for subl in all_child_traits for item in subl if item]
+    bom_trait = root_obj.get_trait('BOM')
+    if bom_trait:
+        child_traits.append(bom_trait)
+    return child_traits
+
+def _make_bom(bom_parts_dict: Dict[str, float], csv:bool=False, ) -> str:
     field_names = ["Description", "Count", "Unit Price", "Total Price"]
     field_names += g_bom_headers
     
     rows = []
     
     all_costs: Dict[str, float] = {}
-    for desc, elements in g_parts_dict.items():
+    for desc, elements in bom_parts_dict.items():
+        row = []
         count = elements['Count']
         currency = elements['currency']
         price = elements['Unit Price']

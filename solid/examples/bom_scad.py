@@ -93,15 +93,16 @@ def doohickey(c):
 
 
 def assembly():
+    nut = m3_nut()
     return union()(
             doohickey(c='blue'),
             translate((-10, 0, doohickey_h / 2))(m3_12()),
             translate((0, 0, doohickey_h / 2))(m3_16()),
             translate((10, 0, doohickey_h / 2))(m3_12()),
             # Nuts
-            translate((-10, 0, -nut_height - doohickey_h / 2))(m3_nut()),
-            translate((0, 0, -nut_height - doohickey_h / 2))(m3_nut()),
-            translate((10, 0, -nut_height - doohickey_h / 2))(m3_nut()),
+            translate((-10, 0, -nut_height - doohickey_h / 2))(nut),
+            translate((0, 0, -nut_height - doohickey_h / 2))(nut),
+            translate((10, 0, -nut_height - doohickey_h / 2))(nut),
     )
 
 
@@ -109,12 +110,12 @@ if __name__ == '__main__':
     out_dir = sys.argv[1] if len(sys.argv) > 1 else None
 
     a = assembly()
-    bom = bill_of_materials()
+    bom = bill_of_materials(a)
     file_out = scad_render_to_file(a, out_dir=out_dir)
 
     print(f"{__file__}: SCAD file written to: \n{file_out}")
     print(bom)
 
     print("Or, Spreadsheet-ready TSV:\n\n")
-    bom = bill_of_materials(csv=True)
+    bom = bill_of_materials(a, csv=True)
     print(bom)
