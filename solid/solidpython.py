@@ -653,10 +653,10 @@ def parse_scad_callables(scad_code_str: str) -> List[dict]:
             arg_matches = re.finditer(args_re, all_args)
             for am in arg_matches:
                 arg_name = am.group('arg_name')
-                if am.group('default_val'):
-                    kwargs.append(arg_name)
-                else:
-                    args.append(arg_name)
+                # NOTE: OpenSCAD's arguments to all functions are effectively
+                # optional, in contrast to Python in which all args without
+                # default values are required.
+                kwargs.append(arg_name)
 
         callables.append({'name': callable_name, 'args': args, 'kwargs': kwargs})
 
