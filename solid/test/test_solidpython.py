@@ -143,17 +143,17 @@ class TestSolidPython(DiffOutput):
                     module var_with_arithmetic(var_with_arithmetic = 8 * 9 - 1 + 89 / 15){}
                     module var_with_parentheses(var_with_parentheses = 8 * ((9 - 1) + 89) / 15){}
                     module var_with_functions(var_with_functions = abs(min(chamferHeight2, 0)) */-+ 1){}
-                    module var_with_conditionnal_assignment(var_with_conditionnal_assignment = mytest ? 45 : yop){}
+                    module var_with_conditional_assignment(var_with_conditional_assignment = mytest ? 45 : yop){}
                    """
         expected = [
             {'name': 'hex', 'args': [], 'kwargs': ['width', 'height', 'flats', 'center']},
             {'name': 'righty', 'args': [], 'kwargs': ['angle']},
-            {'name': 'lefty', 'args': ['avar'], 'kwargs': []},
+            {'name': 'lefty', 'args': [], 'kwargs': ['avar']},
             {'name': 'more', 'args': [], 'kwargs': ['a']},
             {'name': 'pyramid', 'args': [], 'kwargs': ['side', 'height', 'square', 'centerHorizontal', 'centerVertical']},
             {'name': 'no_comments', 'args': [], 'kwargs': ['arg', 'other_arg', 'last_arg']},
             {'name': 'float_arg', 'args': [], 'kwargs': ['arg']},
-            {'name': 'arg_var', 'args': ['var5'], 'kwargs': []},
+            {'name': 'arg_var', 'args': [], 'kwargs': ['var5']},
             {'name': 'kwarg_var', 'args': [], 'kwargs': ['var2']},
             {'name': 'var_true', 'args': [], 'kwargs': ['var_true']},
             {'name': 'var_false', 'args': [], 'kwargs': ['var_false']},
@@ -172,7 +172,7 @@ class TestSolidPython(DiffOutput):
             {'name': 'var_with_arithmetic', 'args': [], 'kwargs': ['var_with_arithmetic']},
             {'name': 'var_with_parentheses', 'args': [], 'kwargs': ['var_with_parentheses']},
             {'name': 'var_with_functions', 'args': [], 'kwargs': ['var_with_functions']},
-            {'name': 'var_with_conditionnal_assignment', 'args': [], 'kwargs': ['var_with_conditionnal_assignment']}
+            {'name': 'var_with_conditional_assignment', 'args': [], 'kwargs': ['var_with_conditional_assignment']}
         ]
 
         from solid.solidpython import parse_scad_callables
@@ -204,6 +204,12 @@ class TestSolidPython(DiffOutput):
         actual = scad_render(a, file_header=header)
         expected = f"{header}\nuse <{abs_path}>\n\n\nsteps(howmany = 3);"
         self.assertEqual(expected, actual)
+
+        # Confirm that we can leave out even non-default arguments in OpenSCAD
+        a = mod.optional_nondefault_arg();
+        actual = scad_render(a)
+        expected = f'use <{abs_path}>\n\n\noptional_nondefault_arg();'
+        self.assertEqual(expected, actual);
 
         # Make sure we throw ValueError on nonexistent imports
         self.assertRaises(ValueError, import_scad, 'path/doesnt/exist.scad')
