@@ -262,7 +262,7 @@ class TestSolidPython(DiffOutput):
         include_file = self.expand_scad_path("examples/scad_to_include.scad")
         self.assertIsNotNone(include_file, 'examples/scad_to_include.scad not found')
         include(include_file)
-        a = steps(3)
+        a = steps(3) # type: ignore
 
         actual = scad_render(a)
         abs_path = a._get_include_path(include_file)
@@ -434,7 +434,7 @@ class TestSolidPython(DiffOutput):
 
     def test_numpy_type(self):
         try:
-            import numpy
+            import numpy # type: ignore
             numpy_cube = cube(size=numpy.array([1, 2, 3]))
             expected = '\n\ncube(size = [1,2,3]);'
             actual = scad_render(numpy_cube)
