@@ -1143,7 +1143,8 @@ def path_2d_polygon(points:Sequence[Point23], width:float=1, closed:bool=False) 
 # ==========================
 def extrude_along_path( shape_pts:Points, 
                         path_pts:Points, 
-                        scale_factors:Sequence[Union[Vector2, float]]=None) -> OpenSCADObject:
+                        scale_factors:Sequence[Union[Vector2, float]]=None,
+                        connect_ends = False) -> OpenSCADObject:
     # Extrude the convex curve defined by shape_pts along path_pts.
     # -- For predictable results, shape_pts must be planar, convex, and lie
     # in the XY plane centered around the origin.
@@ -1161,72 +1162,91 @@ def extrude_along_path( shape_pts:Points,
 
     src_up = Vector3(*UP_VEC)
 
+    shape_pt_count = len(shape_pts)
+
+    tangent_path_points: List[Point3] = []
+    if connect_ends:
+        tangent_path_points = [path_pts[-1]] + path_pts + [path_pts[0]]
+    else:
+        first = Point3(*(path_pts[0] - (path_pts[1] - path_pts[0])))
+        last = Point3(*(path_pts[-1] - (path_pts[-2] - path_pts[-1])))
+        tangent_path_points = [first] + path_pts + [last]
+    tangents = [tangent_path_points[i+2] - tangent_path_points[i] for i in range(len(path_pts))]
+
     for which_loop in range(len(path_pts)):
         path_pt = path_pts[which_loop]
+        tangent = tangents[which_loop]
+        scale_factor = scale_factors[which_loop] if scale_factors else 1
+        this_loop = shape_pts[:]
+        this_loop = _scale_loop(this_loop, scale_factor)
+        this_loop = transform_to_point(this_loop, dest_point=path_pt, dest_normal=tangent, src_up=src_up)
+        loop_start_index = which_loop * shape_pt_count
 
-        # calculate the tangent to the curve at this point
-        if which_loop > 0 and which_loop < len(path_pts) - 1:
-            prev_pt = path_pts[which_loop - 1]
-            next_pt = path_pts[which_loop + 1]
+        if (which_loop < len(path_pts) - 1):
+            loop_facets = _loop_facet_indices(loop_start_index, shape_pt_count)
+            facet_indices += loop_facets
 
-            v_prev = path_pt - prev_pt
-            v_next = next_pt - path_pt
-            tangent = v_prev + v_next
-        elif which_loop == 0:
-            tangent = path_pts[which_loop + 1] - path_pt
-        elif which_loop == len(path_pts) - 1:
-            tangent = path_pt - path_pts[which_loop - 1]
-
-        # Scale points
-        this_loop = shape_pts[:] # type: ignore
-        scale_x, scale_y = [1, 1]
-        if scale_factors:
-            scale = scale_factors[which_loop]
-            if isinstance(scale, (int, float)):
-                scale_x, scale_y = scale, scale
-            elif isinstance(scale, Vector2):
-                scale_x, scale_y = scale.x, scale.y
-            else:
-                raise ValueError(f'Unable to scale shape_pts with scale value: {scale}')
-        this_loop = [Point3(v.x * scale_x, v.y * scale_y, v.z) for v in this_loop]
-
-        # Rotate & translate
-        this_loop = transform_to_point(this_loop, dest_point=path_pt,
-                                       dest_normal=tangent, src_up=src_up)
-
-        # Add the transformed points to our final list
+        # Add the transformed points & facets to our final list
         polyhedron_pts += this_loop
-        # And calculate the facet indices
-        shape_pt_count = len(shape_pts)
-        segment_start = which_loop * shape_pt_count
-        segment_end = segment_start + shape_pt_count - 1
-        if which_loop < len(path_pts) - 1:
-            for i in range(segment_start, segment_end):
-                facet_indices.append( (i, i + shape_pt_count, i + 1) )
-                facet_indices.append( (i + 1, i + shape_pt_count, i + shape_pt_count + 1) )
-            facet_indices.append( (segment_start, segment_end, segment_end + shape_pt_count) )
-            facet_indices.append( (segment_start, segment_end + shape_pt_count, segment_start + shape_pt_count) )
 
-    # endcap at start of extrusion
-    start_cap_index = len(polyhedron_pts)
-    start_loop_pts = polyhedron_pts[:shape_pt_count]
-    start_loop_indices = list(range(shape_pt_count))
-    start_centroid, start_facet_indices = end_cap(start_cap_index, start_loop_pts, start_loop_indices)
-    polyhedron_pts.append(start_centroid)
-    facet_indices += start_facet_indices
+    if connect_ends:
+        next_loop_start_index = len(polyhedron_pts) - shape_pt_count
+        loop_facets = _loop_facet_indices(0, shape_pt_count, next_loop_start_index)
+        facet_indices += loop_facets
 
-    # endcap at end of extrusion
-    end_cap_index = len(polyhedron_pts)
-    last_loop_start_index = len(polyhedron_pts) - shape_pt_count - 1
-    end_loop_pts = polyhedron_pts[last_loop_start_index:-1]
-    end_loop_indices = list(range(last_loop_start_index, len(polyhedron_pts) - 1))
-    end_centroid, end_facet_indices = end_cap(end_cap_index, end_loop_pts, end_loop_indices)
-    polyhedron_pts.append(end_centroid)
-    facet_indices += end_facet_indices
+    else:
+        # endcaps at start & end of extrusion
+        # NOTE: this block adds points & indices to the polyhedron, so it's
+        # very sensitive to the order this is happening in
+        start_cap_index = len(polyhedron_pts)
+        end_cap_index = start_cap_index + 1
+        last_loop_start_index = len(polyhedron_pts) - shape_pt_count 
+
+        start_loop_pts = polyhedron_pts[:shape_pt_count]
+        end_loop_pts = polyhedron_pts[last_loop_start_index:]
+
+        start_loop_indices = list(range(0, shape_pt_count))
+        end_loop_indices = list(range(last_loop_start_index, last_loop_start_index + shape_pt_count))
+
+        start_centroid, start_facet_indices = _end_cap(start_cap_index, start_loop_pts, start_loop_indices)
+        end_centroid, end_facet_indices = _end_cap(end_cap_index, end_loop_pts, end_loop_indices)
+        polyhedron_pts += [start_centroid, end_centroid]
+        facet_indices += start_facet_indices
+        facet_indices += end_facet_indices
 
     return polyhedron(points=euc_to_arr(polyhedron_pts), faces=facet_indices) # type: ignore
 
-def end_cap(new_point_index:int, points:Sequence[Point3], vertex_indices: Sequence[int]) -> Tuple[Point3, List[FacetIndices]]:
+def _loop_facet_indices(loop_start_index:int, loop_pt_count:int, next_loop_start_index=None) -> List[FacetIndices]:
+    facet_indices: List[FacetIndices] = []
+    # nlsi == next_loop_start_index
+    if next_loop_start_index == None:
+        next_loop_start_index = loop_start_index + loop_pt_count
+    loop_indices      = list(range(loop_start_index,      loop_pt_count + loop_start_index)) + [loop_start_index]
+    next_loop_indices = list(range(next_loop_start_index, loop_pt_count + next_loop_start_index )) + [next_loop_start_index]
+
+    for i, (a, b) in enumerate(zip(loop_indices[:-1], loop_indices[1:])):
+        #   c--d
+        #   |\ |
+        #   | \|
+        #   a--b               
+        c, d = next_loop_indices[i: i+2]
+        facet_indices.append((a,c,b))
+        facet_indices.append((b,c,d))
+    return facet_indices
+
+def _scale_loop(points:Sequence[Point3], scale_factor:Union[float, Point2]=None) -> List[Point3]:
+    scale_x, scale_y = [1, 1]
+    if scale_factor:
+        if isinstance(scale_factor, (int, float)):
+            scale_x, scale_y = scale_factor, scale_factor
+        elif isinstance(scale_factor, Vector2):
+            scale_x, scale_y = scale_factor.x, scale_factor.y
+        else:
+            raise ValueError(f'Unable to scale shape_pts with scale_factor: {scale_factor}')
+    this_loop = [Point3(v.x * scale_x, v.y * scale_y, v.z) for v in points]
+    return this_loop
+
+def _end_cap(new_point_index:int, points:Sequence[Point3], vertex_indices: Sequence[int]) -> Tuple[Point3, List[FacetIndices]]:
     # Assume points are a basically planar, basically convex polygon with polyhedron
     # indices `vertex_indices`. 
     # Return a new point that is the centroid of the polygon and a list of 
