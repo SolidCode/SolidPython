@@ -130,7 +130,7 @@ Using SolidPython
        from solid.utils import *  # Not required, but the utils module is useful
 
    (See `this issue <https://github.com/SolidCode/SolidPython/issues/114>`__ for 
-   a discussion of other import styles
+   a discussion of other import styles)
 
 -  OpenSCAD uses curly-brace blocks ({}) to create its tree. SolidPython
    uses parentheses with comma-delimited lists. 
@@ -168,7 +168,7 @@ Importing OpenSCAD code
 =======================
 
 - Use ``solid.import_scad(path)`` to import OpenSCAD code. Relative paths will 
-check current location designated `OpenSCAD library directories <https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Libraries>`.
+check the current location designated in `OpenSCAD library directories <https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Libraries>`__.
 
 **Ex:** 
 
