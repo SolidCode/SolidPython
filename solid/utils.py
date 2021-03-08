@@ -1120,7 +1120,7 @@ def path_2d_polygon(points:Sequence[Point23], width:float=1, closed:bool=False) 
 # ==========================
 def extrude_along_path( shape_pts:Points, 
                         path_pts:Points, 
-                        scale_factors:Sequence[float]=None) -> OpenSCADObject:
+                        scale_factors:Sequence[Union[Vector2, float]]=None) -> OpenSCADObject:
     # Extrude the convex curve defined by shape_pts along path_pts.
     # -- For predictable results, shape_pts must be planar, convex, and lie
     # in the XY plane centered around the origin.
@@ -1132,9 +1132,6 @@ def extrude_along_path( shape_pts:Points,
     polyhedron_pts:Points= []
     facet_indices:List[Tuple[int, int, int]] = []
 
-    if not scale_factors:
-        scale_factors = [1.0] * len(path_pts)
-
     # Make sure we've got Euclid Point3's for all elements
     shape_pts = euclidify(shape_pts, Point3)
     path_pts = euclidify(path_pts, Point3)
@@ -1143,7 +1140,6 @@ def extrude_along_path( shape_pts:Points,
 
     for which_loop in range(len(path_pts)):
         path_pt = path_pts[which_loop]
-        scale = float(scale_factors[which_loop])
 
         # calculate the tangent to the curve at this point
         if which_loop > 0 and which_loop < len(path_pts) - 1:
@@ -1159,17 +1155,21 @@ def extrude_along_path( shape_pts:Points,
             tangent = path_pt - path_pts[which_loop - 1]
 
         # Scale points
-        this_loop:Point3 = []
-        if scale != 1.0:
-            this_loop = [(scale * sh) for sh in shape_pts]
-            # Convert this_loop back to points; scaling changes them to Vectors
-            this_loop = [Point3(v.x, v.y, v.z) for v in this_loop]
-        else:
-            this_loop = shape_pts[:] # type: ignore
+        this_loop = shape_pts[:] # type: ignore
+        scale_x, scale_y = [1, 1]
+        if scale_factors:
+            scale = scale_factors[which_loop]
+            if isinstance(scale, (int, float)):
+                scale_x, scale_y = scale, scale
+            elif isinstance(scale, Vector2):
+                scale_x, scale_y = scale.x, scale.y
+            else:
+                raise ValueError(f'Unable to scale shape_pts with scale value: {scale}')
+        this_loop = [Point3(v.x * scale_x, v.y * scale_y, v.z) for v in this_loop]
 
         # Rotate & translate
-        this_loop = transform_to_point(this_loop, dest_point=path_pt, 
-                                        dest_normal=tangent, src_up=src_up)
+        this_loop = transform_to_point(this_loop, dest_point=path_pt,
+                                       dest_normal=tangent, src_up=src_up)
 
         # Add the transformed points to our final list
         polyhedron_pts += this_loop
