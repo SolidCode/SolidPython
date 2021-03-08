@@ -43,21 +43,9 @@ def circle_points(rad: float = 15, num_points: int = SEGMENTS) -> List[Point2]:
     return points
 
 def extrude_example():
-    # Note the incorrect triangulation at the two ends of the path.  This
-    # is because star isn't convex, and the triangulation algorithm for
-    # the two end caps only works for convex shapes.
     path_rad = 50
     shape = star(num_points=5)
     path = sinusoidal_ring(rad=path_rad, segments=240)
-
-    # # If scale_factors aren't included, they'll default to
-    # # no scaling at each step along path.  Here, let's
-    # # make the shape twice as big at beginning and end of the path
-    # scales = [1] * len(path)
-    # n = len(path)
-    # scales = [1 + 0.5*sin(i*6*pi/n) for i in range(n)]
-    # scales[0] = 2
-    # scales[-1] = 2
 
     extruded = extrude_along_path( shape_pts=shape, path_pts=path)
     # Label
@@ -72,7 +60,6 @@ def extrude_example_xy_scaling() -> OpenSCADObject:
 
     # angle: from 0 to 6*Pi
     angles = list((i/(num_points - 1)*tau*3 for i in range(len(path))))
-
 
     # If scale_factors aren't included, they'll default to
     # no scaling at each step along path.

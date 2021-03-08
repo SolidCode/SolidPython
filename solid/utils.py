@@ -20,8 +20,11 @@ run_euclid_patch()
 from typing import Any, Union, Tuple, Sequence, List, Optional, Callable, Dict, cast
 Point23 = Union[Point2, Point3]
 Vector23 = Union[Vector2, Vector3]
+PointVec23 = Union[Point2, Point3, Vector2, Vector3]
 Line23 = Union[Line2, Line3]
 LineSegment23 = Union[LineSegment2, LineSegment3]
+
+FacetIndices = Tuple[int, int, int]
 
 Tuple2 = Tuple[float, float]
 Tuple3 = Tuple[float, float, float]
@@ -106,7 +109,6 @@ def grid_plane(grid_unit:int=12, count:int=10, line_weight:float=0.1, plane:str=
             t.add([h, v])
 
     return t
-
 
 def distribute_in_grid(objects:Sequence[OpenSCADObject], 
                        max_bounding_box:Tuple[float,float], 
@@ -814,6 +816,27 @@ def scad_matrix(euclid_matrix4):
             [a.m, a.n, a.o, a.p]
             ]
 
+def centroid(points:Sequence[PointVec23]) -> PointVec23:
+    if not points:
+        raise ValueError(f"centroid(): argument `points` is empty")
+    first = points[0]
+    is_3d = isinstance(first, (Vector3, Point3))
+    if is_3d:
+        total = Vector3(0,0,0)
+    else:
+        total = Vector2(0, 0)
+
+    for p in points:
+        total += p
+    total /= len(points)
+
+    if isinstance(first, Point2):
+        return Point2(*total)
+    elif isinstance(first, Point3):
+        return Point3(*total)
+    else:
+        return total
+
 # ==============
 # = Transforms =
 # ==============
@@ -1184,18 +1207,44 @@ def extrude_along_path( shape_pts:Points,
             facet_indices.append( (segment_start, segment_end, segment_end + shape_pt_count) )
             facet_indices.append( (segment_start, segment_end + shape_pt_count, segment_start + shape_pt_count) )
 
-    # Cap the start of the polyhedron
-    for i in range(1, shape_pt_count - 1):
-        facet_indices.append((0, i, i + 1))
+    # endcap at start of extrusion
+    start_cap_index = len(polyhedron_pts)
+    start_loop_pts = polyhedron_pts[:shape_pt_count]
+    start_loop_indices = list(range(shape_pt_count))
+    start_centroid, start_facet_indices = end_cap(start_cap_index, start_loop_pts, start_loop_indices)
+    polyhedron_pts.append(start_centroid)
+    facet_indices += start_facet_indices
 
-    # And the end (could be rolled into the earlier loop)
-    # FIXME: concave cross-sections will cause this end-capping algorithm
-    # to fail
-    end_cap_base = len(polyhedron_pts) - shape_pt_count
-    for i in range(end_cap_base + 1, len(polyhedron_pts) - 1):
-        facet_indices.append( (end_cap_base, i + 1, i) )
+    # endcap at end of extrusion
+    end_cap_index = len(polyhedron_pts)
+    last_loop_start_index = len(polyhedron_pts) - shape_pt_count - 1
+    end_loop_pts = polyhedron_pts[last_loop_start_index:-1]
+    end_loop_indices = list(range(last_loop_start_index, len(polyhedron_pts) - 1))
+    end_centroid, end_facet_indices = end_cap(end_cap_index, end_loop_pts, end_loop_indices)
+    polyhedron_pts.append(end_centroid)
+    facet_indices += end_facet_indices
 
     return polyhedron(points=euc_to_arr(polyhedron_pts), faces=facet_indices) # type: ignore
+
+def end_cap(new_point_index:int, points:Sequence[Point3], vertex_indices: Sequence[int]) -> Tuple[Point3, List[FacetIndices]]:
+    # Assume points are a basically planar, basically convex polygon with polyhedron
+    # indices `vertex_indices`. 
+    # Return a new point that is the centroid of the polygon and a list of 
+    # vertex triangle indices that covers the whole polygon.
+    # (We can actually accept relatively non-planar and non-convex polygons, 
+    # but not anything pathological. Stars are fine, internal pockets would 
+    # cause incorrect faceting)
+
+    # NOTE: In order to deal with moderately-concave polygons, we add a point
+    # to the center of the end cap. This will have a new index that we require
+    # as an argument. 
+
+    new_point = centroid(points)
+    new_facets = []
+    second_indices = vertex_indices[1:] + [vertex_indices[0]]
+    new_facets = [(new_point_index, a, b) for a, b in zip(vertex_indices, second_indices)]
+
+    return (new_point, new_facets)
 
 def frange(*args):
     """
