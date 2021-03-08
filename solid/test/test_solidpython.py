@@ -182,7 +182,8 @@ class TestSolidPython(DiffOutput):
     def test_use(self):
         include_file = self.expand_scad_path("examples/scad_to_include.scad")
         use(include_file)
-        a = steps(3)
+
+        a = steps(3) # type: ignore
         actual = scad_render(a)
 
         abs_path = a._get_include_path(include_file)
@@ -245,12 +246,12 @@ class TestSolidPython(DiffOutput):
                 f.write(scad_str)
 
             use(path)
-            a = reserved_word_arg(or_=5)
+            a = reserved_word_arg(or_=5) # type: ignore
             actual = scad_render(a)
             expected = f"use <{path}>\n\n\nreserved_word_arg(or = 5);"
             self.assertEqual(expected, actual)
 
-            b = or_(arg=5)
+            b = or_(arg=5) # type: ignore
             actual = scad_render(b)
             expected = f"use <{path}>\n\n\nor(arg = 5);"
             self.assertEqual(expected, actual)
