@@ -1143,7 +1143,7 @@ def path_2d_polygon(points:Sequence[Point23], width:float=1, closed:bool=False) 
 # ==========================
 def extrude_along_path( shape_pts:Points, 
                         path_pts:Points, 
-                        scale_factors:Sequence[Union[Vector2, float]]=None,
+                        scale_factors:Sequence[Union[Vector2, float, Tuple2]]=None,
                         connect_ends = False) -> OpenSCADObject:
     # Extrude the convex curve defined by shape_pts along path_pts.
     # -- For predictable results, shape_pts must be planar, convex, and lie
@@ -1234,16 +1234,11 @@ def _loop_facet_indices(loop_start_index:int, loop_pt_count:int, next_loop_start
         facet_indices.append((b,c,d))
     return facet_indices
 
-def _scale_loop(points:Sequence[Point3], scale_factor:Union[float, Point2]=None) -> List[Point3]:
-    scale_x, scale_y = [1, 1]
-    if scale_factor:
-        if isinstance(scale_factor, (int, float)):
-            scale_x, scale_y = scale_factor, scale_factor
-        elif isinstance(scale_factor, Vector2):
-            scale_x, scale_y = scale_factor.x, scale_factor.y
-        else:
-            raise ValueError(f'Unable to scale shape_pts with scale_factor: {scale_factor}')
-    this_loop = [Point3(v.x * scale_x, v.y * scale_y, v.z) for v in points]
+def _scale_loop(points:Sequence[Point3], scale:Union[float, Point2, Tuple2]=None) -> List[Point3]:
+    scale = scale or [1, 1]
+    if isinstance(scale, (float, int)):
+        scale = [scale] * 2
+    this_loop = [Point3(v.x * scale[0], v.y * scale[1], v.z) for v in points]
     return this_loop
 
 def _end_cap(new_point_index:int, points:Sequence[Point3], vertex_indices: Sequence[int]) -> Tuple[Point3, List[FacetIndices]]:
