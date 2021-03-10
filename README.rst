@@ -380,7 +380,11 @@ rounds.
 Extrude Along Path
 ------------------
 
-``solid.utils.extrude_along_path(shape_pts, path_pts, scale_factors=None)``
+``solid.utils.extrude_along_path()`` is quite powerful. It can do everything that
+OpenSCAD's ``linear_extrude() `` and ``rotate_extrude()`` can do, and lots, lots more. 
+Scale to custom values throughout the extrusion. Rotate smoothly through the entire 
+extrusion or specify particular rotations for each step. Apply arbitrary transform
+functions to every point in the extrusion. 
 
 See
 `solid/examples/path_extrude_example.py <https://github.com/SolidCode/SolidPython/blob/master/solid/examples/path_extrude_example.py>`__

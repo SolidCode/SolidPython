@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import difflib
+from solid.solidpython import OpenSCADObject, scad_render_to_file
 import unittest
 import re
 from euclid3 import Point3, Vector3, Point2
@@ -14,6 +15,8 @@ from solid.utils import path_2d, path_2d_polygon
 from solid.utils import FORWARD_VEC, RIGHT_VEC, UP_VEC
 from solid.utils import back, down, forward, left, right, up
 from solid.utils import label
+
+from typing import Union
 
 tri = [Point3(0, 0, 0), Point3(10, 0, 0), Point3(0, 10, 0)]
 
@@ -60,6 +63,13 @@ class TestSPUtils(DiffOutput):
         remove_whitespace = lambda s: re.subn(r'[\s\n]','', s)[0]
         self.assertEqual(remove_whitespace(a), remove_whitespace(b))
 
+    def assertEqualOpenScadObject(self, expected:str, actual:Union[OpenSCADObject, str]):
+        if isinstance(actual, OpenSCADObject):
+            act = scad_render(actual)
+        elif isinstance(actual, str):
+            act = actual
+        self.assertEqualNoWhitespace(expected, act)
+
     def test_split_body_planar(self):
         offset = [10, 10, 10]
         body = translate(offset)(sphere(20))
@@ -85,19 +95,16 @@ class TestSPUtils(DiffOutput):
         pts = [[0, 5], [5, 5], [5, 0], [10, 0], [10, 10], [0, 10], ]
         p = polygon(pts)
         three_points = [euclidify(pts[0:3], Point2)]
-        newp = fillet_2d(three_points, orig_poly=p, fillet_rad=2, remove_material=False)
+        actual = fillet_2d(three_points, orig_poly=p, fillet_rad=2, remove_material=False)
         expected = 'union(){polygon(points=[[0,5],[5,5],[5,0],[10,0],[10,10],[0,10]]);translate(v=[3.0000000000,3.0000000000]){difference(){intersection(){rotate(a=359.9000000000){translate(v=[-998,0,0]){square(center=false,size=[1000,1000]);}}rotate(a=450.1000000000){translate(v=[-998,-1000,0]){square(center=false,size=[1000,1000]);}}}circle(r=2);}}}'
-        actual = scad_render(newp)
-        self.assertEqualNoWhitespace(expected, actual)
+        self.assertEqualOpenScadObject(expected, actual)
 
     def test_fillet_2d_remove(self):
         pts = list((project_to_2D(p) for p in tri))
         poly = polygon(euc_to_arr(pts))
-        newp = fillet_2d([pts], orig_poly=poly, fillet_rad=2, remove_material=True)
+        actual = fillet_2d([pts], orig_poly=poly, fillet_rad=2, remove_material=True)
         expected = 'difference(){polygon(points=[[0,0],[10,0],[0,10]]);translate(v=[5.1715728753,2.0000000000]){difference(){intersection(){rotate(a=-90.1000000000){translate(v=[-998,0,0]){square(center=false,size=[1000,1000]);}}rotate(a=45.1000000000){translate(v=[-998,-1000,0]){square(center=false,size=[1000,1000]);}}}circle(r=2);}}}'
-        actual = scad_render(newp)
-
-        self.assertEqualNoWhitespace(expected, actual)
+        self.assertEqualOpenScadObject(expected, actual)
     
     def test_euclidify_non_mutating(self):
         base_tri = [Point2(0, 0), Point2(10, 0), Point2(0, 10)]
@@ -140,75 +147,10 @@ class TestSPUtils(DiffOutput):
         actual = poly.params['paths']
         self.assertEqual(expected, actual)
 
-    def test_extrude_along_path(self):
-        path = [[0, 0, 0], [0, 20, 0]]
-        # basic test
-        actual = scad_render(extrude_along_path(tri, path))
-        expected = 'polyhedron(faces = [[0, 3, 1], [1, 3, 4], [1, 4, 2], [2, 4, 5], [2, 5, 0], [0, 5, 3], [6, 0, 1], [6, 1, 2], [6, 2, 0], [7, 3, 4], [7, 4, 5], [7, 5, 3]], points = [[0.0000000000, 0.0000000000, 0.0000000000], [10.0000000000, 0.0000000000, 0.0000000000], [0.0000000000, 0.0000000000, 10.0000000000], [0.0000000000, 20.0000000000, 0.0000000000], [10.0000000000, 20.0000000000, 0.0000000000], [0.0000000000, 20.0000000000, 10.0000000000], [3.3333333333, 0.0000000000, 3.3333333333], [3.3333333333, 20.0000000000, 3.3333333333]]);'
-        self.assertEqualNoWhitespace(expected, actual)
-
-    def test_extrude_along_path_vertical(self):
-        # make sure we still look good extruding along z axis; gimbal lock can mess us up
-        vert_path = [[0, 0, 0], [0, 0, 20]]
-        actual = scad_render(extrude_along_path(tri, vert_path))
-        expected = 'polyhedron(faces=[[0,3,1],[1,3,4],[1,4,2],[2,4,5],[2,5,0],[0,5,3],[6,0,1],[6,1,2],[6,2,0],[7,3,4],[7,4,5],[7,5,3]],points=[[0.0000000000,0.0000000000,0.0000000000],[-10.0000000000,0.0000000000,0.0000000000],[0.0000000000,10.0000000000,0.0000000000],[0.0000000000,0.0000000000,20.0000000000],[-10.0000000000,0.0000000000,20.0000000000],[0.0000000000,10.0000000000,20.0000000000],[-3.3333333333,3.3333333333,0.0000000000],[-3.3333333333,3.3333333333,20.0000000000]]);'
-        self.assertEqualNoWhitespace(expected, actual)
-
-    def test_extrude_along_path_1d_scale(self):
-        # verify that we can apply scalar scaling
-        path = [[0, 0, 0], [0, 20, 0]]
-        scale_factors_1d = [1.5, 0.5]
-        actual = scad_render(extrude_along_path(tri, path, scale_factors=scale_factors_1d))
-        expected = 'polyhedron(faces=[[0,3,1],[1,3,4],[1,4,2],[2,4,5],[2,5,0],[0,5,3],[6,0,1],[6,1,2],[6,2,0],[7,3,4],[7,4,5],[7,5,3]],points=[[0.0000000000,0.0000000000,0.0000000000],[15.0000000000,0.0000000000,0.0000000000],[0.0000000000,0.0000000000,15.0000000000],[0.0000000000,20.0000000000,0.0000000000],[5.0000000000,20.0000000000,0.0000000000],[0.0000000000,20.0000000000,5.0000000000],[5.0000000000,0.0000000000,5.0000000000],[1.6666666667,20.0000000000,1.6666666667]]);'
-        self.assertEqualNoWhitespace(expected, actual)
-
-    def test_extrude_along_path_2d_scale(self):
-        # verify that we can apply differential x & y scaling
-        path = [[0, 0, 0], [0, 20, 0], [0, 40, 0]]
-        scale_factors_2d = [Point2(1,1), Point2(0.5, 1.5), Point2(1.5, 0.5), ]
-        actual = scad_render(extrude_along_path(tri, path, scale_factors=scale_factors_2d))
-        expected = 'polyhedron(faces=[[0,3,1],[1,3,4],[1,4,2],[2,4,5],[2,5,0],[0,5,3],[3,6,4],[4,6,7],[4,7,5],[5,7,8],[5,8,3],[3,8,6],[9,0,1],[9,1,2],[9,2,0],[10,6,7],[10,7,8],[10,8,6]],points=[[0.0000000000,0.0000000000,0.0000000000],[10.0000000000,0.0000000000,0.0000000000],[0.0000000000,0.0000000000,10.0000000000],[0.0000000000,20.0000000000,0.0000000000],[5.0000000000,20.0000000000,0.0000000000],[0.0000000000,20.0000000000,15.0000000000],[0.0000000000,40.0000000000,0.0000000000],[15.0000000000,40.0000000000,0.0000000000],[0.0000000000,40.0000000000,5.0000000000],[3.3333333333,0.0000000000,3.3333333333],[5.0000000000,40.0000000000,1.6666666667]]);'
-        self.assertEqualNoWhitespace(expected, actual)
-
-    def test_extrude_along_path_2d_scale_list_input(self):
-        # verify that we can apply differential x & y scaling
-        path = [[0, 0, 0], [0, 20, 0], [0, 40, 0]]
-        scale_factors_2d = [(1,1), (0.5, 1.5), (1.5, 0.5), ]
-        actual = scad_render(extrude_along_path(tri, path, scale_factors=scale_factors_2d))
-        expected = 'polyhedron(faces=[[0,3,1],[1,3,4],[1,4,2],[2,4,5],[2,5,0],[0,5,3],[3,6,4],[4,6,7],[4,7,5],[5,7,8],[5,8,3],[3,8,6],[9,0,1],[9,1,2],[9,2,0],[10,6,7],[10,7,8],[10,8,6]],points=[[0.0000000000,0.0000000000,0.0000000000],[10.0000000000,0.0000000000,0.0000000000],[0.0000000000,0.0000000000,10.0000000000],[0.0000000000,20.0000000000,0.0000000000],[5.0000000000,20.0000000000,0.0000000000],[0.0000000000,20.0000000000,15.0000000000],[0.0000000000,40.0000000000,0.0000000000],[15.0000000000,40.0000000000,0.0000000000],[0.0000000000,40.0000000000,5.0000000000],[3.3333333333,0.0000000000,3.3333333333],[5.0000000000,40.0000000000,1.6666666667]]);'
-        self.assertEqualNoWhitespace(expected, actual)
-
-    def test_extrude_along_path_end_caps(self):
-        path = [[0, 0, 0], [0, 20, 0]]
-        actual = scad_render(extrude_along_path(tri, path, connect_ends=False))
-        expected = 'polyhedron(faces = [[0, 3, 1], [1, 3, 4], [1, 4, 2], [2, 4, 5], [2, 5, 0], [0, 5, 3], [6, 0, 1], [6, 1, 2], [6, 2, 0], [7, 3, 4], [7, 4, 5], [7, 5, 3]], points = [[0.0000000000, 0.0000000000, 0.0000000000], [10.0000000000, 0.0000000000, 0.0000000000], [0.0000000000, 0.0000000000, 10.0000000000], [0.0000000000, 20.0000000000, 0.0000000000], [10.0000000000, 20.0000000000, 0.0000000000], [0.0000000000, 20.0000000000, 10.0000000000], [3.3333333333, 0.0000000000, 3.3333333333], [3.3333333333, 20.0000000000, 3.3333333333]]);'
-        self.assertEqualNoWhitespace(expected, actual)
-
-    def test_extrude_along_path_connect_ends(self):
-        path = [[0, 0, 0], [20, 0, 0], [20,20,0], [0,20, 0]]
-        actual = scad_render(extrude_along_path(tri, path, connect_ends=True))
-        expected = 'polyhedron(faces=[[0,3,1],[1,3,4],[1,4,2],[2,4,5],[2,5,0],[0,5,3],[3,6,4],[4,6,7],[4,7,5],[5,7,8],[5,8,3],[3,8,6],[6,9,7],[7,9,10],[7,10,8],[8,10,11],[8,11,6],[6,11,9],[0,9,1],[1,9,10],[1,10,2],[2,10,11],[2,11,0],[0,11,9]],points=[[0.0000000000,0.0000000000,0.0000000000],[-7.0710678119,-7.0710678119,0.0000000000],[0.0000000000,0.0000000000,10.0000000000],[20.0000000000,0.0000000000,0.0000000000],[27.0710678119,-7.0710678119,0.0000000000],[20.0000000000,0.0000000000,10.0000000000],[20.0000000000,20.0000000000,0.0000000000],[27.0710678119,27.0710678119,0.0000000000],[20.0000000000,20.0000000000,10.0000000000],[0.0000000000,20.0000000000,0.0000000000],[-7.0710678119,27.0710678119,0.0000000000],[0.0000000000,20.0000000000,10.0000000000]]);'
-        self.assertEqualNoWhitespace(expected, actual)
-
-    def test_extrude_along_path_numpy(self):
-        try: 
-            import numpy as np # type: ignore
-        except ImportError:
-            return
-
-        N = 3
-        thetas=np.linspace(0,np.pi,N) 
-        path=list(zip(3*np.sin(thetas),3*np.cos(thetas),thetas)) 
-        profile=list(zip(np.sin(thetas),np.cos(thetas), [0]*len(thetas))) 
-        scalepts=list(np.linspace(1,.1,N))   
-
-        # in earlier code, this would have thrown an exception
-        a = extrude_along_path(shape_pts=profile, path_pts=path, scale_factors=scalepts)
- 
     def test_label(self):
         expected = 'translate(v=[0,5.0000000000,0]){resize(newsize=[15,0,0.5000000000]){union(){translate(v=[0,0.0000000000,0]){linear_extrude(height=1){text($fn=40,font="MgOpenModata:style=Bold",halign="left",spacing=1,text="Hello,",valign="baseline");}}translate(v=[0,-11.5000000000,0]){linear_extrude(height=1){text($fn=40,font="MgOpenModata:style=Bold",halign="left",spacing=1,text="World",valign="baseline");}}}}}'
-        actual = scad_render(label("Hello,\nWorld"))
-        self.assertEqualNoWhitespace(expected, actual)
+        actual = label("Hello,\nWorld")
+        self.assertEqualOpenScadObject(expected, actual)
 
 
 def test_generator_scad(func, args, expected):

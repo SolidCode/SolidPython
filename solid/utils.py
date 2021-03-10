@@ -6,7 +6,6 @@ from solid import union, cube, translate, rotate, square, circle, polyhedron, po
 from solid import difference, intersection, multmatrix, cylinder, color
 from solid import text, linear_extrude, resize
 from solid import run_euclid_patch
-
 from solid import OpenSCADObject, P2, P3, P4, Vec3 , Vec4, Vec34, P3s, P23
 from solid import Points, Indexes, ScadSize
 
@@ -23,8 +22,6 @@ Vector23 = Union[Vector2, Vector3]
 PointVec23 = Union[Point2, Point3, Vector2, Vector3]
 Line23 = Union[Line2, Line3]
 LineSegment23 = Union[LineSegment2, LineSegment3]
-
-FacetIndices = Tuple[int, int, int]
 
 Tuple2 = Tuple[float, float]
 Tuple3 = Tuple[float, float, float]
@@ -135,7 +132,7 @@ def distribute_in_grid(objects:Sequence[OpenSCADObject],
 
     ret = []
     if rows_and_cols:
-        grid_w, grid_h = rows_and_cols
+        grid_h, grid_w = rows_and_cols
     else:
         grid_w = grid_h = int(ceil(sqrt(len(objects))))
 
@@ -947,15 +944,6 @@ def draw_segment(euc_line: Union[Vector3, Line3]=None,
 # TODO: Make a NamedTuple for LEFT_DIR and RIGHT_DIR
 LEFT_DIR, RIGHT_DIR =  1,2
 
-def offset_point(a:Point2, b:Point2, c:Point2, offset:float, direction:DirectionLR=LEFT_DIR) -> Point2:
-    ab_perp = perpendicular_vector(b-a, direction, length=offset)
-    bc_perp = perpendicular_vector(c-b, direction, length=offset)
-
-    ab_par = Line2(a + ab_perp, b + ab_perp)
-    bc_par = Line2(b + bc_perp, c + bc_perp)
-    result = ab_par.intersect(bc_par)
-    return result
-
 def offset_points(points:Sequence[Point23], 
                   offset:float, 
                   internal:bool=True,
@@ -1004,6 +992,15 @@ def offset_points(points:Sequence[Point23],
         intersections.insert(0, lines[0].p)
         intersections.append(lines[-1].p + lines[-1].v)
     return intersections
+
+def offset_point(a:Point2, b:Point2, c:Point2, offset:float, direction:DirectionLR=LEFT_DIR) -> Point2:
+    ab_perp = perpendicular_vector(b-a, direction, length=offset)
+    bc_perp = perpendicular_vector(c-b, direction, length=offset)
+
+    ab_par = Line2(a + ab_perp, b + ab_perp)
+    bc_par = Line2(b + bc_perp, c + bc_perp)
+    result = ab_par.intersect(bc_par)
+    return result
 
 # ==================
 # = Offset helpers =
@@ -1138,130 +1135,20 @@ def path_2d_polygon(points:Sequence[Point23], width:float=1, closed:bool=False) 
         paths = [list(range(len(points))), list(range(len(points), len(path_points)))]
     return polygon(path_points, paths=paths)
 
-# ==========================
-# = Extrusion along a path =
-# ==========================
-def extrude_along_path( shape_pts:Points, 
-                        path_pts:Points, 
-                        scale_factors:Sequence[Union[Vector2, float, Tuple2]]=None,
-                        connect_ends = False) -> OpenSCADObject:
-    # Extrude the convex curve defined by shape_pts along path_pts.
-    # -- For predictable results, shape_pts must be planar, convex, and lie
-    # in the XY plane centered around the origin.
-    #
-    # -- len(scale_factors) should equal len(path_pts).  If not present, scale
-    #       will be assumed to be 1.0 for each point in path_pts
-    # -- Future additions might include corner styles (sharp, flattened, round)
-    #       or a twist factor
-    polyhedron_pts:Points= []
-    facet_indices:List[Tuple[int, int, int]] = []
+# =================
+# = NUMERIC UTILS =
+# =================
+def frange(start:float, end:float, num_steps:int=None, step_size:float=1.0, include_end=True):
+    # if both step_size AND num_steps are supplied, num_steps will be used
+    step_size = step_size or 1.0
 
-    # Make sure we've got Euclid Point3's for all elements
-    shape_pts = euclidify(shape_pts, Point3)
-    path_pts = euclidify(path_pts, Point3)
+    if num_steps:
+        step_count = num_steps - 1 if include_end else num_steps
+        step_size = (end - start)/step_count
+    mode = 3 if include_end else 1
+    return _frange_orig(start, end, step_size, mode)
 
-    src_up = Vector3(*UP_VEC)
-
-    shape_pt_count = len(shape_pts)
-
-    tangent_path_points: List[Point3] = []
-    if connect_ends:
-        tangent_path_points = [path_pts[-1]] + path_pts + [path_pts[0]]
-    else:
-        first = Point3(*(path_pts[0] - (path_pts[1] - path_pts[0])))
-        last = Point3(*(path_pts[-1] - (path_pts[-2] - path_pts[-1])))
-        tangent_path_points = [first] + path_pts + [last]
-    tangents = [tangent_path_points[i+2] - tangent_path_points[i] for i in range(len(path_pts))]
-
-    for which_loop in range(len(path_pts)):
-        path_pt = path_pts[which_loop]
-        tangent = tangents[which_loop]
-        scale_factor = scale_factors[which_loop] if scale_factors else 1
-        this_loop = shape_pts[:]
-        this_loop = _scale_loop(this_loop, scale_factor)
-        this_loop = transform_to_point(this_loop, dest_point=path_pt, dest_normal=tangent, src_up=src_up)
-        loop_start_index = which_loop * shape_pt_count
-
-        if (which_loop < len(path_pts) - 1):
-            loop_facets = _loop_facet_indices(loop_start_index, shape_pt_count)
-            facet_indices += loop_facets
-
-        # Add the transformed points & facets to our final list
-        polyhedron_pts += this_loop
-
-    if connect_ends:
-        next_loop_start_index = len(polyhedron_pts) - shape_pt_count
-        loop_facets = _loop_facet_indices(0, shape_pt_count, next_loop_start_index)
-        facet_indices += loop_facets
-
-    else:
-        # endcaps at start & end of extrusion
-        # NOTE: this block adds points & indices to the polyhedron, so it's
-        # very sensitive to the order this is happening in
-        start_cap_index = len(polyhedron_pts)
-        end_cap_index = start_cap_index + 1
-        last_loop_start_index = len(polyhedron_pts) - shape_pt_count 
-
-        start_loop_pts = polyhedron_pts[:shape_pt_count]
-        end_loop_pts = polyhedron_pts[last_loop_start_index:]
-
-        start_loop_indices = list(range(0, shape_pt_count))
-        end_loop_indices = list(range(last_loop_start_index, last_loop_start_index + shape_pt_count))
-
-        start_centroid, start_facet_indices = _end_cap(start_cap_index, start_loop_pts, start_loop_indices)
-        end_centroid, end_facet_indices = _end_cap(end_cap_index, end_loop_pts, end_loop_indices)
-        polyhedron_pts += [start_centroid, end_centroid]
-        facet_indices += start_facet_indices
-        facet_indices += end_facet_indices
-
-    return polyhedron(points=euc_to_arr(polyhedron_pts), faces=facet_indices) # type: ignore
-
-def _loop_facet_indices(loop_start_index:int, loop_pt_count:int, next_loop_start_index=None) -> List[FacetIndices]:
-    facet_indices: List[FacetIndices] = []
-    # nlsi == next_loop_start_index
-    if next_loop_start_index == None:
-        next_loop_start_index = loop_start_index + loop_pt_count
-    loop_indices      = list(range(loop_start_index,      loop_pt_count + loop_start_index)) + [loop_start_index]
-    next_loop_indices = list(range(next_loop_start_index, loop_pt_count + next_loop_start_index )) + [next_loop_start_index]
-
-    for i, (a, b) in enumerate(zip(loop_indices[:-1], loop_indices[1:])):
-        #   c--d
-        #   |\ |
-        #   | \|
-        #   a--b               
-        c, d = next_loop_indices[i: i+2]
-        facet_indices.append((a,c,b))
-        facet_indices.append((b,c,d))
-    return facet_indices
-
-def _scale_loop(points:Sequence[Point3], scale:Union[float, Point2, Tuple2]=None) -> List[Point3]:
-    scale = scale or [1, 1]
-    if isinstance(scale, (float, int)):
-        scale = [scale] * 2
-    this_loop = [Point3(v.x * scale[0], v.y * scale[1], v.z) for v in points]
-    return this_loop
-
-def _end_cap(new_point_index:int, points:Sequence[Point3], vertex_indices: Sequence[int]) -> Tuple[Point3, List[FacetIndices]]:
-    # Assume points are a basically planar, basically convex polygon with polyhedron
-    # indices `vertex_indices`. 
-    # Return a new point that is the centroid of the polygon and a list of 
-    # vertex triangle indices that covers the whole polygon.
-    # (We can actually accept relatively non-planar and non-convex polygons, 
-    # but not anything pathological. Stars are fine, internal pockets would 
-    # cause incorrect faceting)
-
-    # NOTE: In order to deal with moderately-concave polygons, we add a point
-    # to the center of the end cap. This will have a new index that we require
-    # as an argument. 
-
-    new_point = centroid(points)
-    new_facets = []
-    second_indices = vertex_indices[1:] + [vertex_indices[0]]
-    new_facets = [(new_point_index, a, b) for a, b in zip(vertex_indices, second_indices)]
-
-    return (new_point, new_facets)
-
-def frange(*args):
+def _frange_orig(*args):
     """
     # {{{ http://code.activestate.com/recipes/577068/ (r1)
     frange([start, ] end [, step [, mode]]) -> generator
@@ -1319,6 +1206,18 @@ def frange(*args):
         i += 1
         x = start + i * step
 
+def clamp(val: float, min_val: float, max_val: float) -> float:
+    result = max(min(val, max_val), min_val)
+    return result
+
+def lerp(val: float, min_in: float, max_in: float, min_out: float, max_out: float)-> float:
+    if min_in == max_in or min_out == max_out:
+        return min_out
+
+    ratio = (val - min_in) / (max_in - min_in)
+    result = min_out + ratio * (max_out - min_out);
+    return result;
+
 # =====================
 # = D e b u g g i n g =
 # =====================
@@ -1347,3 +1246,9 @@ def obj_tree_str(sp_obj:OpenSCADObject, vars_to_print:Sequence[str]=None) -> str
         s += indent(obj_tree_str(c, vars_to_print)) # type: ignore
 
     return s
+
+# =====================
+# = DEPENDENT IMPORTS =
+# =====================
+# imported here to mitigate import loops
+from solid.extrude_along_path import extrude_along_path
