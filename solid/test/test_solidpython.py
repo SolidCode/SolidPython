@@ -18,6 +18,7 @@ from solid.test.ExpandedTestCase import DiffOutput
 scad_test_case_templates = [
     {'name': 'polygon', 'class': 'polygon' , 'kwargs': {'paths': [[0, 1, 2]]}, 'expected': '\n\npolygon(paths = [[0, 1, 2]], points = [[0, 0], [1, 0], [0, 1]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]]}, },
     {'name': 'polygon', 'class': 'polygon' , 'kwargs': {}, 'expected': '\n\npolygon(points = [[0, 0], [1, 0], [0, 1]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]]}, },
+    {'name': 'polygon', 'class': 'polygon' , 'kwargs': {}, 'expected': '\n\npolygon(convexity = 3, points = [[0, 0], [1, 0], [0, 1]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]], 'convexity': 3}, },
     {'name': 'circle', 'class': 'circle' , 'kwargs': {'segments': 12, 'r': 1}, 'expected': '\n\ncircle($fn = 12, r = 1);', 'args': {}, },
     {'name': 'circle_diam', 'class': 'circle' , 'kwargs': {'segments': 12, 'd': 1}, 'expected': '\n\ncircle($fn = 12, d = 1);', 'args': {}, },
     {'name': 'square', 'class': 'square' , 'kwargs': {'center': False, 'size': 1}, 'expected': '\n\nsquare(center = false, size = 1);', 'args': {}, },

@@ -36,18 +36,20 @@ class polygon(OpenSCADObject):
     assumed in order. (The 'pN' components of the *paths* vector are 0-indexed 
     references to the elements of the *points* vector.)
 
+    :param convexity: OpenSCAD's convexity... yadda yadda
+
     NOTE: OpenSCAD accepts only 2D points for `polygon()`. Convert any 3D points
     to 2D before compiling
     """
 
-    def __init__(self, points: Union[Points, IncludedOpenSCADObject], paths: Indexes = None) -> None:
+    def __init__(self, points: Union[Points, IncludedOpenSCADObject], paths: Indexes = None, convexity: int = None) -> None:
         # Force points to 2D if they're defined in Python, pass through if they're
         # included OpenSCAD code
         pts = points # type: ignore
         if not isinstance(points, IncludedOpenSCADObject):
             pts = list([(p[0], p[1]) for p in points]) # type: ignore
 
-        args = {'points':pts}
+        args = {'points':pts, 'convexity':convexity}
         # If not supplied, OpenSCAD assumes all points in order for paths
         if paths:
             args['paths'] = paths # type: ignore
