@@ -286,6 +286,24 @@ is the same as:
         cylinder(r=2, h=30)
     )
 
+To assist with debugging:
+
+.. code:: python
+
+    c = ~cylinder(r=10, h=5)
+
+is the same as:
+
+.. code:: python
+
+    c = cylinder(r=10, h=5).set_modifier("#")
+
+which in OpenSCAD would be:
+
+.. code:: openscad
+
+    #cylinder(r=10, h=5)
+
 First-class Negative Space (Holes)
 ----------------------------------
 

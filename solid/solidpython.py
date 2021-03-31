@@ -304,6 +304,12 @@ class OpenSCADObject:
         """
         return self.add(args)
 
+    def __invert__(self):
+        """
+        Same as .set_modifier("#")
+        """
+        return self.set_modifier("#")
+
     def __add__(self, x: "OpenSCADObject") -> "OpenSCADObject":
         """
         This makes u = a+b identical to:
