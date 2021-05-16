@@ -611,51 +611,14 @@ def sp_code_in_scad_comment(calling_file: PathStr) -> str:
 # ===========
 # = Parsing =
 # ===========
+def parse_scad_callables(filename: str) -> List[dict]:
+    from .py_scadparser import scad_parser
 
-def parse_scad_callables(scad_code_str: str) -> List[dict]:
+    _, _, modules, functions, _ = scad_parser.parseFile(filename)
+
     callables = []
-
-    # Note that this isn't comprehensive; tuples or nested data structures in
-    # a module definition will defeat it.
-
-    # Current implementation would throw an error if you tried to call a(x, y)
-    # since Python would expect a(x);  OpenSCAD itself ignores extra arguments,
-    # but that's not really preferable behavior
-
-    # TODO:  write a pyparsing grammar for OpenSCAD, or, even better, use the yacc parse grammar
-    # used by the language itself.  -ETJ 06 Feb 2011
-
-    # FIXME: OpenSCAD use/import includes top level variables. We should parse 
-    # those out (e.g. x = someValue;) as well -ETJ 21 May 2019
-    no_comments_re = r'(?mxs)(//.*?\n|/\*.*?\*/)'
-
-    # Also note: this accepts: 'module x(arg) =' and 'function y(arg) {', both
-    # of which are incorrect syntax
-    mod_re = r'(?mxs)^\s*(?:module|function)\s+(?P<callable_name>\w+)\s*\((?P<all_args>.*?)\)\s*(?:{|=)'
-
-    # See https://github.com/SolidCode/SolidPython/issues/95; Thanks to https://github.com/Torlos
-    args_re = r'(?mxs)(?P<arg_name>\w+)(?:\s*=\s*(?P<default_val>([\w.\"\s\?:\-+\\\/*]+|\((?>[^()]|(?2))*\)|\[(?>[^\[\]]|(?2))*\])+))?(?:,|$)'
-
-    # remove all comments from SCAD code
-    scad_code_str = re.sub(no_comments_re, '', scad_code_str)
-    # get all SCAD callables
-    mod_matches = re.finditer(mod_re, scad_code_str)
-
-    for m in mod_matches:
-        callable_name = m.group('callable_name')
-        args = []
-        kwargs = []
-        all_args = m.group('all_args')
-        if all_args:
-            arg_matches = re.finditer(args_re, all_args)
-            for am in arg_matches:
-                arg_name = am.group('arg_name')
-                # NOTE: OpenSCAD's arguments to all functions are effectively
-                # optional, in contrast to Python in which all args without
-                # default values are required.
-                kwargs.append(arg_name)
-
-        callables.append({'name': callable_name, 'args': args, 'kwargs': kwargs})
+    for c in modules + functions:
+        callables.append({'name': c.name, 'args': [], 'kwargs': c.parameters})
 
     return callables
 
