@@ -14,6 +14,7 @@ class ScadTypes(Enum):
     FUNCTION = 2
     USE = 3
     INCLUDE = 4
+    PARAMETER = 5
 
 class ScadObject:
     def __init__(self, scadType):
@@ -37,17 +38,31 @@ class ScadGlobalVar(ScadObject):
         super().__init__(ScadTypes.GLOBAL_VAR)
         self.name = name
 
-class ScadModule(ScadObject):
-    def __init__(self, name, parameters):
-        super().__init__(ScadTypes.MODULE)
+class ScadCallable(ScadObject):
+    def __init__(self, name, parameters, scadType):
+        super().__init__(scadType)
         self.name = name
         self.parameters = parameters
 
-class ScadFunction(ScadObject):
+    def __repr__(self):
+        return f'{self.name} ({self.parameters})'
+
+class ScadModule(ScadCallable):
     def __init__(self, name, parameters):
-        super().__init__(ScadTypes.FUNCTION)
+        super().__init__(name, parameters, ScadTypes.MODULE)
+
+class ScadFunction(ScadCallable):
+    def __init__(self, name, parameters):
+        super().__init__(name, parameters, ScadTypes.FUNCTION)
+
+class ScadParameter(ScadObject):
+    def __init__(self, name, optional=False):
+        super().__init__(ScadTypes.PARAMETER)
         self.name = name
-        self.parameters = parameters
+        self.optional = optional
+
+    def __repr__(self):
+        return self.name + "=..." if self.optional else  self.name
 
 precedence = (
     ('nonassoc', "THEN"),
@@ -202,7 +217,7 @@ def p_parameter_list(p):
 def p_parameter(p):
     '''parameter : ID
                 |  ID "=" expression'''
-    p[0] = p[1]
+    p[0] = ScadParameter(p[1], len(p) == 4)
 
 def p_function(p):
     '''function : FUNCTION ID "(" opt_parameter_list ")" "=" expression
@@ -269,11 +284,11 @@ def parseFileAndPrintGlobals(scadFile):
 
     print("Modules:")
     for m in modules:
-        print(f'    {m.name}({m.parameters})')
+        print(f'    {m}')
 
     print("Functions:")
     for m in functions:
-        print(f'    {m.name}({m.parameters})')
+        print(f'    {m}')
 
     print("Global Vars:")
     for m in globalVars:

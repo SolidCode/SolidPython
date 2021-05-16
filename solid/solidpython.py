@@ -618,7 +618,16 @@ def parse_scad_callables(filename: str) -> List[dict]:
 
     callables = []
     for c in modules + functions:
-        callables.append({'name': c.name, 'args': [], 'kwargs': c.parameters})
+        args = []
+        kwargs = []
+
+        for p in c.parameters:
+            if p.optional:
+                kwargs.append(p.name)
+            else:
+                args.append(p.name)
+
+        callables.append({'name': c.name, 'args': args, 'kwargs': kwargs})
 
     return callables
 

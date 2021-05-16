@@ -13,7 +13,7 @@ module steps(howmany=3){
     }
 }
 
-module blub(a) cube([a, 2, 2]);
+module blub(a, b=1) cube([a, 2, 2]);
 
 function scad_points() = [[0,0], [1,0], [0,1]];
 
