@@ -611,9 +611,6 @@ def sp_code_in_scad_comment(calling_file: PathStr) -> str:
 # ===========
 # = Parsing =
 # ===========
-def extract_callable_signatures(scad_file_path: PathStr) -> List[dict]:
-    scad_code_str = Path(scad_file_path).read_text()
-    return parse_scad_callables(scad_code_str)
 
 def parse_scad_callables(scad_code_str: str) -> List[dict]:
     callables = []
