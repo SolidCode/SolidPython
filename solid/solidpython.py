@@ -621,11 +621,15 @@ def parse_scad_callables(filename: str) -> List[dict]:
         args = []
         kwargs = []
 
+        #for some reason solidpython needs to treat all openscad arguments as if
+        #they where optional. I don't know why, but at least to pass the tests
+        #it's neccessary to handle it like this !?!?!
         for p in c.parameters:
-            if p.optional:
-                kwargs.append(p.name)
-            else:
-                args.append(p.name)
+            kwargs.append(p.name)
+            #if p.optional:
+            #    kwargs.append(p.name)
+            #else:
+            #    args.append(p.name)
 
         callables.append({'name': c.name, 'args': args, 'kwargs': kwargs})
 
