@@ -244,9 +244,6 @@ def p_error(p):
     print("syntex error")
 
 def parseFile(scadFile):
-    from pathlib import Path
-    p = Path(scadFile)
-    f = p.open()
 
     lexer = lex.lex()
     parser = yacc.yacc()
@@ -264,8 +261,10 @@ def parseFile(scadFile):
                      ScadTypes.INCLUDE: lambda x: includes.append(x),
     }
 
-    for i in  parser.parse(f.read(), lexer=lexer):
-        appendObject[i.getType()](i)
+    from pathlib import Path
+    with Path(scadFile).open() as f:
+        for i in  parser.parse(f.read(), lexer=lexer):
+            appendObject[i.getType()](i)
 
     return uses, includes, modules, functions, globalVars
 
