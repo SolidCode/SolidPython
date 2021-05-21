@@ -227,6 +227,14 @@ class TestSolidPython(DiffOutput):
         #       are imported correctly. Not sure how to do this without writing
         #       temp files to those directories. Seems like overkill for the moment
 
+    def test_multiple_import_scad(self):
+        # For Issue #172. Originally, multiple `import_scad()` calls would 
+        # re-import the entire module, rather than cache a module after one use
+        include_file = self.expand_scad_path("examples/scad_to_include.scad")
+        mod1 = import_scad(include_file)
+        mod2 = import_scad(include_file)
+        self.assertEqual(mod1, mod2)
+
     def test_imported_scad_arguments(self):
         include_file = self.expand_scad_path("examples/scad_to_include.scad")
         mod = import_scad(include_file)

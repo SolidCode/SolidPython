@@ -22,6 +22,8 @@ Indexes = Union[Sequence[int], Sequence[Sequence[int]]]
 ScadSize = Union[int, Sequence[float]]
 OpenSCADObjectPlus = Union[OpenSCADObject, Sequence[OpenSCADObject]]
 
+IMPORTED_SCAD_MODULES: Dict[Path, SimpleNamespace] = {}
+
 class polygon(OpenSCADObject):
     """
     Create a polygon with the specified points and paths.
@@ -761,15 +763,23 @@ def import_scad(scad_file_or_dir: PathStr) -> SimpleNamespace:
         OpenSCAD files. Create Python mappings for all OpenSCAD modules & functions
     Return a namespace or raise ValueError if no scad files found
     '''
+    global IMPORTED_SCAD_MODULES
+    
     scad = Path(scad_file_or_dir)
     candidates: List[Path] = [scad]
-    if not scad.is_absolute():
-        candidates = [d/scad for d in _openscad_library_paths()]
 
-    for candidate_path in candidates:
-        namespace = _import_scad(candidate_path)
-        if namespace is not None:
-            return namespace
+    ns = IMPORTED_SCAD_MODULES.get(scad)
+    if ns:
+        return ns
+    else:
+        if not scad.is_absolute():
+            candidates = [d/scad for d in _openscad_library_paths()]
+
+        for candidate_path in candidates:
+            namespace = _import_scad(candidate_path)
+            if namespace is not None:
+                IMPORTED_SCAD_MODULES[scad] = namespace
+                return namespace
     raise ValueError(f'Could not find .scad files at or under {scad}. \nLocations searched were: {candidates}')
 
 def _import_scad(scad: Path) -> Optional[SimpleNamespace]:
