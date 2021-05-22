@@ -42,7 +42,7 @@ bad_escape = r"""([\\][^a-zA-Z._~^!=&\^\-\\?'"x0-9])"""
 escape_sequence = r"""(\\("""+simple_escape+'|'+decimal_escape+'|'+hex_escape+'))'
 escape_sequence_start_in_string = r"""(\\[0-9a-zA-Z._~!=&\^\-\\?'"])"""
 string_char = r"""([^"\\\n]|"""+escape_sequence_start_in_string+')'
-t_STRING = '"'+string_char+'*"'
+t_STRING = '"'+string_char+'*"' + " | " + "'" +string_char+ "*'"
 
 t_EQUAL = "=="
 t_GREATER_OR_EQUAL = ">="
