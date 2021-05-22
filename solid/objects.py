@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from typing import Dict, Optional, Sequence, Tuple, Union, List
 
 from .solidpython import IncludedOpenSCADObject, OpenSCADObject
+from .helpers import _subbed_keyword
 
 PathStr = Union[Path, str]
 
@@ -804,7 +805,7 @@ def _import_scad(scad: Path) -> Optional[SimpleNamespace]:
                 if namespace is None:
                     namespace = SimpleNamespace()
                 # Add a subspace to namespace named by the file/dir it represents
-                setattr(namespace, f.stem, subspace)
+                setattr(namespace, _subbed_keyword(f.stem), subspace)
 
     return namespace
    
@@ -863,16 +864,7 @@ def use(scad_file_path: PathStr, use_not_include: bool = True, dest_namespace_di
 
     scad_file_path = _find_library(scad_file_path) 
 
-    contents = None
-    try:
-        contents = scad_file_path.read_text()
-    except Exception as e:
-        raise Exception(f"Failed to import SCAD module '{scad_file_path}' with error: {e} ")
-
-    # Once we have a list of all callables and arguments, dynamically
-    # add OpenSCADObject subclasses for all callables to the calling module's
-    # namespace.
-    symbols_dicts = parse_scad_callables(contents)
+    symbols_dicts = parse_scad_callables(scad_file_path)
 
     for sd in symbols_dicts:
         class_str = new_openscad_class_str(sd['name'], sd['args'], sd['kwargs'],

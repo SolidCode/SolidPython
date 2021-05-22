@@ -135,17 +135,24 @@ class TestSolidPython(DiffOutput):
                     module var_number(var_number = -5e89){}
                     module var_empty_vector(var_empty_vector = []){}
                     module var_simple_string(var_simple_string = "simple string"){}
-                    module var_complex_string(var_complex_string = "a \"complex\"\tstring with a\\"){}
+                    module var_complex_string(var_complex_string = "a \\"complex\\"\\tstring with a\\\\"){}
                     module var_vector(var_vector = [5454445, 565, [44545]]){}
                     module var_complex_vector(var_complex_vector = [545 + 4445, 565, [cos(75) + len("yes", 45)]]){}
-                    module var_vector(var_vector = [5, 6, "string\twith\ttab"]){}
+                    module var_vector(var_vector = [5, 6, "string\\twith\\ttab"]){}
                     module var_range(var_range = [0:10e10]){}
                     module var_range_step(var_range_step = [-10:0.5:10]){}
                     module var_with_arithmetic(var_with_arithmetic = 8 * 9 - 1 + 89 / 15){}
                     module var_with_parentheses(var_with_parentheses = 8 * ((9 - 1) + 89) / 15){}
-                    module var_with_functions(var_with_functions = abs(min(chamferHeight2, 0)) */-+ 1){}
+                    module var_with_functions(var_with_functions = abs(min(chamferHeight2, 0)) / 1){}
                     module var_with_conditional_assignment(var_with_conditional_assignment = mytest ? 45 : yop){}
+
                    """
+
+        scad_file = ""
+        with tempfile.NamedTemporaryFile(suffix=".scad", delete=False) as f:
+            f.write(test_str.encode("utf-8"))
+            scad_file = f.name
+
         expected = [
             {'name': 'hex', 'args': [], 'kwargs': ['width', 'height', 'flats', 'center']},
             {'name': 'righty', 'args': [], 'kwargs': ['angle']},
@@ -177,8 +184,12 @@ class TestSolidPython(DiffOutput):
         ]
 
         from solid.solidpython import parse_scad_callables
-        actual = parse_scad_callables(test_str)
-        self.assertEqual(expected, actual)
+        actual = parse_scad_callables(scad_file)
+
+        for e in expected:
+            self.assertEqual(e in actual, True)
+
+        os.unlink(scad_file)
 
     def test_use(self):
         include_file = self.expand_scad_path("examples/scad_to_include.scad")
