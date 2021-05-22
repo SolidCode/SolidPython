@@ -26,6 +26,8 @@ from typing import Callable, Iterable, List, Optional, Sequence, Set, Union, Dic
 import pkg_resources
 import regex as re
 
+from .helpers import _find_library
+
 PathStr = Union[Path, str]
 AnimFunc = Callable[[Optional[float]], 'OpenSCADObject']
 # These are features added to SolidPython but NOT in OpenSCAD.
@@ -369,7 +371,9 @@ class IncludedOpenSCADObject(OpenSCADObject):
     """
 
     def __init__(self, name, params, include_file_path, use_not_include=False, **kwargs):
-        self.include_file_path = self._get_include_path(include_file_path)
+        #this call is more or less redudant, because objects.py:854 already calls
+        #_find_library and ensures the path is already resolved......
+        self.include_file_path = _find_library(include_file_path)
 
         use_str = 'use' if use_not_include else 'include'
         self.include_string = f'{use_str} <{self.include_file_path}>\n'

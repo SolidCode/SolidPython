@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from typing import Dict, Optional, Sequence, Tuple, Union, List
 
 from .solidpython import IncludedOpenSCADObject, OpenSCADObject
+from .helpers import _find_library, _openscad_library_paths
 
 PathStr = Union[Path, str]
 
@@ -798,43 +799,6 @@ def _import_scad(scad: Path) -> Optional[SimpleNamespace]:
 
     return namespace
    
-def _openscad_library_paths() -> List[Path]:
-    """
-    Return system-dependent OpenSCAD library paths or paths defined in os.environ['OPENSCADPATH']
-    """
-    import platform
-    import os
-    import re
-
-    paths = [Path('.')]
-
-    user_path = os.environ.get('OPENSCADPATH')
-    if user_path:
-        for s in re.split(r'\s*[;:]\s*', user_path):
-            paths.append(Path(s))
-
-    default_paths = {
-        'Linux':   Path.home() / '.local/share/OpenSCAD/libraries',
-        'Darwin':  Path.home() / 'Documents/OpenSCAD/libraries',
-        'Windows': Path('My Documents\OpenSCAD\libraries')
-    }
-
-    paths.append(default_paths[platform.system()])
-    return paths
-
-def _find_library(library_name: PathStr) -> Path:
-    result = Path(library_name)
-
-    if not result.is_absolute():
-        paths = _openscad_library_paths()
-        for p in paths:
-            f = p / result
-            # print(f'Checking {f} -> {f.exists()}')
-            if f.exists():
-                result = f
-
-    return result
- 
 # use() & include() mimic OpenSCAD's use/include mechanics.
 # -- use() makes methods in scad_file_path.scad available to be called.
 # --include() makes those methods available AND executes all code in
