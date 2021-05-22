@@ -240,12 +240,12 @@ def p_module(p):
     p[0] = ScadModule(p[2], params)
 
 def p_error(p):
-    print(f'{p.lineno}:{p.lexpos} {p.type} - {p.value}')
-    print("syntex error")
+    print(f'py_scadparser: Syntax error: {p.lexer.filename}({p.lineno}) {p.type} - {p.value}')
 
 def parseFile(scadFile):
 
     lexer = lex.lex()
+    lexer.filename = scadFile
     parser = yacc.yacc()
 
     uses = []

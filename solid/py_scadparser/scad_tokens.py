@@ -84,7 +84,7 @@ def t_NUMBER(t):
     return t
 
 def t_error(t):
-    print(f'Illegal character ({t.lexer.lineno}) "{t.value[0]}"')
+    print(f'py_scadparser: Illegal character: {t.lexer.filename}({t.lexer.lineno}) "{t.value[0]}"')
     t.lexer.skip(1)
 
 if __name__ == "__main__":
@@ -97,9 +97,10 @@ if __name__ == "__main__":
 
     p = Path(sys.argv[1])
     f = p.open()
-    lex.lex()
-    lex.input(''.join(f.readlines()))
-    for tok in iter(lex.token, None):
+    lexer = lex.lex()
+    lexer.filename = p.as_posix()
+    lexer.input(''.join(f.readlines()))
+    for tok in iter(lexer.token, None):
         if tok.type == "MODULE":
             print("")
         print(repr(tok.type), repr(tok.value), end='')
