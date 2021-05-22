@@ -16,7 +16,6 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-import keyword
 
 from typing import Set, Sequence, List, Callable, Optional, Union, Iterable
 
@@ -26,17 +25,13 @@ from typing import Callable, Iterable, List, Optional, Sequence, Set, Union, Dic
 import pkg_resources
 import regex as re
 
+from .helpers import _subbed_keyword, _unsubbed_keyword
+
 PathStr = Union[Path, str]
 AnimFunc = Callable[[Optional[float]], 'OpenSCADObject']
 # These are features added to SolidPython but NOT in OpenSCAD.
 # Mark them for special treatment
 non_rendered_classes = ['hole', 'part']
-
-# Words reserved in Python but not OpenSCAD
-# Re: https://github.com/SolidCode/SolidPython/issues/99
-
-PYTHON_ONLY_RESERVED_WORDS = keyword.kwlist
-
 
 # =========================
 # = Internal Utilities    =
@@ -709,39 +704,6 @@ def new_openscad_class_str(class_name: str,
 
     return result
 
-def _subbed_keyword(keyword: str) -> str:
-    """
-    Append an underscore to any python reserved word.
-    Prepend an underscore to any OpenSCAD identifier starting with a digit.
-    No-op for all other strings, e.g. 'or' => 'or_', 'other' => 'other'
-    """
-    new_key = keyword
-
-    if keyword in PYTHON_ONLY_RESERVED_WORDS:
-        new_key = keyword + "_"
-
-    if keyword[0].isdigit():
-        new_key = "_" + keyword
-
-    if new_key != keyword:
-        print(f"\nFound OpenSCAD code that's not compatible with Python. \n"
-              f"Imported OpenSCAD code using `{keyword}` \n"
-              f"can be accessed with `{new_key}` in SolidPython\n")
-    return new_key
-
-def _unsubbed_keyword(subbed_keyword: str) -> str:
-    """
-    Remove trailing underscore for already-subbed python reserved words.
-    Remove prepending underscore if remaining identifier starts with a digit.
-    No-op for all other strings: e.g. 'or_' => 'or', 'other_' => 'other_'
-    """
-    if subbed_keyword.endswith("_") and subbed_keyword[:-1] in PYTHON_ONLY_RESERVED_WORDS:
-        return subbed_keyword[:-1]
-
-    if subbed_keyword.startswith("_") and subbed_keyword[1].isdigit():
-        return subbed_keyword[1:]
-
-    return subbed_keyword
 
 # now that we have the base class defined, we can do a circular import
 from . import objects
