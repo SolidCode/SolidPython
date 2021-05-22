@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from typing import Dict, Optional, Sequence, Tuple, Union, List
 
 from .solidpython import IncludedOpenSCADObject, OpenSCADObject
+from .helpers import _subbed_keyword
 
 PathStr = Union[Path, str]
 
@@ -794,7 +795,7 @@ def _import_scad(scad: Path) -> Optional[SimpleNamespace]:
                 if namespace is None:
                     namespace = SimpleNamespace()
                 # Add a subspace to namespace named by the file/dir it represents
-                setattr(namespace, f.stem, subspace)
+                setattr(namespace, _subbed_keyword(f.stem), subspace)
 
     return namespace
    
