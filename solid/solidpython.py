@@ -614,7 +614,7 @@ def sp_code_in_scad_comment(calling_file: PathStr) -> str:
 def parse_scad_callables(filename: str) -> List[dict]:
     from .py_scadparser import scad_parser
 
-    _, _, modules, functions, _ = scad_parser.parseFile(filename)
+    modules, functions, _ = scad_parser.parseFile(filename)
 
     callables = []
     for c in modules + functions:
@@ -720,8 +720,14 @@ def _subbed_keyword(keyword: str) -> str:
     if keyword in PYTHON_ONLY_RESERVED_WORDS:
         new_key = keyword + "_"
 
-    if keyword[0].isdigit():
+    elif keyword[0].isdigit():
         new_key = "_" + keyword
+
+    elif keyword == "$fn":
+        new_key = "segments"
+
+    elif keyword[0] == "$":
+        new_key = "__" + keyword[1:]
 
     if new_key != keyword:
         print(f"\nFound OpenSCAD code that's not compatible with Python. \n"
@@ -738,8 +744,14 @@ def _unsubbed_keyword(subbed_keyword: str) -> str:
     if subbed_keyword.endswith("_") and subbed_keyword[:-1] in PYTHON_ONLY_RESERVED_WORDS:
         return subbed_keyword[:-1]
 
-    if subbed_keyword.startswith("_") and subbed_keyword[1].isdigit():
+    elif subbed_keyword.startswith("__"):
+        return "$" + subbed_keyword[2:]
+
+    elif subbed_keyword.startswith("_") and subbed_keyword[1].isdigit():
         return subbed_keyword[1:]
+
+    elif subbed_keyword == "segments":
+        return "$fn"
 
     return subbed_keyword
 
