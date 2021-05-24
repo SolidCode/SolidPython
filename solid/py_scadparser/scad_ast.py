@@ -15,16 +15,6 @@ class ScadObject:
     def getType(self):
         return self.scadType
 
-class ScadUse(ScadObject):
-    def __init__(self, filename):
-        super().__init__(ScadTypes.USE)
-        self.filename = filename
-
-class ScadInclude(ScadObject):
-    def __init__(self, filename):
-        super().__init__(ScadTypes.INCLUDE)
-        self.filename = filename
-
 class ScadGlobalVar(ScadObject):
     def __init__(self, name):
         super().__init__(ScadTypes.GLOBAL_VAR)

@@ -254,8 +254,6 @@ def parseFile(scadFile):
     lexer.filename = scadFile
     parser = yacc.yacc()
 
-    uses = []
-    includes = []
     modules = []
     functions = []
     globalVars = []
@@ -263,8 +261,6 @@ def parseFile(scadFile):
     appendObject = { ScadTypes.MODULE : lambda x: modules.append(x),
                      ScadTypes.FUNCTION: lambda x: functions.append(x),
                      ScadTypes.GLOBAL_VAR: lambda x: globalVars.append(x),
-                     ScadTypes.USE: lambda x: uses.append(x),
-                     ScadTypes.INCLUDE: lambda x: includes.append(x),
     }
 
     from pathlib import Path
