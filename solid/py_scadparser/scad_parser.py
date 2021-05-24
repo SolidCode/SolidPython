@@ -252,7 +252,7 @@ def parseFile(scadFile):
 
     lexer = lex.lex()
     lexer.filename = scadFile
-    parser = yacc.yacc()
+    parser = yacc.yacc(debug=False, write_tables=False)
 
     modules = []
     functions = []
