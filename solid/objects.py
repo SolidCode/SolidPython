@@ -804,7 +804,13 @@ def _import_scad(scad: Path) -> Optional[SimpleNamespace]:
                 if namespace is None:
                     namespace = SimpleNamespace()
                 # Add a subspace to namespace named by the file/dir it represents
-                setattr(namespace, f.stem, subspace)
+                package_name = f.stem
+                # Prefix an underscore to packages starting with a digit, which
+                # are valid in OpenSCAD but not in Python
+                if package_name[0].isdigit():
+                    package_name = '_' + package_name
+
+                setattr(namespace, package_name, subspace)
 
     return namespace
    
