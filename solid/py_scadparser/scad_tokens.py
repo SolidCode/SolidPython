@@ -6,7 +6,7 @@ literals = [
             "+", "-", "*", "/", "^",
             "?", ":",
             "[", "]", "{", "}", "(", ")",
-            "%",
+            "%", "#"
 ]
 
 reserved = {
@@ -16,9 +16,14 @@ reserved = {
                 'function' : 'FUNCTION',
                 'if'     : 'IF',
                 'else'   : 'ELSE',
-                'for'    : 'FOR',
                 'let'    : 'LET',
+                'assert' : 'ASSERT',
+                'echo'   : 'ECHO',
+                'for'    : 'FOR',
                 'each'   : 'EACH',
+                'true'   : 'TRUE',
+                'false'  : 'FALSE',
+                'undef'  : 'UNDEF',
 }
 
 tokens = [
@@ -53,8 +58,6 @@ t_OR = "\|\|"
 
 t_FILENAME = r'<[a-zA-Z_0-9/\\\.-]*>'
 
-t_ignore = "#$"
-
 def t_eat_escaped_quotes(t):
     r"\\\""
     pass
@@ -74,7 +77,7 @@ def t_whitespace(t):
     t.lexer.lineno += t.value.count("\n")
 
 def t_ID(t):
-    r'[0-9]*[a-zA-Z_][a-zA-Z_0-9]*'
+    r'[\$]?[0-9]*[a-zA-Z_][a-zA-Z_0-9]*'
     t.type = reserved.get(t.value,'ID')
     return t
 
