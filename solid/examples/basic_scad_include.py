@@ -13,6 +13,7 @@ from solid.objects import import_scad, use
 def demo_import_scad():
     scad_path = Path(__file__).parent / 'scad_to_include.scad'
     scad_mod = import_scad(scad_path)
+    scad_mod.optional_nondefault_arg(1)
     return scad_mod.steps(5)
 
 
