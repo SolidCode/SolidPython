@@ -37,7 +37,7 @@ python = ">=3.7"
 euclid3 = "^0.1.0"
 pypng = "^0.0.19"
 PrettyTable = "=0.7.2"
-regex = "^2019.4"
+ply = "^3.11"
 
 [tool.poetry.dev-dependencies]
 tox = "^tox 3.11"

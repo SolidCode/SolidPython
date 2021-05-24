@@ -24,7 +24,7 @@ from types import ModuleType
 from typing import Callable, Iterable, List, Optional, Sequence, Set, Union, Dict
 
 import pkg_resources
-import regex as re
+import re
 
 PathStr = Union[Path, str]
 AnimFunc = Callable[[Optional[float]], 'OpenSCADObject']
