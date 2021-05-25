@@ -18,12 +18,11 @@ reserved = {
                 'else'   : 'ELSE',
                 'let'    : 'LET',
                 'assert' : 'ASSERT',
-                'echo'   : 'ECHO',
                 'for'    : 'FOR',
                 'each'   : 'EACH',
                 'true'   : 'TRUE',
                 'false'  : 'FALSE',
-                'undef'  : 'UNDEF',
+                'echo'   : 'ECHO',
 }
 
 tokens = [
@@ -82,7 +81,7 @@ def t_ID(t):
     return t
 
 def t_NUMBER(t):
-    r'\d*\.?\d+'
+    r'[0-9]*\.?\d+([eE][-\+]\d+)?'
     t.value = float(t.value)
     return t
 

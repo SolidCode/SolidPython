@@ -9,250 +9,231 @@ else:
     from .scad_tokens import *
 
 precedence = (
-        ('nonassoc', 'NO_ELSE'),
-        ('nonassoc', 'ELSE'),
-        )
+    ('nonassoc', 'ASSERT'),
+    ('nonassoc', 'ECHO'),
+    ('nonassoc', "THEN"),
+    ('nonassoc', "ELSE"),
+    ('nonassoc', "?"),
+    ('nonassoc', ":"),
+    ('nonassoc', "(", ")", "{", "}"),
 
-def p_input(p):
-    """input :"""
-    p[0] = []
+    ('nonassoc', '='),
+    ('left', "AND", "OR"),
+    ('left', "EQUAL", "NOT_EQUAL", "GREATER_OR_EQUAL", "LESS_OR_EQUAL", ">", "<"),
+    ('left', '+', '-'),
+    ('left', "%"),
+    ('left', '*', '/'),
+    ('right', '^'),
+    ('right', 'NEG', 'POS', 'BACKGROUND', 'NOT'),
+    ('left', "ACCESS"),
+ )
 
-def p_input_use(p):
-    """input : input USE FILENAME
-            | input INCLUDE FILENAME"""
-    p[0] = p[1]
-
-def p_input_statement(p):
-    """input : input statement"""
+def p_statements(p):
+    '''statements : statements statement'''
     p[0] = p[1]
     if p[2] != None:
         p[0].append(p[2])
 
-def p_statement(p):
-    """statement : ';'
-        | '{' inner_input '}'
-        | module_instantiation
-        """
-    p[0] = None
+def p_statements_empty(p):
+    '''statements : empty'''
+    p[0] = []
 
-def p_statement_assigment(p):
-    """statement : assignment"""
-    p[0] = p[1]
+def p_empty(p):
+    'empty : '
+
+def p_statement(p):
+    ''' statement : IF "(" expression ")" statement %prec THEN
+                |   IF "(" expression ")" statement ELSE statement
+                |   for_loop statement
+                |   LET "(" assignment_list ")" statement %prec THEN
+                |   ASSERT "(" opt_call_parameter_list ")" statement
+                |   ECHO "(" opt_call_parameter_list ")" statement
+                |   "{" statements "}"
+                |   "%" statement %prec BACKGROUND
+                |   "*" statement %prec BACKGROUND
+                |   "!" statement %prec BACKGROUND
+                |   "#" statement %prec BACKGROUND
+                |   call statement
+                |   USE FILENAME
+                |   INCLUDE FILENAME
+                |   ";"
+                '''
+def p_for_loop(p):
+    '''for_loop : FOR "(" parameter_list ")"
+                | FOR "(" parameter_list ";" expression ";" parameter_list ")"'''
 
 def p_statement_function(p):
-    """statement : MODULE ID '(' parameters optional_commas ')' statement
-                 | FUNCTION ID '(' parameters optional_commas ')' '=' expr ';'
-    """
-    if p[1] == 'module':
-        p[0] = ScadModule(p[2], p[4])
-    elif p[1] == 'function':
-        p[0] = ScadFunction(p[2], p[4])
-    else:
-        assert(False)
+    'statement : function'
+    p[0] = p[1]
 
-def p_inner_input(p):
-    """inner_input :
-        | inner_input statement
-    """
+def p_statement_module(p):
+    'statement : module'
+    p[0] = p[1]
 
-def p_assignment(p):
-    """assignment : ID '=' expr ';'"""
+def p_statement_assignment(p):
+    'statement : ID "=" expression ";"'
     p[0] = ScadGlobalVar(p[1])
 
-def p_module_instantiation(p):
-    """module_instantiation : '!' module_instantiation
-        | '#' module_instantiation
-        | '%' module_instantiation
-        | '*' module_instantiation
-        | single_module_instantiation child_statement
-        | ifelse_statement
-    """
+def p_logic_expr(p):
+    '''logic_expr :  "-" expression %prec NEG
+                |   "+" expression %prec POS
+                |   "!" expression %prec NOT
+                |   expression "?" expression ":" expression
+                |   expression "%" expression
+                |   expression "+" expression
+                |   expression "-" expression
+                |   expression "/" expression
+                |   expression "*" expression
+                |   expression "^" expression
+                |   expression "<" expression
+                |   expression ">" expression
+                |   expression EQUAL expression
+                |   expression NOT_EQUAL expression
+                |   expression GREATER_OR_EQUAL expression
+                |   expression LESS_OR_EQUAL expression
+                |   expression AND expression
+                |   expression OR expression
+       '''
 
-def p_ifelse_statement(p):
-    """ifelse_statement : if_statement %prec NO_ELSE
-        | if_statement ELSE child_statement
-    """
+def p_access_expr(p):
+    '''access_expr : ID %prec ACCESS
+                |   expression "." ID %prec ACCESS
+                |   expression "(" call_parameter_list ")" %prec ACCESS
+                |   expression "(" ")" %prec ACCESS
+                |   expression "[" expression "]" %prec ACCESS
+        '''
 
-def p_if_statement(p):
-    """if_statement : IF '(' expr ')' child_statement
-    """
+def p_list_stuff(p):
+    '''list_stuff : FUNCTION "(" opt_parameter_list ")" expression
+                |   LET "(" assignment_list ")" expression %prec THEN
+                |   EACH expression %prec THEN
+                |   "[" expression ":" expression "]"
+                |   "[" expression ":" expression ":" expression "]"
+                |   "[" for_loop expression "]"
+                |   tuple
+        '''
 
-def p_child_statements(p):
-    """child_statements :
-        | child_statements child_statement
-        | child_statements assignment
-    """
+def p_assert_or_echo(p):
+    '''assert_or_echo : ASSERT "(" opt_call_parameter_list ")"
+                    |   ECHO "(" opt_call_parameter_list ")"
+       '''
+def p_constants(p):
+    '''constants : STRING
+                |  TRUE
+                |  FALSE
+                |  NUMBER'''
 
-def p_child_statement(p):
-    """child_statement : ';'
-        | '{' child_statements '}'
-        | module_instantiation
-    """
+def p_opt_else(p):
+    '''opt_else :
+                | ELSE expression %prec THEN
+       '''
+       #this causes some shift/reduce conflicts, but I don't know how to solve it
+def p_for_or_if(p):
+    '''for_or_if :  for_loop expression %prec THEN
+                |   IF "(" expression ")" expression opt_else
+       '''
 
-def p_module_id(p):
-    """module_id : ID
-        | FOR
-        | LET
-        | ASSERT
-        | ECHO
-        | EACH
-    """
+def p_expression(p):
+    '''expression : access_expr
+                |   logic_expr
+                |   list_stuff
+                |   assert_or_echo
+                |   assert_or_echo expression %prec ASSERT
+                |   constants
+                |   for_or_if
+                |   "(" expression ")"
+       '''
+       #the assert_or_echo stuff causes some shift/reduce conflicts, but I don't know how to solve it
 
-def p_single_module_instantiation(p):
-    """single_module_instantiation : module_id '(' arguments ')'
-    """
-
-def p_expr(p):
-    """expr : logic_or
-        | FUNCTION '(' parameters optional_commas ')' expr %prec NO_ELSE
-        | logic_or '?' expr ':' expr
-        | LET '(' arguments ')' expr
-        | ASSERT '(' arguments ')' expr_or_empty
-        | ECHO '(' arguments ')' expr_or_empty
-    """
-
-def p_logic_or(p):
-    """logic_or : logic_and
-        | logic_or OR logic_and
-    """
-
-def p_logic_and(p):
-    """logic_and : equality
-        | logic_and AND equality
-    """
-
-def p_equality(p):
-    """equality : comparison
-        | equality EQUAL comparison
-        | equality NOT_EQUAL comparison
-    """
-
-def p_comparison(p):
-    """comparison : addition
-        | comparison '>' addition
-        | comparison GREATER_OR_EQUAL addition
-        | comparison '<' addition
-        | comparison LESS_OR_EQUAL addition
-    """
-
-def p_addition(p):
-    """addition : multiplication
-        | addition '+' multiplication
-        | addition '-' multiplication
-    """
-
-def p_multiplication(p):
-    """multiplication : unary
-        | multiplication '*' unary
-        | multiplication '/' unary
-        | multiplication '%' unary
-    """
-
-def p_unary(p):
-    """unary : exponent
-        | '+' unary
-        | '-' unary
-        | '!' unary
-    """
-
-def p_exponent(p):
-    """exponent : call
-        | call '^' unary
-    """
+def p_assignment_list(p):
+    '''assignment_list : ID "=" expression
+                    |   assignment_list "," ID "=" expression
+       '''
 
 def p_call(p):
-    """call : primary
-        | call '(' arguments ')'
-        | call '[' expr ']'
-        | call '.' ID
-    """
+    ''' call : ID "(" call_parameter_list ")"
+            |  ID "(" ")"'''
 
-def p_primary(p):
-    """primary : TRUE
-        | FALSE
-        | UNDEF
-        | NUMBER
-        | STRING
-        | ID
-        | '(' expr ')'
-        | '[' expr ':' expr ']'
-        | '[' expr ':' expr ':' expr ']'
-        | '[' optional_commas ']'
-        | '[' vector_expr optional_commas ']'
-    """
+def p_tuple(p):
+    ''' tuple : "[" opt_expression_list "]"
+        '''
 
-def p_expr_or_empty(p):
-    """expr_or_empty :
-          | expr
-    """
+def p_commas(p):
+    '''commas : commas ","
+              | ","
+       '''
 
-def p_list_comprehension_elements(p):
-    """list_comprehension_elements : LET '(' arguments ')' list_comprehension_elements_p
-        | EACH list_comprehension_elements_or_expr
-        | FOR '(' arguments ')' list_comprehension_elements_or_expr
-        | FOR '(' arguments ';' expr ';' arguments ')' list_comprehension_elements_or_expr
-        | IF '(' expr ')' list_comprehension_elements_or_expr %prec NO_ELSE
-        | IF '(' expr ')' list_comprehension_elements_or_expr ELSE list_comprehension_elements_or_expr
-    """
+def p_opt_expression_list(p):
+    '''opt_expression_list : expression_list
+                        |    expression_list commas
+                        |    empty'''
+def p_expression_list(p):
+    ''' expression_list : expression_list commas expression
+                    |     expression
+        '''
 
-def p_list_comprehension_elements_p(p):
-    """list_comprehension_elements_p : list_comprehension_elements
-        | '(' list_comprehension_elements ')'
-    """
+def p_opt_call_parameter_list(p):
+    '''opt_call_parameter_list :
+                               | call_parameter_list
+       '''
+def p_call_parameter_list(p):
+    '''call_parameter_list : call_parameter_list commas call_parameter
+                        |    call_parameter'''
 
-def p_list_comprehension_elements_or_expr(p):
-    """list_comprehension_elements_or_expr : list_comprehension_elements_p
-        | expr
-    """
+def p_call_parameter(p):
+    '''call_parameter : expression
+                    |   ID "=" expression'''
 
-def p_optional_commas(p):
-    """optional_commas :
-          | ',' optional_commas
-    """
-
-def p_vector_expr(p):
-    """vector_expr : expr
-        | list_comprehension_elements
-        | vector_expr ',' optional_commas list_comprehension_elements_or_expr
-    """
-
-def p_parameters(p):
-    """parameters :
-        | parameter
-        | parameters ',' optional_commas parameter
-    """
-    if len(p) == 1:
-        p[0] = []
-    elif len(p) == 2:
-        p[0] = [p[1]]
+def p_opt_parameter_list(p):
+    '''opt_parameter_list : parameter_list
+                        |   parameter_list commas
+                        |   empty
+       '''
+    if p[1] != None:
+        p[0] = p[1]
     else:
-        p[0] = p[1] + [p[4]]
+       p[0] = []
+
+def p_parameter_list(p):
+    '''parameter_list :     parameter_list commas parameter
+                        |   parameter'''
+    if len(p) > 2:
+        p[0] = p[1] + [p[3]]
+    else:
+        p[0] = [p[1]]
 
 def p_parameter(p):
-    """parameter : ID
-        | ID '=' expr
-    """
+    '''parameter : ID
+                |  ID "=" expression'''
     p[0] = ScadParameter(p[1], len(p) == 4)
 
-def p_arguments(p):
-    """arguments :
-        | argument
-        | arguments ',' optional_commas argument
-    """
+def p_function(p):
+    '''function : FUNCTION ID "(" opt_parameter_list ")" "=" expression
+       '''
+    params = None
+    if p[4] != ")":
+        params = p[4]
 
-def p_argument(p):
-    """argument : expr
-        | ID '=' expr
-    """
+    p[0] = ScadFunction(p[2], params)
+
+def p_module(p):
+    '''module : MODULE ID "(" opt_parameter_list ")" statement
+       '''
+    params = None
+    if p[4] != ")":
+        params = p[4]
+
+    p[0] = ScadModule(p[2], params)
+
 
 def p_error(p):
     print(f'py_scadparser: Syntax error: {p.lexer.filename}({p.lineno}) {p.type} - {p.value}')
 
 def parseFile(scadFile):
 
-    lexer = lex.lex()
+    lexer = lex.lex(debug=False)
     lexer.filename = scadFile
-    parser = yacc.yacc(debug=False, write_tables=False)
+    parser = yacc.yacc(debug=False)
 
     modules = []
     functions = []
@@ -298,6 +279,7 @@ if __name__ == "__main__":
 
     for i in files:
         if quiete:
+            print(i)
             parseFile(i)
         else:
             parseFileAndPrintGlobals(i)
