@@ -110,6 +110,7 @@ def p_list_stuff(p):
                 |   "[" expression ":" expression "]"
                 |   "[" expression ":" expression ":" expression "]"
                 |   "[" for_loop expression "]"
+                |   tuple
         '''
 
 def p_assert_or_echo(p):
@@ -122,11 +123,14 @@ def p_constants(p):
                 |  FALSE
                 |  NUMBER'''
 
+def p_opt_else(p):
+    '''opt_else :
+                | ELSE expression %prec THEN
+       '''
+       #this causes some shift/reduce conflicts, but I don't know how to solve it
 def p_for_or_if(p):
     '''for_or_if :  for_loop expression %prec THEN
-                |   IF "(" expression ")" expression %prec THEN
-                |   IF "(" expression ")" expression ELSE expression
-                |   tuple
+                |   IF "(" expression ")" expression opt_else
        '''
 
 def p_expression(p):
@@ -139,6 +143,7 @@ def p_expression(p):
                 |   for_or_if
                 |   "(" expression ")"
        '''
+       #the assert_or_echo stuff causes some shift/reduce conflicts, but I don't know how to solve it
 
 def p_assignment_list(p):
     '''assignment_list : ID "=" expression
@@ -226,9 +231,9 @@ def p_error(p):
 
 def parseFile(scadFile):
 
-    lexer = lex.lex()
+    lexer = lex.lex(debug=False)
     lexer.filename = scadFile
-    parser = yacc.yacc(debug=False, write_tables=False)
+    parser = yacc.yacc(debug=False)
 
     modules = []
     functions = []
