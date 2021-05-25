@@ -1,84 +1,31 @@
-from enum import Enum
-
 from ply import lex, yacc
 
 #workaround relative imports.... make this module runable as script
 if __name__ == "__main__":
+    from scad_ast import *
     from scad_tokens import *
 else:
+    from .scad_ast import *
     from .scad_tokens import *
 
-class ScadTypes(Enum):
-    GLOBAL_VAR = 0
-    MODULE = 1
-    FUNCTION = 2
-    USE = 3
-    INCLUDE = 4
-    PARAMETER = 5
-
-class ScadObject:
-    def __init__(self, scadType):
-        self.scadType = scadType
-
-    def getType(self):
-        return self.scadType
-
-class ScadUse(ScadObject):
-    def __init__(self, filename):
-        super().__init__(ScadTypes.USE)
-        self.filename = filename
-
-class ScadInclude(ScadObject):
-    def __init__(self, filename):
-        super().__init__(ScadTypes.INCLUDE)
-        self.filename = filename
-
-class ScadGlobalVar(ScadObject):
-    def __init__(self, name):
-        super().__init__(ScadTypes.GLOBAL_VAR)
-        self.name = name
-
-class ScadCallable(ScadObject):
-    def __init__(self, name, parameters, scadType):
-        super().__init__(scadType)
-        self.name = name
-        self.parameters = parameters
-
-    def __repr__(self):
-        return f'{self.name} ({self.parameters})'
-
-class ScadModule(ScadCallable):
-    def __init__(self, name, parameters):
-        super().__init__(name, parameters, ScadTypes.MODULE)
-
-class ScadFunction(ScadCallable):
-    def __init__(self, name, parameters):
-        super().__init__(name, parameters, ScadTypes.FUNCTION)
-
-class ScadParameter(ScadObject):
-    def __init__(self, name, optional=False):
-        super().__init__(ScadTypes.PARAMETER)
-        self.name = name
-        self.optional = optional
-
-    def __repr__(self):
-        return self.name + "=..." if self.optional else  self.name
-
 precedence = (
+    ('nonassoc', 'ASSERT'),
+    ('nonassoc', 'ECHO'),
     ('nonassoc', "THEN"),
     ('nonassoc', "ELSE"),
     ('nonassoc', "?"),
     ('nonassoc', ":"),
-    ('nonassoc', "[", "]", "(", ")", "{", "}"),
+    ('nonassoc', "(", ")", "{", "}"),
 
     ('nonassoc', '='),
     ('left', "AND", "OR"),
-    ('nonassoc', "EQUAL", "NOT_EQUAL", "GREATER_OR_EQUAL", "LESS_OR_EQUAL", ">", "<"),
-    ('left', "%"),
+    ('left', "EQUAL", "NOT_EQUAL", "GREATER_OR_EQUAL", "LESS_OR_EQUAL", ">", "<"),
     ('left', '+', '-'),
+    ('left', "%"),
     ('left', '*', '/'),
-    ('right', 'NEG', 'POS', 'BACKGROUND', 'NOT'),
     ('right', '^'),
+    ('right', 'NEG', 'POS', 'BACKGROUND', 'NOT'),
+    ('left', "ACCESS"),
  )
 
 def p_statements(p):
@@ -99,24 +46,21 @@ def p_statement(p):
                 |   IF "(" expression ")" statement ELSE statement
                 |   for_loop statement
                 |   LET "(" assignment_list ")" statement %prec THEN
+                |   ASSERT "(" opt_call_parameter_list ")" statement
+                |   ECHO "(" opt_call_parameter_list ")" statement
                 |   "{" statements "}"
                 |   "%" statement %prec BACKGROUND
                 |   "*" statement %prec BACKGROUND
                 |   "!" statement %prec BACKGROUND
+                |   "#" statement %prec BACKGROUND
                 |   call statement
+                |   USE FILENAME
+                |   INCLUDE FILENAME
                 |   ";"
                 '''
-
 def p_for_loop(p):
-    '''for_loop : FOR "(" parameter_list ")"'''
-
-def p_statement_use(p):
-    'statement : USE FILENAME'
-    p[0] = ScadUse(p[2][1:len(p[2])-1])
-
-def p_statement_include(p):
-    'statement : INCLUDE FILENAME'
-    p[0] = ScadInclude(p[2][1:len(p[2])-1])
+    '''for_loop : FOR "(" parameter_list ")"
+                | FOR "(" parameter_list ";" expression ";" parameter_list ")"'''
 
 def p_statement_function(p):
     'statement : function'
@@ -130,10 +74,8 @@ def p_statement_assignment(p):
     'statement : ID "=" expression ";"'
     p[0] = ScadGlobalVar(p[1])
 
-def p_expression(p):
-    '''expression : ID
-                |   expression "." ID
-                |   "-" expression %prec NEG
+def p_logic_expr(p):
+    '''logic_expr :  "-" expression %prec NEG
                 |   "+" expression %prec POS
                 |   "!" expression %prec NOT
                 |   expression "?" expression ":" expression
@@ -151,20 +93,52 @@ def p_expression(p):
                 |   expression LESS_OR_EQUAL expression
                 |   expression AND expression
                 |   expression OR expression
+       '''
+
+def p_access_expr(p):
+    '''access_expr : ID %prec ACCESS
+                |   expression "." ID %prec ACCESS
+                |   expression "(" call_parameter_list ")" %prec ACCESS
+                |   expression "(" ")" %prec ACCESS
+                |   expression "[" expression "]" %prec ACCESS
+        '''
+
+def p_list_stuff(p):
+    '''list_stuff : FUNCTION "(" opt_parameter_list ")" expression
                 |   LET "(" assignment_list ")" expression %prec THEN
                 |   EACH expression %prec THEN
                 |   "[" expression ":" expression "]"
                 |   "[" expression ":" expression ":" expression "]"
                 |   "[" for_loop expression "]"
-                |   for_loop expression %prec THEN
+        '''
+
+def p_assert_or_echo(p):
+    '''assert_or_echo : ASSERT "(" opt_call_parameter_list ")"
+                    |   ECHO "(" opt_call_parameter_list ")"
+       '''
+def p_constants(p):
+    '''constants : STRING
+                |  TRUE
+                |  FALSE
+                |  NUMBER'''
+
+def p_for_or_if(p):
+    '''for_or_if :  for_loop expression %prec THEN
                 |   IF "(" expression ")" expression %prec THEN
                 |   IF "(" expression ")" expression ELSE expression
-                |   "(" expression ")"
-                |   call
-                |   expression "[" expression "]"
                 |   tuple
-                |   STRING
-                |   NUMBER'''
+       '''
+
+def p_expression(p):
+    '''expression : access_expr
+                |   logic_expr
+                |   list_stuff
+                |   assert_or_echo
+                |   assert_or_echo expression %prec ASSERT
+                |   constants
+                |   for_or_if
+                |   "(" expression ")"
+       '''
 
 def p_assignment_list(p):
     '''assignment_list : ID "=" expression
@@ -179,17 +153,26 @@ def p_tuple(p):
     ''' tuple : "[" opt_expression_list "]"
         '''
 
+def p_commas(p):
+    '''commas : commas ","
+              | ","
+       '''
+
 def p_opt_expression_list(p):
     '''opt_expression_list : expression_list
-                        |    expression_list ","
+                        |    expression_list commas
                         |    empty'''
 def p_expression_list(p):
-    ''' expression_list : expression_list "," expression
+    ''' expression_list : expression_list commas expression
                     |     expression
         '''
 
+def p_opt_call_parameter_list(p):
+    '''opt_call_parameter_list :
+                               | call_parameter_list
+       '''
 def p_call_parameter_list(p):
-    '''call_parameter_list : call_parameter_list "," call_parameter
+    '''call_parameter_list : call_parameter_list commas call_parameter
                         |    call_parameter'''
 
 def p_call_parameter(p):
@@ -198,7 +181,7 @@ def p_call_parameter(p):
 
 def p_opt_parameter_list(p):
     '''opt_parameter_list : parameter_list
-                        |   parameter_list ","
+                        |   parameter_list commas
                         |   empty
        '''
     if p[1] != None:
@@ -207,7 +190,7 @@ def p_opt_parameter_list(p):
        p[0] = []
 
 def p_parameter_list(p):
-    '''parameter_list :     parameter_list "," parameter
+    '''parameter_list :     parameter_list commas parameter
                         |   parameter'''
     if len(p) > 2:
         p[0] = p[1] + [p[3]]
@@ -222,7 +205,6 @@ def p_parameter(p):
 def p_function(p):
     '''function : FUNCTION ID "(" opt_parameter_list ")" "=" expression
        '''
-
     params = None
     if p[4] != ")":
         params = p[4]
@@ -232,12 +214,12 @@ def p_function(p):
 def p_module(p):
     '''module : MODULE ID "(" opt_parameter_list ")" statement
        '''
-
     params = None
     if p[4] != ")":
         params = p[4]
 
     p[0] = ScadModule(p[2], params)
+
 
 def p_error(p):
     print(f'py_scadparser: Syntax error: {p.lexer.filename}({p.lineno}) {p.type} - {p.value}')
@@ -262,20 +244,12 @@ def parseFile(scadFile):
         for i in  parser.parse(f.read(), lexer=lexer):
             appendObject[i.getType()](i)
 
-    return uses, includes, modules, functions, globalVars
+    return modules, functions, globalVars
 
 def parseFileAndPrintGlobals(scadFile):
 
     print(f'======{scadFile}======')
-    uses, includes, modules, functions, globalVars = parseFile(scadFile)
-
-    print("Uses:")
-    for u in uses:
-        print(f'    {u.filename}')
-
-    print("Includes:")
-    for i in includes:
-        print(f'    {i.filename}')
+    modules, functions, globalVars = parseFile(scadFile)
 
     print("Modules:")
     for m in modules:
@@ -285,7 +259,7 @@ def parseFileAndPrintGlobals(scadFile):
     for m in functions:
         print(f'    {m}')
 
-    print("Global Vars:")
+    print("Global Variables:")
     for m in globalVars:
         print(f'    {m.name}')
 
