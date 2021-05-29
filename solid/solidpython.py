@@ -26,6 +26,8 @@ from typing import Callable, Iterable, List, Optional, Sequence, Set, Union, Dic
 import pkg_resources
 import re
 
+from solid.customizer import Customizer
+
 PathStr = Union[Path, str]
 AnimFunc = Callable[[Optional[float]], 'OpenSCADObject']
 # These are features added to SolidPython but NOT in OpenSCAD.
@@ -412,22 +414,48 @@ def _find_include_strings(obj: Union[IncludedOpenSCADObject, OpenSCADObject]) ->
             include_strings.update(_find_include_strings(param))
     return include_strings
 
+def _find_customizer_inits(scad_object:OpenSCADObject) -> Set[str]:
+    # Recursively travel scad_object and all its children, making a set
+    # of all unique Customizer instances we find. 
+    # Return a set of all OpenSCAD customizer initializer strings, 
+    # which will then define the OpenSCAD Customizer GUI.
+
+    customizer_strings = set()
+    for child in scad_object.children:
+        customizer_strings.update(_find_customizer_inits(child))
+    # We accept Customizer instances as parameters to functions, 
+    # so search in scad_object.params as well
+    for param in scad_object.params.values():
+        if isinstance(param, Customizer):
+            customizer_strings.add(param.scad_declaration())
+        elif hasattr(param, '__iter__') and not isinstance(param, (str, bytes)):
+            for elt in param:
+                if isinstance(elt, Customizer):
+                    customizer_strings.add(elt.scad_declaration())
+    return customizer_strings
+
+
 def scad_render(scad_object: OpenSCADObject, file_header: str = '') -> str:
     # Make this object the root of the tree
     root = scad_object
 
     # Scan the tree for all instances of
     # IncludedOpenSCADObject, storing their strings
+    # and render the strings
     include_strings = _find_include_strings(root)
-
-    # and render the string
     includes = ''.join(include_strings) + "\n"
+
+    # Similarly, find all instances of Customizer subclasses and render them 
+    # at the file's top level to create a Customizer GUI
+    customizer_inits = _find_customizer_inits(root)
+    customizer_declarations = ''.join( sorted(list(customizer_inits))) + '\n'
+    
     scad_body = root._render()
 
     if file_header and not file_header.endswith('\n'): 
         file_header += '\n'
 
-    return file_header + includes + scad_body
+    return file_header + includes + customizer_declarations + scad_body
 
 def scad_render_animated(func_to_animate: AnimFunc, 
                          steps: int =20, 
@@ -759,6 +787,8 @@ def _unsubbed_keyword(subbed_keyword: str) -> str:
 from . import objects
 
 def py2openscad(o: Union[bool, float, str, Iterable]) -> str:
+    if isinstance(o, Customizer):
+        return str(o)
     if type(o) == bool:
         return str(o).lower()
     if type(o) == float:
