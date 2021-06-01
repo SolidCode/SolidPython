@@ -832,7 +832,7 @@ def _openscad_library_paths() -> List[Path]:
     default_paths = {
         'Linux':   Path.home() / '.local/share/OpenSCAD/libraries',
         'Darwin':  Path.home() / 'Documents/OpenSCAD/libraries',
-        'Windows': Path('My Documents\OpenSCAD\libraries')
+        'Windows': Path('My Documents/OpenSCAD/libraries')
     }
 
     paths.append(default_paths[platform.system()])
