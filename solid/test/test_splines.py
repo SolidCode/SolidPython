@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 import unittest
-from solid.test.ExpandedTestCase import DiffOutput
+from solid.test.solidpython_testcase import SolidPythonTestCase
 from solid import *
 from solid.utils import euclidify
 from solid.splines import catmull_rom_points, catmull_rom_prism, bezier_points, bezier_polygon
@@ -10,7 +10,7 @@ from math import pi
 
 SEGMENTS = 8
 
-class TestSplines(DiffOutput):
+class TestSplines(SolidPythonTestCase):
     def setUp(self):
         self.points = [
             Point3(0,0),

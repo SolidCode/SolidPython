@@ -13,7 +13,7 @@ from solid.objects import polyhedron, projection, render, resize, rotate_extrude
 from solid.objects import scale, surface, union
 
 from solid.solidpython import scad_render, scad_render_animated_file, scad_render_to_file
-from solid.test.ExpandedTestCase import DiffOutput
+from solid.test.solidpython_testcase import SolidPythonTestCase
 
 scad_test_case_templates = [
     {'name': 'polygon', 'class': 'polygon' , 'kwargs': {'paths': [[0, 1, 2]]}, 'expected': '\n\npolygon(paths = [[0, 1, 2]], points = [[0, 0], [1, 0], [0, 1]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]]}, },
@@ -84,7 +84,7 @@ class TemporaryFileBuffer(object):
             pass
 
 
-class TestSolidPython(DiffOutput):
+class TestSolidPython(SolidPythonTestCase):
     # test cases will be dynamically added to this instance
 
     def expand_scad_path(self, filename):
@@ -228,15 +228,14 @@ class TestSolidPython(DiffOutput):
         self.assertRaises(ValueError, import_scad, 'path/doesnt/exist.scad')
 
         # Test that we recursively import directories correctly
-        # FIXME: the presence of some extra *.scad files in this dir
-        # caused this to hang (or take waay too long) sometimes. 
-        # Maybe test in a better-defined & locked-down directory?
-        # Or better yet, what is it about this recursive parsing that's taking 
-        # so much time?
-        # ETJ 20210531
-        examples = import_scad(include_file.parent)
-        self.assertTrue(hasattr(examples, 'scad_to_include'))
-        self.assertTrue(hasattr(examples.scad_to_include, 'steps'))
+        # write to a temp directory to make sure it only contains what we want
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            import shutil
+            dest_file = Path(tmpdirname) / include_file.name
+            shutil.copyfile(include_file, dest_file)
+            tmpdir_namespace = import_scad(tmpdirname)
+            self.assertTrue(hasattr(tmpdir_namespace, 'scad_to_include'))
+            self.assertTrue(hasattr(tmpdir_namespace.scad_to_include, 'steps'))
 
         # TODO: we should test that:
         # A) scad files in the designated OpenSCAD library directories

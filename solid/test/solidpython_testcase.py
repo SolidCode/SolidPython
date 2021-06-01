@@ -8,7 +8,7 @@ import re
 from typing import Union
 from solid import OpenSCADObject, scad_render
 
-class DiffOutput(unittest.TestCase):
+class SolidPythonTestCase(unittest.TestCase):
 
     def assertEqual(self, first, second, msg=None):
         """
@@ -24,7 +24,7 @@ class DiffOutput(unittest.TestCase):
                         tofile='expected'
                     )
                 )
-        return super(DiffOutput, self).assertEqual(first, second, msg=msg)
+        return super(SolidPythonTestCase, self).assertEqual(first, second, msg=msg)
 
     def assertEqualNoWhitespace(self, a, b):
         remove_whitespace = lambda s: re.subn(r'[\s\n]','', s)[0]

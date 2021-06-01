@@ -4,11 +4,11 @@ import re
 
 from solid.screw_thread import default_thread_section, thread
 from solid.solidpython import scad_render
-from solid.test.ExpandedTestCase import DiffOutput
+from solid.test.solidpython_testcase import SolidPythonTestCase
 
 SEGMENTS = 4
 
-class TestScrewThread(DiffOutput):
+class TestScrewThread(SolidPythonTestCase):
     def setUp(self):
         self.tooth_height = 10
         self.tooth_depth = 5

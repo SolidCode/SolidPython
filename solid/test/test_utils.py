@@ -7,7 +7,7 @@ from euclid3 import Point3, Vector3, Point2
 
 from solid import scad_render
 from solid.objects import cube, polygon, sphere, translate
-from solid.test.ExpandedTestCase import DiffOutput
+from solid.test.solidpython_testcase import SolidPythonTestCase
 from solid.utils import BoundingBox, arc, arc_inverted, euc_to_arr, euclidify 
 from solid.utils import extrude_along_path, fillet_2d, is_scad, offset_points
 from solid.utils import split_body_planar, transform_to_point, project_to_2D
@@ -56,7 +56,7 @@ other_test_cases = [
 ]
 
 
-class TestSPUtils(DiffOutput):
+class TestSPUtils(SolidPythonTestCase):
     # Test cases will be dynamically added to this instance
     # using the test case arrays above
     def test_split_body_planar(self):
