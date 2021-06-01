@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 
-#    Simple Python OpenSCAD Code Generator
+#    Python OpenSCAD Code Generator
 #    Copyright (C) 2009    Philipp Tiefenbacher <wizards23@gmail.com>
-#    Amendments & additions, (C) 2011-2019 Evan Jones <evan_t_jones@mac.com>
+#    Amendments & additions, (C) 2011-2021 Evan Jones <evan_t_jones@mac.com>
 #
 #   License: LGPL 2.1 or later
 #
@@ -26,7 +26,7 @@ from typing import Callable, Iterable, List, Optional, Sequence, Set, Union, Dic
 import pkg_resources
 import re
 
-from solid.customizer import Customizer
+from solid.customizer import CompoundFloat, Customizer
 
 PathStr = Union[Path, str]
 AnimFunc = Callable[[Optional[float]], 'OpenSCADObject']
@@ -428,12 +428,18 @@ def _find_customizer_inits(scad_object:OpenSCADObject) -> Set[str]:
     for param in scad_object.params.values():
         if isinstance(param, Customizer):
             customizer_strings.add(param.scad_declaration())
+        # params may be CompoundFloats that contain Customizer instances, like: 
+        # (2*slider) or (2*((slider * slider) + 3))
+        # Recurse each CompoundFloat for any Customizer instances
+        elif isinstance(param, CompoundFloat):
+            customizers = param.customizer_instances()
+            customizer_strings.update((c.scad_declaration() for c in customizers))
+
         elif hasattr(param, '__iter__') and not isinstance(param, (str, bytes)):
             for elt in param:
                 if isinstance(elt, Customizer):
                     customizer_strings.add(elt.scad_declaration())
     return customizer_strings
-
 
 def scad_render(scad_object: OpenSCADObject, file_header: str = '') -> str:
     # Make this object the root of the tree

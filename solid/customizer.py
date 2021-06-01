@@ -1,18 +1,46 @@
 #! /usr/bin/env python3
+import sys
 
 from numbers import Real
 
-from typing import Callable, Union, Dict, List, Sequence, Any
+from typing import Callable, Union, Dict, List, Sequence, Any, Set
 from typing import Generator, TypeVar
 
 Operator = Any
 
 class CompoundFloat(float):
+    '''
+    CompoundFloat is a subclass of float that lets a float reconstruct the math
+    used to generate it. 
+
+    In normal python, `my_float = 3.0 + 1` yields 4.0, with no way to track how it was created.
+    A CompoundFloat contains, recursively, all float operations used to create it
+    compound = CompoundFloat(3.0)
+    new_compound = compound + 1 
+    # new_compound has the value 4.0, but str(new_compound) is `((3.0) + 1)`
+
+    This allows us to use OpenSCAD's Customizer feature while still doing math
+    with the values, so that CustomizerSlider (a subclass of CompoundFloat)
+    does the following:
+    ```python
+    slider = CustomizerSlider('sliderName', 2, 1, 5, 1)
+    quad_box = cube([slider * slider, slider, slider])
+    print(scad_render(quad_box))
+    ```
+    yields:
+    ```
+    sliderName = 2; // [1:1:5]
+    cube(size = [(sliderName * sliderName), slider, slider]);
+    ```
+    which can be adjusted interactively with OpenSCAD's or Thingiverse's Customizer feature
+
+    '''
     def __new__(cls, val: Real, op: Operator = None, other: Real = None):
-        val = val
+        evaluated = val
         if op and other:
-            val = op(val, other) 
-        self =  super(CompoundFloat, cls).__new__(cls, val)
+            evaluated = op(val, other) 
+        self =  super(CompoundFloat, cls).__new__(cls, evaluated)
+        self.val = val
         # TODO: ensure that either op & other are defined, or neither are
         self.op = op
         self.other = other
@@ -22,10 +50,7 @@ class CompoundFloat(float):
         # FIXME: add support for unary operators and non-infix ops like __ceil__()
         symbols = {
             '__add__': '+',
-            # '__ceil__': '',
             '__eq__': '==',
-            # '__float__': '',
-            # '__floor__': '',
             '__floordiv__': '//',
             '__le__': '<=',
             '__lt__': '<',
@@ -33,15 +58,20 @@ class CompoundFloat(float):
             '__mul__': '*',
             '__neg__': '-',
             '__pos__': '+',
-            '__pow__': '**',
             '__radd__': '+',
             '__rfloordiv__': '//',
             '__rmod__': '%',
             '__rmul__': '*',
-            # '__round__': '',
             '__rpow__': '**',
+            '__rsub__': '-',
             '__rtruediv__': '/',
             '__truediv__': '/',
+            '__sub__': '-',
+            # '__ceil__': '',
+            # '__float__': '',
+            # '__floor__': '',
+            # '__pow__': '**', # NOTE: OpenSCAD uses `pow(a,b)`, not `a ** b`
+            # '__round__': '',
             # '__trunc__': '',
 
         }
@@ -57,29 +87,53 @@ class CompoundFloat(float):
         other_str = f' {self.other}' if self.other else ''
         return f'({val_str}{op_str}{other_str})'
 
-    def __add__(self, other:Real) ->        'CompoundFloat': return CompoundFloat(self, float.__add__, other)
-    def __ceil__(self, other:Real) ->       'CompoundFloat': return CompoundFloat(self, float.__ceil__, other)
-    def __eq__(self, other:Real) ->         'CompoundFloat': return CompoundFloat(self, float.__eq__, other)
-    def __float__(self, other:Real) ->      'CompoundFloat': return CompoundFloat(self, float.__float__, other)
-    def __floor__(self, other:Real) ->      'CompoundFloat': return CompoundFloat(self, float.__floor__, other)
-    def __floordiv__(self, other:Real) ->   'CompoundFloat': return CompoundFloat(self, float.__floordiv__, other)
-    def __le__(self, other:Real) ->         'CompoundFloat': return CompoundFloat(self, float.__le__, other)
-    def __lt__(self, other:Real) ->         'CompoundFloat': return CompoundFloat(self, float.__lt__, other)
-    def __mod__(self, other:Real) ->        'CompoundFloat': return CompoundFloat(self, float.__mod__, other)
-    def __mul__(self, other:Real) ->        'CompoundFloat': return CompoundFloat(self, float.__mul__, other)
-    # FIXME: CompoundFloat breaks on unary operators +/-/!  ?
-    # def __neg__(self, other:Real) ->      'CompoundFloat': return CompoundFloat(self, float.__neg__, other)
-    # def __pos__(self, other:Real) ->      'CompoundFloat': return CompoundFloat(self, float.__pos__, other)
-    def __pow__(self, other:Real) ->        'CompoundFloat': return CompoundFloat(self, float.__pow__, other)
-    def __radd__(self, other:Real) ->       'CompoundFloat': return CompoundFloat(self, float.__radd__, other)
-    def __rfloordiv__(self, other:Real) ->  'CompoundFloat': return CompoundFloat(self, float.__rfloordiv__, other)
-    def __rmod__(self, other:Real) ->       'CompoundFloat': return CompoundFloat(self, float.__rmod__, other)
-    def __rmul__(self, other:Real) ->       'CompoundFloat': return CompoundFloat(self, float.__rmul__, other)
-    def __round__(self, other:Real) ->      'CompoundFloat': return CompoundFloat(self, float.__round__, other)
-    def __rpow__(self, other:Real) ->       'CompoundFloat': return CompoundFloat(self, float.__rpow__, other)
-    def __rtruediv__(self, other:Real) ->   'CompoundFloat': return CompoundFloat(self, float.__rtruediv__, other)
-    def __truediv__(self, other:Real) ->    'CompoundFloat': return CompoundFloat(self, float.__truediv__, other)
-    def __trunc__(self, other:Real) ->      'CompoundFloat': return CompoundFloat(self, float.__trunc__, other)
+    def customizer_instances(self) -> List['Customizer']:
+        # Recursively visit the parts of this compound, returning a list of all
+        # instances of Customizer subclasses
+        customizers = []
+        elements = (self.val, self.other)
+        for elt in elements:
+            if isinstance(elt, Customizer):
+                customizers.append(elt)
+            elif isinstance(elt, CompoundFloat):
+                customizers += elt.customizer_instances()
+        return customizers
+
+    def new_compound_float_for_operator(self, other:Real):
+        # NOTE: by reaching back into the stack for the calling function every time,
+        # this is slower than it would be with a custom function for each operator.
+        # But it's rare that SolidPython programs take any time to run, and this
+        # enables a more general code solution
+        op_name = sys._getframe(1).f_code.co_name
+        operator = getattr(float, op_name)
+        return CompoundFloat(self, operator, other)    
+
+    def __add__(self, other:Real):      return self.new_compound_float_for_operator(other)
+    def __ceil__(self, other:Real):     return self.new_compound_float_for_operator(other)
+    def __eq__(self, other:Real):       return self.new_compound_float_for_operator(other)
+    def __float__(self, other:Real):    return self.new_compound_float_for_operator(other)
+    def __floor__(self, other:Real):    return self.new_compound_float_for_operator(other)
+    def __floordiv__(self, other:Real): return self.new_compound_float_for_operator(other)
+    def __le__(self, other:Real):       return self.new_compound_float_for_operator(other)
+    def __lt__(self, other:Real):       return self.new_compound_float_for_operator(other)
+    def __mod__(self, other:Real):      return self.new_compound_float_for_operator(other)
+    def __mul__(self, other:Real):      return self.new_compound_float_for_operator(other)
+    def __pow__(self, other:Real):      return self.new_compound_float_for_operator(other)
+    def __radd__(self, other:Real):     return self.new_compound_float_for_operator(other)
+    def __rmod__(self, other:Real):     return self.new_compound_float_for_operator(other)
+    def __rmul__(self, other:Real):     return self.new_compound_float_for_operator(other)
+    def __round__(self, other:Real):    return self.new_compound_float_for_operator(other)
+    def __sub__(self, other:Real):      return self.new_compound_float_for_operator(other)
+    def __truediv__(self, other:Real):  return self.new_compound_float_for_operator(other)
+    def __trunc__(self, other:Real):    return self.new_compound_float_for_operator(other)
+    # right- operators
+    def __rpow__(self, other:Real):     return CompoundFloat(float(other), float.__pow__, self)
+    def __rfloordiv__(self, other:Real):return CompoundFloat(float(other), float.__rfloordiv__, self)
+    def __rsub__(self, other:Real):     return CompoundFloat(float(other), float.__sub__, self)
+    def __rtruediv__(self, other:Real): return CompoundFloat(float(other), float.__truediv__, self)
+    # unary operators
+    def __neg__(self):                  return CompoundFloat(-1.0, float.__mul__, self)
+    def __pos__(self):                  return self
 
 class CompundInt(int):
     pass
@@ -91,12 +145,14 @@ class CompoundString(str):
     pass
 
 class Customizer():
+    '''
+    Base class for all Customizer UI elements. 
+    '''
     def scad_declaration(self):
         raise NotImplementedError
 
     def __str__(self):
         return self.name
-
 
 class CustomizerSlider(CompoundFloat, Customizer):
     def __new__(cls, name:str, val:float, min_val:float=0, max_val:float = 1, step:float = None):
@@ -137,6 +193,23 @@ class CustomizerDropdownNumber(CompoundFloat, Customizer):
     def __str__(self):
         return self.name
 
+class CustomizerSpinbox(CompoundFloat, Customizer):
+    # NOTE: if val is an integer (1, or 1.0), each spin step will be 1
+    # If val is a decimal, spin step will be one decimal unit, 
+    # i.e. 5.5 -> 0.1 step,  5.002 => 0.001 step
+    def __new__(cls, name:str, val:float):
+        self = super(CustomizerSpinbox, cls).__new__(cls, val)
+        self.name = name
+        self.val = val
+        return self
+
+    def scad_declaration(self):
+        # No special comment syntax required for spinboxes
+        return f'{self.name} = {self.val};\n'
+
+    def __str__(self):
+        return self.name
+
 class CustomizerDropdownString(CompoundString, Customizer):
     def __new__(cls, name:str, val:str, options:Union[List[str],  Dict[str,str]]):
         self =  super(CustomizerDropdownString, cls).__new__(cls, val)
@@ -158,6 +231,19 @@ class CustomizerDropdownString(CompoundString, Customizer):
     def __str__(self):
         return self.name
 
+class CustomizerTextbox(CompoundString, Customizer):
+    def __new__(cls, name:str, val:str):
+        self = super(CustomizerTextbox, cls).__new__(cls, val)
+        self.name = name
+        self.val = val
+        return self
+
+    def scad_declaration(self):
+        # No special comment syntax required for textboxes
+        return f'{self.name} = "{self.val}";\n'
+
+    def __str__(self):
+        return self.name
 
 class CustomizerCheckbox(CompoundBoolean, Customizer):
     def __new__(cls, name:str, val:bool):
@@ -170,37 +256,6 @@ class CustomizerCheckbox(CompoundBoolean, Customizer):
         # No special comment syntax required for checkboxes
         val_str = f'{self.val}'.lower()
         return f'{self.name} = {val_str};\n'
-
-    def __str__(self):
-        return self.name
-
-class CustomizerSpinbox(CompoundFloat, Customizer):
-    # NOTE: if val is an integer (1, or 1.0), each spin step will be 1
-    # If val is a decimal, spin step will be one decimal unit, 
-    # i.e. 5.5 -> 0.1 step,  5.002 => 0.001 step
-    def __new__(cls, name:str, val:float):
-        self = super(CustomizerSpinbox, cls).__new__(cls, val)
-        self.name = name
-        self.val = val
-        return self
-
-    def scad_declaration(self):
-        # No special comment syntax required for spinboxes
-        return f'{self.name} = {self.val};\n'
-
-    def __str__(self):
-        return self.name
-
-class CustomizerTextbox(CompoundString, Customizer):
-    def __new__(cls, name:str, val:str):
-        self = super(CustomizerTextbox, cls).__new__(cls, val)
-        self.name = name
-        self.val = val
-        return self
-
-    def scad_declaration(self):
-        # No special comment syntax required for textboxes
-        return f'{self.name} = "{self.val}";\n'
 
     def __str__(self):
         return self.name
