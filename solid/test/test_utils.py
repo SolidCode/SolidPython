@@ -59,17 +59,6 @@ other_test_cases = [
 class TestSPUtils(DiffOutput):
     # Test cases will be dynamically added to this instance
     # using the test case arrays above
-    def assertEqualNoWhitespace(self, a, b):
-        remove_whitespace = lambda s: re.subn(r'[\s\n]','', s)[0]
-        self.assertEqual(remove_whitespace(a), remove_whitespace(b))
-
-    def assertEqualOpenScadObject(self, expected:str, actual:Union[OpenSCADObject, str]):
-        if isinstance(actual, OpenSCADObject):
-            act = scad_render(actual)
-        elif isinstance(actual, str):
-            act = actual
-        self.assertEqualNoWhitespace(expected, act)
-
     def test_split_body_planar(self):
         offset = [10, 10, 10]
         body = translate(offset)(sphere(20))
