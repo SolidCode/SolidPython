@@ -6,6 +6,8 @@ scad.set_global_var("$fn", 6)
 
 scad.register_customizer_var("cyl_pos", "[1, 2, 3]")
 
+scad.additional_header_code("//some non sense")
+
 cube_pos = scad.get("cyl_pos")
 
 c = translate(cube_pos) (
