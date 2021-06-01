@@ -52,8 +52,8 @@ t_EQUAL = "=="
 t_GREATER_OR_EQUAL = ">="
 t_LESS_OR_EQUAL = "<="
 t_NOT_EQUAL = "!="
-t_AND = "\&\&"
-t_OR = "\|\|"
+t_AND = r"\&\&"
+t_OR = r"\|\|"
 
 t_FILENAME = r'<[a-zA-Z_0-9/\\\.-]*>'
 
