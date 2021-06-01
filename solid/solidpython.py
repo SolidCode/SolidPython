@@ -447,8 +447,10 @@ def scad_render(scad_object: OpenSCADObject, file_header: str = '') -> str:
 
     # Similarly, find all instances of Customizer subclasses and render them 
     # at the file's top level to create a Customizer GUI
+    customizer_declarations = ''
     customizer_inits = _find_customizer_inits(root)
-    customizer_declarations = ''.join( sorted(list(customizer_inits))) + '\n'
+    if customizer_inits:
+        customizer_declarations = ''.join( sorted(list(customizer_inits))) + '\n'
     
     scad_body = root._render()
 
