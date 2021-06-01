@@ -95,22 +95,22 @@ class TestSolidPython(DiffOutput):
         a = cube(2)
         b = sphere(2)
         expected = '\n\nunion() {\n\tcube(size = 2);\n\tsphere(r = 2);\n}'
-        actual = scad_render(a + b)
-        self.assertEqual(expected, actual)
+        actual = a + b
+        self.assertEqualOpenScadObject(expected, actual)
 
     def test_infix_difference(self):
         a = cube(2)
         b = sphere(2)
         expected = '\n\ndifference() {\n\tcube(size = 2);\n\tsphere(r = 2);\n}'
-        actual = scad_render(a - b)
-        self.assertEqual(expected, actual)
+        actual = a - b
+        self.assertEqualOpenScadObject(expected, actual)
 
     def test_infix_intersection(self):
         a = cube(2)
         b = sphere(2)
         expected = '\n\nintersection() {\n\tcube(size = 2);\n\tsphere(r = 2);\n}'
-        actual = scad_render(a * b)
-        self.assertEqual(expected, actual)
+        actual = a * b
+        self.assertEqualOpenScadObject(expected, actual)
 
     def test_parse_scad_callables(self):
         test_str = """
@@ -228,6 +228,12 @@ class TestSolidPython(DiffOutput):
         self.assertRaises(ValueError, import_scad, 'path/doesnt/exist.scad')
 
         # Test that we recursively import directories correctly
+        # FIXME: the presence of some extra *.scad files in this dir
+        # caused this to hang (or take waay too long) sometimes. 
+        # Maybe test in a better-defined & locked-down directory?
+        # Or better yet, what is it about this recursive parsing that's taking 
+        # so much time?
+        # ETJ 20210531
         examples = import_scad(include_file.parent)
         self.assertTrue(hasattr(examples, 'scad_to_include'))
         self.assertTrue(hasattr(examples.scad_to_include, 'steps'))
@@ -292,36 +298,35 @@ class TestSolidPython(DiffOutput):
     def test_extra_args_to_included_scad(self):
         include_file = self.expand_scad_path("examples/scad_to_include.scad")
         mod = import_scad(include_file)
-        a = mod.steps(3, external_var=True)
-        actual = scad_render(a)
+        actual = mod.steps(3, external_var=True)
 
-        abs_path = a._get_include_path(include_file)
+        abs_path = actual._get_include_path(include_file)
         expected = f"use <{abs_path}>\n\n\nsteps(external_var = true, howmany = 3);"
-        self.assertEqual(expected, actual)
+        self.assertEqualOpenScadObject(expected, actual)
 
     def test_background(self):
         a = cube(10)
         expected = '\n\n%cube(size = 10);'
-        actual = scad_render(background(a))
-        self.assertEqual(expected, actual)
+        actual = background(a)
+        self.assertEqualOpenScadObject(expected, actual)
 
     def test_debug(self):
         a = cube(10)
         expected = '\n\n#cube(size = 10);'
-        actual = scad_render(debug(a))
-        self.assertEqual(expected, actual)
+        actual = debug(a)
+        self.assertEqualOpenScadObject(expected, actual)
 
     def test_disable(self):
         a = cube(10)
         expected = '\n\n*cube(size = 10);'
-        actual = scad_render(disable(a))
-        self.assertEqual(expected, actual)
+        actual = disable(a)
+        self.assertEqualOpenScadObject(expected, actual)
 
     def test_root(self):
         a = cube(10)
         expected = '\n\n!cube(size = 10);'
-        actual = scad_render(root(a))
-        self.assertEqual(expected, actual)
+        actual = root(a)
+        self.assertEqualOpenScadObject(expected, actual)
 
     def test_color(self):
         all_args = [
@@ -339,14 +344,14 @@ class TestSolidPython(DiffOutput):
         ]
         for args, expected in zip(all_args, expecteds):
             col = color(**args)
-            actual = scad_render(col)
-            self.assertEqual(expected, actual)
+            actual = col
+            self.assertEqualOpenScadObject(expected, actual)
 
     def test_explicit_hole(self):
         a = cube(10, center=True) + hole()(cylinder(2, 20, center=True))
         expected = '\n\ndifference(){\n\tunion() {\n\t\tcube(center = true, size = 10);\n\t}\n\t/* Holes Below*/\n\tunion(){\n\t\tcylinder(center = true, h = 20, r = 2);\n\t} /* End Holes */ \n}'
-        actual = scad_render(a)
-        self.assertEqual(expected, actual)
+        actual = a
+        self.assertEqualOpenScadObject(expected, actual)
 
     def test_hole_transform_propagation(self):
         # earlier versions of holes had problems where a hole
@@ -364,8 +369,8 @@ class TestSolidPython(DiffOutput):
 
         a = cube(10, center=True) + h + h_vert
         expected = '\n\ndifference(){\n\tunion() {\n\t\tcube(center = true, size = 10);\n\t\trotate(a = -90, v = [0, 1, 0]) {\n\t\t}\n\t}\n\t/* Holes Below*/\n\tunion(){\n\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\tcylinder(center = true, h = 20, r = 2);\n\t\t}\n\t\trotate(a = -90, v = [0, 1, 0]){\n\t\t\trotate(a = 90, v = [0, 1, 0]) {\n\t\t\t\tcylinder(center = true, h = 20, r = 2);\n\t\t\t}\n\t\t}\n\t} /* End Holes */ \n}'
-        actual = scad_render(a)
-        self.assertEqual(expected, actual)
+        actual = a
+        self.assertEqualOpenScadObject(expected, actual)
 
     def test_separate_part_hole(self):
         # Make two parts, a block with hole, and a cylinder that
@@ -389,8 +394,8 @@ class TestSolidPython(DiffOutput):
         a = p1 + p2
 
         expected = '\n\nunion() {\n\tdifference(){\n\t\tdifference() {\n\t\t\tcube(center = true, size = 10);\n\t\t}\n\t\t/* Holes Below*/\n\t\tunion(){\n\t\t\tcylinder(center = true, h = 12, r = 2);\n\t\t} /* End Holes */ \n\t}\n\tcylinder(center = true, h = 14, r = 1.5000000000);\n}'
-        actual = scad_render(a)
-        self.assertEqual(expected, actual)
+        actual = a
+        self.assertEqualOpenScadObject(expected, actual)
 
     def test_scad_render_animated_file(self):
         def my_animate(_time=0):
@@ -457,8 +462,8 @@ class TestSolidPython(DiffOutput):
             import numpy # type: ignore
             numpy_cube = cube(size=numpy.array([1, 2, 3]))
             expected = '\n\ncube(size = [1,2,3]);'
-            actual = scad_render(numpy_cube)
-            self.assertEqual(expected, actual, 'Numpy SolidPython not rendered correctly')
+            actual = numpy_cube
+            self.assertEqualOpenScadObject(expected, actual)
         except ImportError:
             pass
 
@@ -479,8 +484,8 @@ class TestSolidPython(DiffOutput):
 
         for iterable in iterables:
             name = type(iterable).__name__
-            actual = scad_render(cube(size=iterable))
-            self.assertEqual(expected, actual, f'{name} SolidPython not rendered correctly')
+            actual = cube(size=iterable)
+            self.assertEqualOpenScadObject(expected, actual)
 
 
 def single_test(test_dict):
@@ -495,9 +500,8 @@ def single_test(test_dict):
         call_str += ')'
 
         scad_obj = eval(call_str)
-        actual = scad_render(scad_obj)
-
-        self.assertEqual(expected, actual)
+        actual = scad_obj
+        self.assertEqualOpenScadObject(expected, actual)
 
     return test
 
