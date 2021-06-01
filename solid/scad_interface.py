@@ -13,7 +13,8 @@ class OpenSCADConstant(OpenSCADObject):
 
 class ScadInterface:
     def __init__(self):
-        self.header = ''
+        self.header = '\n' #make sure we don't get attached to some other code
+                           #without a line break
 
     def register_customizer_var(self, name, value, options=''):
         self.header += f'{name} = {value}; //{options}\n'
