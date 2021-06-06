@@ -26,6 +26,8 @@ from typing import Callable, Iterable, List, Optional, Sequence, Set, Union, Dic
 import pkg_resources
 import re
 
+from . import greedy_scad_interface
+
 PathStr = Union[Path, str]
 AnimFunc = Callable[[Optional[float]], 'OpenSCADObject']
 # These are features added to SolidPython but NOT in OpenSCAD.
@@ -427,7 +429,7 @@ def scad_render(scad_object: OpenSCADObject, file_header: str = '') -> str:
     if file_header and not file_header.endswith('\n'): 
         file_header += '\n'
 
-    return file_header + includes + scad_body
+    return file_header + greedy_scad_interface.get_scad_header() + includes + scad_body
 
 def scad_render_animated(func_to_animate: AnimFunc, 
                          steps: int =20, 
