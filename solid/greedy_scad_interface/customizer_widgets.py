@@ -6,7 +6,7 @@ class CustomizerDropdownVariable(ScadVariable):
             options_str = '[' + ", ".join(map(str, options)) + ']'
 
         if isinstance(options, dict):
-            reverse_options = [ f"{options[k]} : {k}" for k in options.keys()]
+            reverse_options = [ f'{options[k]} : "{k}"' for k in options.keys()]
             options_str = f'[{", ".join(reverse_options)}]'
 
         super().__init__(name, default_value, options_str, label=label, tab=tab)
@@ -27,5 +27,5 @@ class CustomizerCheckboxVariable(ScadVariable):
 class CustomizerTextboxVariable(ScadVariable):
     def __init__(self, name, default_value, max_length='', label='', tab=''):
         options_str = max_length and str(max_length)
-        super().__init__(name, f'"{default_value}"', options_str, label=label, tab=tab)
+        super().__init__(name, default_value, options_str, label=label, tab=tab)
 

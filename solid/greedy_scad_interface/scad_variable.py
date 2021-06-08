@@ -22,6 +22,12 @@ class ScadValue:
     def __unary_operator_base__(self, op):
         return ScadValue(f'({op}{self})')
 
+    def __illegal_operator__(self):
+       raise Exception("You can't compare a ScadValue with something else, " +\
+                       "because we don't know the customized value at " +\
+                       "SolidPythons runtime because it might get customized " +\
+                       "at OpenSCAD runtime.")
+
     #basic operators +, -, *, /, %, **
     def __add__(self, other): return self.__operator_base__("+", other)
     def __sub__(self, other): return self.__operator_base__("-", other)
@@ -43,22 +49,19 @@ class ScadValue:
     #other operators
     def __abs__(self): return ScadValue(f'abs({self})')
 
-    def __bool__(self):
-        raise Exception("You can't use scad variables as truth statement because " +\
-                        "we don't know the value of a customized variable at SolidPython " +\
-                        "runtime.")
-
-    def __illegal_operator__(self):
-       raise Exception("You can't compare a ScadValue with something else, " +\
-                       "because we don't know the customized value at SolidPythons runtime " +\
-                       "because it might get customized at OpenSCAD runtime.")
-
+    #"illegal" operators
     def __eq__(self, other): return self.__illegal_operator__()
     def __ne__(self, other): return self.__illegal_operator__()
     def __le__(self, other): return self.__illegal_operator__()
     def __ge__(self, other): return self.__illegal_operator__()
     def __lt__(self, other): return self.__illegal_operator__()
     def __gt__(self, other): return self.__illegal_operator__()
+
+    #do not allow to evaluate to bool
+    def __bool__(self):
+        raise Exception("You can't use scad variables as truth statement because " +\
+                        "we don't know the value of a customized variable at " +\
+                        "SolidPython runtime.")
 
 class ScadVariable(ScadValue):
     registered_variables = {}
@@ -73,12 +76,12 @@ class ScadVariable(ScadValue):
         self.registered_variables.update({name : def_str})
 
     def get_definition(self, name, default_value, options_str, label, tab):
+        from ..solidpython import py2openscad
+
         tab = tab and f'/* [{tab}] */\n'
         label = label and f'//{label}\n'
         options_str = options_str and f' //{options_str}'
-
-        if isinstance(default_value, str):
-            default_value = f'"{default_value}"'
+        default_value = py2openscad(default_value)
 
         return f'{tab}{label}{name} = {default_value};{options_str}'
 
