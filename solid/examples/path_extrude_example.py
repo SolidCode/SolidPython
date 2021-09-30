@@ -148,24 +148,23 @@ def extrude_example_transforms() -> OpenSCADObject:
         # Rotate the points sinusoidally up to max_rotation
         p = p.rotate_around(up, max_rotation*sin(tau*path_norm))
 
-
         # Oscillate z values sinusoidally, growing from 
-        # 0 magnitude to max_z_displacement
-        max_z = lerp(path_norm, 0, 1, 0, max_z_displacement)
+        # 0 magnitude to max_z_displacement, then decreasing to 0 magnitude at path_norm == 1
+        max_z = sin(pi*path_norm) * max_z_displacement
         angle = lerp(loop_norm, 0, 1, 0, 10*tau)
         p.z += max_z*sin(angle)
         return p
 
     no_trans = make_label('No Transform')
     no_trans += down(height/2)(
-        extrude_along_path(shape, path, cap_ends=False)
+        extrude_along_path(shape, path, cap_ends=True)
     )
 
     # We can pass transforms a single function that will be called on all points,
     # or pass a list with a transform function for each point along path
     arb_trans = make_label('Arbitrary Transform')
     arb_trans += down(height/2)(
-        extrude_along_path(shape, path, transforms=[point_trans], cap_ends=False)
+        extrude_along_path(shape, path, transforms=[point_trans], cap_ends=True)
     )
 
     return no_trans + right(3*path_rad)(arb_trans)

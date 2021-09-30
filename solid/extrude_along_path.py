@@ -104,29 +104,18 @@ def extrude_along_path( shape_pts:Points,
         polyhedron_pts += this_loop
 
     if connect_ends:
-        next_loop_start_index = len(polyhedron_pts) - shape_pt_count
-        loop_facets = _loop_facet_indices(0, shape_pt_count, next_loop_start_index)
+        connect_loop_start_index = len(polyhedron_pts) - shape_pt_count
+        loop_facets = _loop_facet_indices(connect_loop_start_index, shape_pt_count, 0)
         facet_indices += loop_facets
 
     elif cap_ends:
-        # endcaps at start & end of extrusion
-        # NOTE: this block adds points & indices to the polyhedron, so it's
-        # very sensitive to the order this is happening in
-        start_cap_index = len(polyhedron_pts)
-        end_cap_index = start_cap_index + 1
+        # OpenSCAD's polyhedron will automatically triangulate faces as needed.
+        # So just include all points at each end of the tube 
         last_loop_start_index = len(polyhedron_pts) - shape_pt_count 
-
-        start_loop_pts = polyhedron_pts[:shape_pt_count]
-        end_loop_pts = polyhedron_pts[last_loop_start_index:]
-
-        start_loop_indices = list(range(0, shape_pt_count))
-        end_loop_indices = list(range(last_loop_start_index, last_loop_start_index + shape_pt_count))
-
-        start_centroid, start_facet_indices = _end_cap(start_cap_index, start_loop_pts, start_loop_indices)
-        end_centroid, end_facet_indices = _end_cap(end_cap_index, end_loop_pts, end_loop_indices)
-        polyhedron_pts += [start_centroid, end_centroid]
-        facet_indices += start_facet_indices
-        facet_indices += end_facet_indices
+        start_loop_indices = list(reversed(range(shape_pt_count)))
+        end_loop_indices = list(range(last_loop_start_index, last_loop_start_index + shape_pt_count))   
+        facet_indices.append(start_loop_indices)
+        facet_indices.append(end_loop_indices)
 
     return polyhedron(points=euc_to_arr(polyhedron_pts), faces=facet_indices) # type: ignore
 
@@ -139,13 +128,18 @@ def _loop_facet_indices(loop_start_index:int, loop_pt_count:int, next_loop_start
     next_loop_indices = list(range(next_loop_start_index, loop_pt_count + next_loop_start_index )) + [next_loop_start_index]
 
     for i, (a, b) in enumerate(zip(loop_indices[:-1], loop_indices[1:])):
+        c, d = next_loop_indices[i: i+2]
+        # OpenSCAD's polyhedron will accept quads and do its own triangulation with them,
+        # so we could just append (a,b,d,c). 
+        # However, this lets OpenSCAD (Or CGAL?) do its own triangulation, leading
+        # to some strange outcomes. Prefer to do our own triangulation.
         #   c--d
         #   |\ |
         #   | \|
         #   a--b               
-        c, d = next_loop_indices[i: i+2]
-        facet_indices.append((a,c,b))
-        facet_indices.append((b,c,d))
+        # facet_indices.append((a,b,d,c))
+        facet_indices.append((a,b,c))
+        facet_indices.append((b,d,c))
     return facet_indices
 
 def _rotate_loop(points:Sequence[Point3], rotation_degrees:float=None) -> List[Point3]:
@@ -178,22 +172,3 @@ def _transform_loop(points:Sequence[Point3], transform_func:Point3Transform = No
         result.append(new_p)
     return result
 
-def _end_cap(new_point_index:int, points:Sequence[Point3], vertex_indices: Sequence[int]) -> Tuple[Point3, List[FacetIndices]]:
-    # Assume points are a basically planar, basically convex polygon with polyhedron
-    # indices `vertex_indices`. 
-    # Return a new point that is the centroid of the polygon and a list of 
-    # vertex triangle indices that covers the whole polygon.
-    # (We can actually accept relatively non-planar and non-convex polygons, 
-    # but not anything pathological. Stars are fine, internal pockets would 
-    # cause incorrect faceting)
-
-    # NOTE: In order to deal with moderately-concave polygons, we add a point
-    # to the center of the end cap. This will have a new index that we require
-    # as an argument. 
-
-    new_point = centroid(points)
-    new_facets = []
-    second_indices = vertex_indices[1:] + [vertex_indices[0]]
-    new_facets = [(new_point_index, a, b) for a, b in zip(vertex_indices, second_indices)]
-
-    return (new_point, new_facets)
