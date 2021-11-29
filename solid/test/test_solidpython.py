@@ -28,6 +28,7 @@ scad_test_case_templates = [
     {'name': 'cylinder', 'class': 'cylinder' , 'kwargs': {'r1': None, 'r2': None, 'h': 1, 'segments': 12, 'r': 1, 'center': False}, 'expected': '\n\ncylinder($fn = 12, center = false, h = 1, r = 1);', 'args': {}, },
     {'name': 'cylinder_d1d2', 'class': 'cylinder' , 'kwargs': {'d1': 4, 'd2': 2, 'h': 1, 'segments': 12, 'center': False}, 'expected': '\n\ncylinder($fn = 12, center = false, d1 = 4, d2 = 2, h = 1);', 'args': {}, },
     {'name': 'polyhedron', 'class': 'polyhedron' , 'kwargs': {'convexity': None}, 'expected': '\n\npolyhedron(faces = [[0, 1, 2]], points = [[0, 0, 0], [1, 0, 0], [0, 1, 0]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]], 'faces': [[0, 1, 2]]}, },
+    {'name': 'polyhedron_default_convexity', 'class': 'polyhedron' , 'kwargs': {}, 'expected': '\n\npolyhedron(convexity = 10, faces = [[0, 1, 2]], points = [[0, 0, 0], [1, 0, 0], [0, 1, 0]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]], 'faces': [[0, 1, 2]]}, },
     {'name': 'union', 'class': 'union' , 'kwargs': {}, 'expected': '\n\nunion();', 'args': {}, },
     {'name': 'intersection', 'class': 'intersection' , 'kwargs': {}, 'expected': '\n\nintersection();', 'args': {}, },
     {'name': 'difference', 'class': 'difference' , 'kwargs': {}, 'expected': '\n\ndifference();', 'args': {}, },

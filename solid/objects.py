@@ -219,7 +219,7 @@ class polyhedron(OpenSCADObject):
     :type convexity: int
     """
 
-    def __init__(self, points: P3s, faces: Indexes, convexity: int = None, triangles: Indexes = None) -> None:
+    def __init__(self, points: P3s, faces: Indexes, convexity: int = 10, triangles: Indexes = None) -> None:
         super().__init__('polyhedron',
                          {'points': points, 'faces': faces,
                           'convexity': convexity,
