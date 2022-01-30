@@ -15,6 +15,8 @@ from solid.objects import scale, surface, union
 from solid.solidpython import scad_render, scad_render_animated_file, scad_render_to_file
 from solid.test.ExpandedTestCase import DiffOutput
 
+from solid.helpers import _find_library
+
 scad_test_case_templates = [
     {'name': 'polygon', 'class': 'polygon' , 'kwargs': {'paths': [[0, 1, 2]]}, 'expected': '\n\npolygon(paths = [[0, 1, 2]], points = [[0, 0], [1, 0], [0, 1]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]]}, },
     {'name': 'polygon', 'class': 'polygon' , 'kwargs': {}, 'expected': '\n\npolygon(points = [[0, 0], [1, 0], [0, 1]]);', 'args': {'points': [[0, 0, 0], [1, 0, 0], [0, 1, 0]]}, },
@@ -199,7 +201,7 @@ class TestSolidPython(DiffOutput):
         a = steps(3) # type: ignore
         actual = scad_render(a)
 
-        abs_path = a._get_include_path(include_file)
+        abs_path = _find_library(include_file)
         expected = f"use <{abs_path}>\n\n\nsteps(howmany = 3);"
         self.assertEqual(expected, actual)
 
@@ -209,7 +211,7 @@ class TestSolidPython(DiffOutput):
         a = mod.steps(3)
         actual = scad_render(a)
 
-        abs_path = a._get_include_path(include_file)
+        abs_path = _find_library(include_file)
         expected = f"use <{abs_path}>\n\n\nsteps(howmany = 3);"
         self.assertEqual(expected, actual)
 
@@ -253,7 +255,7 @@ class TestSolidPython(DiffOutput):
         points = mod.scad_points();
         poly = polygon(points);
         actual = scad_render(poly);
-        abs_path = points._get_include_path(include_file)
+        abs_path = _find_library(include_file)
         expected = f'use <{abs_path}>\n\n\npolygon(points = scad_points());'
         self.assertEqual(expected, actual)
 
@@ -286,7 +288,7 @@ class TestSolidPython(DiffOutput):
         a = steps(3) # type: ignore
 
         actual = scad_render(a)
-        abs_path = a._get_include_path(include_file)
+        abs_path = _find_library(include_file)
         expected = f"include <{abs_path}>\n\n\nsteps(howmany = 3);"
         self.assertEqual(expected, actual)
 
@@ -296,7 +298,7 @@ class TestSolidPython(DiffOutput):
         a = mod.steps(3, external_var=True)
         actual = scad_render(a)
 
-        abs_path = a._get_include_path(include_file)
+        abs_path = _find_library(include_file)
         expected = f"use <{abs_path}>\n\n\nsteps(external_var = true, howmany = 3);"
         self.assertEqual(expected, actual)
 
