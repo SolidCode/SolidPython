@@ -233,14 +233,38 @@ class TestSolidPython(DiffOutput):
         self.assertTrue(hasattr(examples, 'scad_to_include'))
         self.assertTrue(hasattr(examples.scad_to_include, 'steps'))
 
-        # TODO: we should test that:
+        # Test that:
         # A) scad files in the designated OpenSCAD library directories
         #       (path-dependent, see: solid.objects._openscad_library_paths())
-        #       are imported correctly. Not sure how to do this without writing
-        #       temp files to those directories. Seems like overkill for the moment
+        #       are imported correctly.
+        # B) scad files in the designated app-install library directories
+        from solid import objects
+        lib_dirs = objects._openscad_library_paths()
+        for i, ld in enumerate(lib_dirs):
+            if ld.as_posix() == '.':
+                continue
+            if not ld.exists():
+                continue
+            temp_dirname = f'test_{i}'
+            d = ld / temp_dirname
+            d.mkdir(exist_ok=True)
+            p = d / 'scad_to_include.scad'
+            p.write_text(include_file.read_text())
+            temp_file_str = f'{temp_dirname}/scad_to_include.scad'
+
+            mod = import_scad(temp_file_str)
+            a = mod.steps(3)
+            actual = scad_render(a)
+            expected = f"use <{p.absolute()}>\n\n\nsteps(howmany = 3);"
+            self.assertEqual(actual, expected,
+                             f'Unexpected file contents at {p} for dir: {ld}')
+
+            # remove generated file and directories
+            p.unlink()
+            d.rmdir()
 
     def test_multiple_import_scad(self):
-        # For Issue #172. Originally, multiple `import_scad()` calls would 
+        # For Issue #172. Originally, multiple `import_scad()` calls would
         # re-import the entire module, rather than cache a module after one use
         include_file = self.expand_scad_path("examples/scad_to_include.scad")
         mod1 = import_scad(include_file)

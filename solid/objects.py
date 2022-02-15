@@ -830,13 +830,23 @@ def _openscad_library_paths() -> List[Path]:
             paths.append(Path(s))
 
     default_paths = {
-        'Linux':   Path.home() / '.local/share/OpenSCAD/libraries',
-        'Darwin':  Path.home() / 'Documents/OpenSCAD/libraries',
-        'Windows': Path('My Documents\OpenSCAD\libraries')
+        'Linux':   [
+            Path.home() / '.local/share/OpenSCAD/libraries',
+            Path('/usr/share/openscad/libraries')
+        ],
+        'Darwin':  [
+            Path.home() / 'Documents/OpenSCAD/libraries',
+            Path('/Applications/OpenSCAD.app/Contents/Resources/libraries')
+        ],
+        'Windows': [
+            Path('My Documents\OpenSCAD\libraries'),
+            Path('c:\Program Files\OpenSCAD\libraries')
+        ],
     }
 
-    paths.append(default_paths[platform.system()])
+    paths += default_paths.get(platform.system(), [])
     return paths
+
 
 def _find_library(library_name: PathStr) -> Path:
     result = Path(library_name)
@@ -848,14 +858,17 @@ def _find_library(library_name: PathStr) -> Path:
             # print(f'Checking {f} -> {f.exists()}')
             if f.exists():
                 result = f
+                break
 
     return result
- 
+
 # use() & include() mimic OpenSCAD's use/include mechanics.
 # -- use() makes methods in scad_file_path.scad available to be called.
 # --include() makes those methods available AND executes all code in
 #   scad_file_path.scad, which may have side effects.
 #   Unless you have a specific need, call use().
+
+
 def use(scad_file_path: PathStr, use_not_include: bool = True, dest_namespace_dict: Dict = None):
     """
     Opens scad_file_path, parses it for all usable calls,
