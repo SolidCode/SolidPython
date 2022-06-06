@@ -56,12 +56,15 @@ def extrude_along_path( shape_pts:Points,
     facet_indices:List[Tuple[int, int, int]] = []
 
     # Make sure we've got Euclid Point3's for all elements
-    shape_pts = euclidify(shape_pts, Point3)
     path_pts = euclidify(path_pts, Point3)
 
     src_up = Vector3(0, 0, 1)
 
-    shape_pt_count = len(shape_pts)
+    if callable(shape_pts):
+        shape_pt_count = None
+    else: 
+        shape_pts = euclidify(shape_pts, Point3)
+        shape_pt_count = len(shape_pts)
 
     tangent_path_points: List[Point3] = []
     if connect_ends:
@@ -88,7 +91,15 @@ def extrude_along_path( shape_pts:Points,
         if transforms:
             transform_func = transforms[which_loop] if len(transforms) > 1 else transforms[0]
 
-        this_loop = shape_pts[:]
+        if callable(shape_pts):
+            this_loop = shape_pts(which_loop/len(path_pts))
+            if shape_pt_count is None:
+                shape_pt_count = len(this_loop)
+            else:
+                assert len(this_loop) == shape_pt_count
+        else:
+            this_loop = shape_pts[:]
+
         this_loop = _scale_loop(this_loop, scale)
         this_loop = _rotate_loop(this_loop, rotate_degrees)
         this_loop = _transform_loop(this_loop, transform_func, path_normal)
