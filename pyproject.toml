@@ -44,17 +44,5 @@ tox = "^tox 3.11"
 
 
 [build-system]
-requires = [
-    "poetry>=0.12",
-    # See https://github.com/pypa/setuptools/issues/2353#issuecomment-683781498
-    # for the rest of these requirements, 
-    # -ETJ 31 December 2020
-    "setuptools>=30.3.0,<50",
-    "wheel",
-    "pytest-runner",
-    "setuptools_scm>=3.3.1",
-
-]
-
-build-backend = "poetry.masonry.api"
-
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
