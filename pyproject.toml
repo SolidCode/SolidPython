@@ -38,6 +38,7 @@ euclid3 = "^0.1.0"
 pypng = "^0.0.19"
 PrettyTable = "=0.7.2"
 ply = "^3.11"
+setuptools = ">=65.6.3"
 
 [tool.poetry.dev-dependencies]
 tox = "^tox 3.11"
