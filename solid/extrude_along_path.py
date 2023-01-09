@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 from math import radians
 from solid import OpenSCADObject, Points, Indexes, ScadSize, polyhedron
-from solid.utils import euclidify, euc_to_arr, transform_to_point, centroid
+from solid.utils import euclidify, euc_to_arr, transform_to_point, centroid, EPSILON
 from euclid3 import Point2, Point3, Vector2, Vector3
 
 from typing import Dict, Optional, Sequence, Tuple, Union, List, Callable
@@ -64,6 +64,13 @@ def extrude_along_path( shape_pts:Points,
     shape_pt_count = len(shape_pts)
 
     tangent_path_points: List[Point3] = []
+
+    # If first & last points are the same, let's close the shape
+    first_last_equal = ((path_pts[0] - path_pts[-1]).magnitude_squared() < EPSILON)
+    if first_last_equal:
+        connect_ends = True
+        path_pts = path_pts[:][:-1]
+
     if connect_ends:
         tangent_path_points = [path_pts[-1]] + path_pts + [path_pts[0]]
     else:
