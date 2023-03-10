@@ -1,4 +1,4 @@
-Hey! All the energy and improvements in this project are going into SolidPython V2. Check it out at [Github](https://github.com/jeff-dh/SolidPython) or on its [PyPI page](https://pypi.org/project/solidpython2/) before you commit to an older version.
+**Hey!** All the energy and improvements in this project are going into **SolidPython V2**. Check it out at `Github <https://github.com/jeff-dh/SolidPython>`_ or on its `PyPI page <https://pypi.org/project/solidpython2/>`_ before you commit to an older version.
 
 
 
