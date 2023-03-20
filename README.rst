@@ -172,7 +172,7 @@ Importing OpenSCAD code
 =======================
 
 - Use ``solid.import_scad(path)`` to import OpenSCAD code. Relative paths will 
-check the current location designated in `OpenSCAD library directories <https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Libraries>`__.
+  check the current location designated in `OpenSCAD library directories <https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Libraries>`__.
 
 **Ex:** 
 
@@ -209,7 +209,7 @@ check the current location designated in `OpenSCAD library directories <https://
     mount = mcad.motors.stepper_motor_mount(nema_standard=17)
     scad_render_to_file(mount, 'motor_mount_file.scad')
 
-- OpenSCAD has the ``use()`` and ``include()`` statements for importing SCAD code, and SolidPython has them, too. They pollute the global namespace, though, and you may have better luck with ``import_scad()``,
+- OpenSCAD has the ``use()`` and ``include()`` statements for importing SCAD code, and SolidPython has them, too. They pollute the global namespace, though, and you may have better luck with ``import_scad()``.
 
 **Ex:**
 
@@ -238,7 +238,7 @@ Example Code
 
 The best way to learn how SolidPython works is to look at the included
 example code. If you've installed SolidPython, the following line of
-Python will print(the location of ) the examples directory:
+Python will print(the location of the examples directory):
 
 .. code:: python
 
@@ -246,7 +246,7 @@ Python will print(the location of ) the examples directory:
         
 
 Or browse the example code on Github
-`here <https://github.com/SolidCode/SolidPython/tree/master/solid/examples>`__
+`here <https://github.com/SolidCode/SolidPython/tree/master/solid/examples>`__.
 
 Adding your own code to the example file
 `solid/examples/solidpython_template.py <https://github.com/SolidCode/SolidPython/blob/master/solid/examples/solidpython_template.py>`__
@@ -354,7 +354,7 @@ seems a lot clearer to me than:
 
 .. code:: python
 
-    translate( [0,0,10])(
+    translate([0,0,10])(
         cylinder()
     )
 
